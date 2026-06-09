@@ -1,0 +1,12 @@
+allowBuilds:
+  aws-sdk: true
+
+ignoreWorkspaceRootCheck: true
+
+packages:
+  - 'services/backend/*'
+  - 'services/lambdas/*'
+  - 'apps/*'
+  - 'packages/*'
+  - 'iac/**'
+  - 'firmware/*'

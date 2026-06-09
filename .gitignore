@@ -53,8 +53,9 @@ results.xml
 **/.terraform/*
 *.tfstate
 *.tfstate.*
-*.tfvars.json
 *.tfvars
+!*.tfvars.example
+*.auto.tfvars
 crash.log
 crash.*.log
 override.tf
@@ -64,14 +65,11 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# tfvars con secrets (ajustar según contenido real)
-iac/environments/*/secrets.tfvars
-iac/environments/*/backend.hcl
-!.terraform.tfvars.example
-!.auto.tfvars.example
-!iac/environments/*/backend.hcl.example
+# Backend config with credentials
+**/backend.hcl
+!**/backend.hcl.example
 
-# Terraform lock file
+# Terraform lock file (commitear para versionar providers)
 # .terraform.lock.hcl
 
 # Firmware ESP32 (PlatformIO)

@@ -1,0 +1,124 @@
+# OS & Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+*.crt
+!.env.example
+!*.pem.example
+!*.key.example
+
+# Node.js / TypeScript
+node_modules/
+dist/
+build/
+coverage/
+.nyc_output/
+.npm
+*.tsbuildinfo
+*.js.map
+*.d.ts
+!*.config.js
+!*.config.mjs
+
+# Testing
+junit.xml
+report.xml
+results.xml
+*.lcov
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars.json
+*.tfvars
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# tfvars con secrets (ajustar según contenido real)
+iac/environments/*/secrets.tfvars
+iac/environments/*/backend.hcl
+!.terraform.tfvars.example
+!.auto.tfvars.example
+!iac/environments/*/backend.hcl.example
+
+# Terraform lock file
+# .terraform.lock.hcl
+
+# Firmware ESP32 (PlatformIO)
+.pio/
+.pioenvs/
+.piolibdeps/
+*.elf
+*.bin
+*.hex
+*.map
+*.o
+*.a
+*.lib
+firmware/esp32/.vscode/
+
+# Web Admin (Next.js)
+apps/web-admin/.next/
+apps/web-admin/out/
+apps/web-admin/.turbo/
+
+# Mobile App (React Native / Expo)
+apps/mobile-app/.expo/
+apps/mobile-app/.expo-shared/
+apps/mobile-app/android/app/build/
+apps/mobile-app/ios/build/
+apps/mobile-app/ios/Pods/
+*.apk
+*.aab
+*.ipa
+*.jks
+*.keystore
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# AWS
+.aws-sam/
+.serverless/
+cdk.out/
+*.zip
+*.tgz
+
+# Misc
+.cache/
+.temp/
+tmp/
+*.bak
+*.backup
+*.orig

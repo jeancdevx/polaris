@@ -1,0 +1,50 @@
+{
+  "name": "polaris",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "lint": "eslint 'services/backend/*/src/**/*.ts' 'services/lambdas/*/src/**/*.ts' 'packages/*/src/**/*.ts' --no-error-on-unmatched-pattern",
+    "lint:fix": "eslint 'services/backend/*/src/**/*.ts' 'services/lambdas/*/src/**/*.ts' 'packages/*/src/**/*.ts' --fix --no-error-on-unmatched-pattern",
+    "format": "prettier --write 'packages/*/src/**/*.ts' '*.{js,mjs,json,md}' && (prettier --write 'services/backend/*/src/**/*.ts' 2>/dev/null || true) && (prettier --write 'services/lambdas/*/src/**/*.ts' 2>/dev/null || true) && (prettier --write 'apps/*/src/**/*.{ts,tsx}' 2>/dev/null || true)",
+    "format:check": "prettier --check 'packages/*/src/**/*.ts' '*.{js,mjs,json,md}'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "build": "pnpm -r build",
+    "typecheck": "tsc --noEmit",
+    "typecheck:all": "pnpm -r typecheck",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{tsx,js,mjs}": [
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.0.2",
+    "@commitlint/config-conventional": "21.0.2",
+    "@eslint/js": "10.0.1",
+    "@ianvs/prettier-plugin-sort-imports": "4.7.1",
+    "@types/aws-lambda": "8.10.162",
+    "@types/node": "25.9.2",
+    "@vitest/coverage-v8": "4.1.8",
+    "@vitest/ui": "4.1.8",
+    "aws-lambda": "1.0.7",
+    "eslint": "10.4.1",
+    "globals": "17.6.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.0.7",
+    "prettier": "3.8.3",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.60.1",
+    "vitest": "4.1.8"
+  }
+}

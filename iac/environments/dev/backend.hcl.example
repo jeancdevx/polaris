@@ -1,0 +1,9 @@
+# Copy this file to backend.hcl for local use.
+# Credentials are resolved via AWS_PROFILE (SSO), or uncomment profile.
+# profile        = "your-sso-profile"
+bucket         = "REPLACE_WITH_TERRAFORM_STATE_BUCKET"
+key            = "env/dev/terraform.tfstate"
+region         = "us-east-2"
+# dynamodb_table = "REPLACE_WITH_TERRAFORM_LOCK_TABLE" # marked as deprecated
+use_lockfile = true
+encrypt        = true

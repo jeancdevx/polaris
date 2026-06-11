@@ -5,7 +5,6 @@ project_name = "polaris"
 environment  = "dev"
 
 # VPC
-
 vpc_cidr = "10.0.0.0/16"
 
 azs = ["us-east-2a", "us-east-2b", "us-east-2c"]
@@ -17,3 +16,32 @@ data_subnet_cidrs    = ["10.0.20.0/24", "10.0.21.0/24", "10.0.22.0/24"]
 enable_nat_gateway   = true
 single_nat_gateway   = false
 enable_vpc_endpoints = true
+
+# Aurora PostgreSQL
+# WARNING: Never commit real passwords. Use AWS Secrets Manager or SSM Parameter Store.
+db_password            = "ChangeMe123!"
+db_engine_version      = "17.7"
+
+# Scalability: serverless-v2 (auto-scaling ACUs) or provisioned (fixed instances)
+db_scalability_type    = "serverless-v2"
+
+# Serverless v2 settings (ignored if scalability_type = provisioned)
+db_serverless_min_acu  = 0.5
+db_serverless_max_acu  = 2
+
+# Provisioned settings (ignored if scalability_type = serverless-v2)
+db_provisioned_instance_class = "db.r6g.large"
+
+# Instance counts
+db_writer_count        = 1
+db_reader_count        = 0
+
+# Storage: aurora (Standard, pay-per-I/O) or aurora-iopt1 (I/O-Optimized, included)
+db_storage_type        = "aurora"
+
+# High availability & backups
+db_multi_az            = true
+db_backup_retention_period = 7
+db_deletion_protection = false
+db_skip_final_snapshot = true
+db_enable_performance_insights = true

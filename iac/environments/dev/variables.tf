@@ -23,7 +23,6 @@ variable "environment" {
 }
 
 # VPC
-
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
@@ -86,4 +85,90 @@ variable "vpc_endpoint_services" {
     "secretsmanager",
     "kms"
   ]
+}
+
+# Aurora PostgreSQL
+variable "db_password" {
+  description = "Master password for the Aurora database"
+  type        = string
+  sensitive   = true
+  default     = "ChangeMe123!"
+}
+
+variable "db_engine_version" {
+  description = "Aurora PostgreSQL engine version"
+  type        = string
+  default     = "17.7"
+}
+
+variable "db_scalability_type" {
+  description = "Cluster scalability type: serverless-v2 or provisioned"
+  type        = string
+  default     = "serverless-v2"
+}
+
+variable "db_serverless_min_acu" {
+  description = "Minimum ACUs for Serverless v2"
+  type        = number
+  default     = 0.5
+}
+
+variable "db_serverless_max_acu" {
+  description = "Maximum ACUs for Serverless v2"
+  type        = number
+  default     = 2
+}
+
+variable "db_provisioned_instance_class" {
+  description = "Instance class for Provisioned mode"
+  type        = string
+  default     = "db.r6g.large"
+}
+
+variable "db_writer_count" {
+  description = "Number of writer instances"
+  type        = number
+  default     = 1
+}
+
+variable "db_reader_count" {
+  description = "Number of reader instances"
+  type        = number
+  default     = 0
+}
+
+variable "db_storage_type" {
+  description = "Aurora storage type: aurora (Standard) or aurora-iopt1 (I/O-Optimized)"
+  type        = string
+  default     = "aurora"
+}
+
+variable "db_multi_az" {
+  description = "Enable Multi-AZ deployment for writer"
+  type        = bool
+  default     = true
+}
+
+variable "db_backup_retention_period" {
+  description = "Number of days to retain backups"
+  type        = number
+  default     = 7
+}
+
+variable "db_deletion_protection" {
+  description = "Enable deletion protection"
+  type        = bool
+  default     = false
+}
+
+variable "db_skip_final_snapshot" {
+  description = "Skip final snapshot on deletion"
+  type        = bool
+  default     = true
+}
+
+variable "db_enable_performance_insights" {
+  description = "Enable Performance Insights"
+  type        = bool
+  default     = true
 }

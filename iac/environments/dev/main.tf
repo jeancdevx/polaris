@@ -35,3 +35,39 @@ module "ecs" {
 
   additional_tags = local.default_tags
 }
+
+module "rds" {
+  source = "../../modules/rds"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  vpc_id          = module.vpc.vpc_id
+  data_subnet_ids = module.vpc.data_subnet_ids
+
+  db_name     = "parking_db"
+  db_username = "parking_admin"
+  db_password = var.db_password
+
+  engine_version   = var.db_engine_version
+  scalability_type = var.db_scalability_type
+
+  serverless_min_acu         = var.db_serverless_min_acu
+  serverless_max_acu         = var.db_serverless_max_acu
+  provisioned_instance_class = var.db_provisioned_instance_class
+
+  writer_count = var.db_writer_count
+  reader_count = var.db_reader_count
+
+  storage_type = var.db_storage_type
+
+  multi_az                    = var.db_multi_az
+  backup_retention_period     = var.db_backup_retention_period
+  deletion_protection         = var.db_deletion_protection
+  skip_final_snapshot         = var.db_skip_final_snapshot
+  enable_performance_insights = var.db_enable_performance_insights
+
+  allowed_security_group_ids = [module.ecs.security_group_ids.services]
+
+  additional_tags = local.default_tags
+}

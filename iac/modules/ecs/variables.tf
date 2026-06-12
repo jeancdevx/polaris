@@ -48,6 +48,7 @@ variable "services" {
     max_count         = optional(number, 4)
     min_count         = optional(number, 1)
     health_check_path = optional(string, "/health")
+    health_check_type = optional(string, "http")
     environment_vars  = optional(map(string), {})
     secrets           = optional(map(string), {})
     log_group_name    = optional(string, "")

@@ -137,8 +137,26 @@ variable "enable_performance_insights" {
   default     = true
 }
 
+variable "enable_enhanced_monitoring" {
+  description = "Enable Enhanced Monitoring"
+  type        = bool
+  default     = true
+}
+
+variable "enhanced_monitoring_interval" {
+  description = "Interval in seconds for Enhanced Monitoring (0 = disabled)"
+  type        = number
+  default     = 60
+}
+
 variable "enable_cloudwatch_logs" {
   description = "Enable CloudWatch log exports"
+  type        = bool
+  default     = true
+}
+
+variable "enable_slow_log" {
+  description = "Enable Redis slow log delivery to CloudWatch"
   type        = bool
   default     = true
 }

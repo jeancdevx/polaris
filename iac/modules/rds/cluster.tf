@@ -12,6 +12,9 @@ resource "aws_rds_cluster" "main" {
 
   storage_type = var.storage_type
 
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.aurora[0].arn
+
   vpc_security_group_ids = [aws_security_group.aurora[0].id]
 
   backup_retention_period      = var.backup_retention_period

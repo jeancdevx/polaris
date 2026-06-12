@@ -5,7 +5,7 @@ resource "aws_security_group" "alb" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description = "HTTP from anywhere"
+    description = "HTTP from VPC"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -13,7 +13,7 @@ resource "aws_security_group" "alb" {
   }
 
   ingress {
-    description = "HTTPS from anywhere"
+    description = "HTTPS from VPC"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
@@ -39,12 +39,15 @@ resource "aws_security_group" "services" {
   name_prefix = "${local.name}-ecs-"
   vpc_id      = var.vpc_id
 
-  ingress {
-    description     = "Allow traffic from ALB"
-    from_port       = 0
-    to_port         = 65535
-    protocol        = "tcp"
-    security_groups = var.enable_alb ? [aws_security_group.alb[0].id] : []
+  dynamic "ingress" {
+    for_each = var.services
+    content {
+      description     = "Traffic from ALB to ${ingress.value.name}"
+      from_port       = ingress.value.container_port
+      to_port         = ingress.value.container_port
+      protocol        = "tcp"
+      security_groups = var.enable_alb ? [aws_security_group.alb[0].id] : []
+    }
   }
 
   egress {

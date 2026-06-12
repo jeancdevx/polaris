@@ -26,9 +26,21 @@ resource "aws_iam_role_policy_attachment" "task_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-resource "aws_iam_role_policy_attachment" "task_execution_secrets" {
+data "aws_iam_policy_document" "task_execution_secrets" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret"
+    ]
+    resources = ["arn:aws:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:${local.name}-*"]
+  }
+}
+
+resource "aws_iam_role_policy" "task_execution_secrets" {
   count = var.task_execution_role_arn == "" ? 1 : 0
 
-  role       = aws_iam_role.task_execution[0].name
-  policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+  name   = "${local.name}-ecs-secrets"
+  role   = aws_iam_role.task_execution[0].name
+  policy = data.aws_iam_policy_document.task_execution_secrets.json
 }

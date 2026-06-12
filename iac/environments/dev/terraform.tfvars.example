@@ -45,3 +45,18 @@ db_backup_retention_period = 7
 db_deletion_protection = false
 db_skip_final_snapshot = true
 db_enable_performance_insights = true
+
+# ElastiCache Redis Serverless
+redis_engine_version             = "7.1"
+
+# Usage limits (serverless auto-scales between 0 and these maximums)
+redis_max_data_storage_gb        = 5
+redis_max_ecpu_per_second        = 1000
+
+# Security
+redis_transit_encryption_enabled = true
+redis_at_rest_encryption_enabled = true
+
+# Backups
+redis_snapshot_retention_limit   = 7
+redis_daily_snapshot_time        = "03:00"

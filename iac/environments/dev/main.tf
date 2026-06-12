@@ -71,3 +71,28 @@ module "rds" {
 
   additional_tags = local.default_tags
 }
+
+module "redis" {
+  source = "../../modules/redis"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  vpc_id          = module.vpc.vpc_id
+  data_subnet_ids = module.vpc.data_subnet_ids
+
+  engine_version = var.redis_engine_version
+
+  max_data_storage_gb = var.redis_max_data_storage_gb
+  max_ecpu_per_second = var.redis_max_ecpu_per_second
+
+  transit_encryption_enabled = var.redis_transit_encryption_enabled
+  at_rest_encryption_enabled = var.redis_at_rest_encryption_enabled
+
+  snapshot_retention_limit = var.redis_snapshot_retention_limit
+  daily_snapshot_time      = var.redis_daily_snapshot_time
+
+  allowed_security_group_ids = [module.ecs.security_group_ids.services]
+
+  additional_tags = local.default_tags
+}

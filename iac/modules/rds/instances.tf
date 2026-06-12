@@ -14,6 +14,9 @@ resource "aws_rds_cluster_instance" "writer" {
   performance_insights_enabled          = var.enable_performance_insights
   performance_insights_retention_period = var.enable_performance_insights ? 7 : 0
 
+  monitoring_interval = var.enable_enhanced_monitoring ? var.enhanced_monitoring_interval : 0
+  monitoring_role_arn = var.enable_enhanced_monitoring ? aws_iam_role.enhanced_monitoring[0].arn : null
+
   tags = merge(local.common_tags, {
     Name = "${local.name}-aurora-writer-${count.index}"
     Role = "writer"
@@ -35,6 +38,9 @@ resource "aws_rds_cluster_instance" "reader" {
 
   performance_insights_enabled          = var.enable_performance_insights
   performance_insights_retention_period = var.enable_performance_insights ? 7 : 0
+
+  monitoring_interval = var.enable_enhanced_monitoring ? var.enhanced_monitoring_interval : 0
+  monitoring_role_arn = var.enable_enhanced_monitoring ? aws_iam_role.enhanced_monitoring[0].arn : null
 
   tags = merge(local.common_tags, {
     Name = "${local.name}-aurora-reader-${count.index}"

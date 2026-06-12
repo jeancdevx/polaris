@@ -31,19 +31,11 @@ resource "aws_route_table" "private" {
 }
 
 resource "aws_route_table" "data" {
-  count  = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : local.az_count) : 1
+  count  = 1
   vpc_id = aws_vpc.main.id
 
-  dynamic "route" {
-    for_each = var.enable_nat_gateway ? [1] : []
-    content {
-      cidr_block     = "0.0.0.0/0"
-      nat_gateway_id = aws_nat_gateway.main[count.index].id
-    }
-  }
-
   tags = merge(local.common_tags, {
-    Name = "${local.name}-data-rt-${var.single_nat_gateway ? "single" : var.azs[count.index]}"
+    Name = "${local.name}-data-rt"
     Tier = "data"
   })
 }
@@ -66,5 +58,5 @@ resource "aws_route_table_association" "data" {
   count = local.az_count
 
   subnet_id      = aws_subnet.data[count.index].id
-  route_table_id = aws_route_table.data[var.single_nat_gateway ? 0 : count.index].id
+  route_table_id = aws_route_table.data[0].id
 }

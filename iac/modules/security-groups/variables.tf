@@ -23,6 +23,15 @@ variable "kafka_ui_security_group_id" {
   type        = string
 }
 
+variable "lambda_functions" {
+  description = "Map of Lambda functions that need security groups"
+  type = map(object({
+    function_name = string
+    vpc_enabled   = optional(bool, true)
+  }))
+  default = {}
+}
+
 variable "additional_tags" {
   description = "Additional tags to apply to all resources"
   type        = map(string)

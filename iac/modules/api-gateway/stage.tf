@@ -4,6 +4,8 @@ resource "aws_api_gateway_stage" "public" {
   rest_api_id   = aws_api_gateway_rest_api.public.id
   stage_name    = "v1"
 
+  xray_tracing_enabled = true
+
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.public_api.arn
     format = jsonencode({
@@ -27,6 +29,8 @@ resource "aws_api_gateway_stage" "private" {
   deployment_id = aws_api_gateway_deployment.private.id
   rest_api_id   = aws_api_gateway_rest_api.private.id
   stage_name    = "v1"
+
+  xray_tracing_enabled = true
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.private_api.arn

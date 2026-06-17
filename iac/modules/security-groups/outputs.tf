@@ -14,3 +14,13 @@ output "lambda_security_group_ids" {
     for k, v in aws_security_group.lambda : k => v.id
   }
 }
+
+output "api_gateway_vpc_link_security_group_id" {
+  description = "Security group ID for API Gateway VPC Link"
+  value       = aws_security_group.api_gateway_vpc_link.id
+}
+
+output "api_gateway_vpc_endpoint_security_group_id" {
+  description = "Security group ID for API Gateway VPC Endpoint"
+  value       = aws_security_group.api_gateway_vpc_endpoint.id
+}

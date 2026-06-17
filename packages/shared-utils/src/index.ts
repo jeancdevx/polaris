@@ -1,6 +1,8 @@
+import { randomBytes } from 'crypto'
+
 export const generateId = (prefix: string): string => {
   const timestamp = Date.now().toString(36)
-  const random = Math.random().toString(36).substring(2, 8)
+  const random = randomBytes(4).toString('hex')
   return `${prefix}-${timestamp}-${random}`
 }
 
@@ -13,7 +15,7 @@ export const parseTimestamp = (timestamp: string): Date => {
 }
 
 export const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
   return emailRegex.test(email)
 }
 

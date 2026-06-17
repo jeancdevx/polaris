@@ -27,6 +27,8 @@ module "iam" {
   kafka_cluster_arn  = module.kafka.cluster_arn
   kafka_cluster_name = module.kafka.cluster_name
 
+  lambda_functions = local.lambda_iam_functions
+
   additional_tags = local.default_tags
 }
 
@@ -73,6 +75,10 @@ module "security_groups" {
   project_name = var.project_name
   vpc_id       = module.vpc.vpc_id
   vpc_cidr     = module.vpc.vpc_cidr
+
+  kafka_ui_security_group_id = module.kafka_ui.security_group_id
+
+  lambda_functions = local.lambda_sg_functions
 
   additional_tags = local.default_tags
 }
@@ -159,6 +165,23 @@ module "kafka" {
   enhanced_monitoring    = var.kafka_enhanced_monitoring
 
   security_group_id = module.security_groups.msk_security_group_id
+
+  additional_tags = local.default_tags
+}
+
+module "lambda" {
+  source = "../../modules/lambda"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnet_ids
+
+  functions = local.lambda_functions
+
+  role_arns          = module.iam.lambda_role_arns
+  security_group_ids = module.security_groups.lambda_security_group_ids
 
   additional_tags = local.default_tags
 }

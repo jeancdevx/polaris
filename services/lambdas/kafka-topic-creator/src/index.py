@@ -72,6 +72,13 @@ class _MSKTokenProvider:
 def _create_admin_client(retries: int = 5, delay: float = 5.0) -> KafkaAdminClient:
     """Create KafkaAdminClient with MSK IAM auth; retries on connection failure."""
     last_exc: Exception | None = None
+    
+    # Configure secure SSL context
+    ssl_context = ssl.create_default_context()
+    ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+    ssl_context.check_hostname = True
+    ssl_context.verify_mode = ssl.CERT_REQUIRED
+    
     for attempt in range(1, retries + 1):
         try:
             return KafkaAdminClient(
@@ -79,7 +86,7 @@ def _create_admin_client(retries: int = 5, delay: float = 5.0) -> KafkaAdminClie
                 security_protocol="SASL_SSL",
                 sasl_mechanism="OAUTHBEARER",
                 sasl_oauth_token_provider=_MSKTokenProvider(),
-                ssl_context=ssl.create_default_context(),
+                ssl_context=ssl_context,
                 client_id="polaris-kafka-setup",
                 request_timeout_ms=20000,
             )
@@ -88,7 +95,6 @@ def _create_admin_client(retries: int = 5, delay: float = 5.0) -> KafkaAdminClie
             print(json.dumps({"event": "connect_retry", "attempt": attempt, "error": str(exc)}))
             if attempt < retries:
                 time.sleep(delay)
-
     raise RuntimeError(f"Failed to connect to MSK after {retries} attempts") from last_exc
 
 

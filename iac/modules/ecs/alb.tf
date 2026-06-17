@@ -9,6 +9,12 @@ resource "aws_lb" "main" {
 
   enable_deletion_protection = false
 
+  access_logs {
+    bucket  = aws_s3_bucket.alb_logs[0].bucket
+    prefix  = "alb-logs"
+    enabled = true
+  }
+
   tags = merge(local.common_tags, {
     Name = "${local.name}-alb"
   })
@@ -22,12 +28,12 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type = "fixed-response"
+    type = "redirect"
 
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "No route matched"
-      status_code  = "404"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
     }
   }
 }

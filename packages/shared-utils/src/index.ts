@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto'
+import { randomBytes } from 'node:crypto'
 
 export const generateId = (prefix: string): string => {
   const timestamp = Date.now().toString(36)

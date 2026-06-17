@@ -36,6 +36,17 @@ module "ecs" {
   additional_tags = local.default_tags
 }
 
+module "security_groups" {
+  source = "../../modules/security-groups"
+
+  environment  = var.environment
+  project_name = var.project_name
+  vpc_id       = module.vpc.vpc_id
+  vpc_cidr     = module.vpc.vpc_cidr
+
+  additional_tags = local.default_tags
+}
+
 module "rds" {
   source = "../../modules/rds"
 
@@ -93,6 +104,31 @@ module "redis" {
   daily_snapshot_time      = var.redis_daily_snapshot_time
 
   allowed_security_group_ids = [module.ecs.security_group_ids.services]
+
+  additional_tags = local.default_tags
+}
+
+module "kafka" {
+  source = "../../modules/kafka"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+
+  kafka_version          = var.kafka_version
+  number_of_broker_nodes = var.kafka_number_of_broker_nodes
+  broker_instance_type   = var.kafka_broker_instance_type
+  broker_ebs_volume_size = var.kafka_broker_ebs_volume_size
+
+  encryption_in_transit_client_broker = var.kafka_encryption_in_transit_client_broker
+  encryption_in_transit_inter_broker  = var.kafka_encryption_in_transit_inter_broker
+
+  enable_cloudwatch_logs = var.kafka_enable_cloudwatch_logs
+  enhanced_monitoring    = var.kafka_enhanced_monitoring
+
+  security_group_id = module.security_groups.msk_security_group_id
 
   additional_tags = local.default_tags
 }

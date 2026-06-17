@@ -215,3 +215,52 @@ variable "redis_daily_snapshot_time" {
   type        = string
   default     = "03:00"
 }
+
+# MSK Kafka
+variable "kafka_version" {
+  description = "Apache Kafka version"
+  type        = string
+  default     = "3.9.x"
+}
+
+variable "kafka_number_of_broker_nodes" {
+  description = "Number of Kafka broker nodes. Must be multiple of number of AZs."
+  type        = number
+  default     = 3
+}
+
+variable "kafka_broker_instance_type" {
+  description = "EC2 instance type for Kafka brokers"
+  type        = string
+  default     = "kafka.t3.small"
+}
+
+variable "kafka_broker_ebs_volume_size" {
+  description = "EBS volume size in GB for each broker"
+  type        = number
+  default     = 100
+}
+
+variable "kafka_encryption_in_transit_client_broker" {
+  description = "Encryption setting for data in transit between clients and brokers"
+  type        = string
+  default     = "TLS"
+}
+
+variable "kafka_encryption_in_transit_inter_broker" {
+  description = "Encryption setting for data in transit between brokers"
+  type        = string
+  default     = "TLS"
+}
+
+variable "kafka_enable_cloudwatch_logs" {
+  description = "Enable CloudWatch logging for MSK"
+  type        = bool
+  default     = true
+}
+
+variable "kafka_enhanced_monitoring" {
+  description = "Enhanced monitoring level"
+  type        = string
+  default     = "PER_BROKER"
+}

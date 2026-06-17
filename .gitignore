@@ -34,7 +34,11 @@ pnpm-debug.log*
 node_modules/
 dist/
 build/
+.build/
 coverage/
+
+# Lambda builds
+services/lambdas/*/dist/
 .nyc_output/
 .npm
 *.tsbuildinfo

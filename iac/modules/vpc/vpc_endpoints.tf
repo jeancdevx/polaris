@@ -38,3 +38,20 @@ resource "aws_vpc_endpoint" "interface" {
     Name = "${local.name}-${each.key}-endpoint"
   })
 }
+
+resource "aws_vpc_endpoint" "execute_api" {
+  count = var.create_api_gateway_endpoint ? 1 : 0
+
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.execute-api"
+  vpc_endpoint_type = "Interface"
+
+  subnet_ids         = aws_subnet.private[*].id
+  security_group_ids = [var.api_gateway_endpoint_security_group_id]
+
+  private_dns_enabled = true
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name}-execute-api-endpoint"
+  })
+}

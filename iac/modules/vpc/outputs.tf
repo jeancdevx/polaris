@@ -56,6 +56,16 @@ output "vpc_endpoint_ids" {
   )
 }
 
+output "execute_api_endpoint_id" {
+  description = "ID of the execute-api VPC endpoint"
+  value       = var.create_api_gateway_endpoint ? aws_vpc_endpoint.execute_api[0].id : null
+}
+
+output "execute_api_endpoint_dns" {
+  description = "DNS name of the execute-api VPC endpoint"
+  value       = var.create_api_gateway_endpoint ? aws_vpc_endpoint.execute_api[0].dns_entry[0].dns_name : null
+}
+
 output "vpc_endpoint_security_group_id" {
   description = "ID of the VPC endpoints security group"
   value       = aws_security_group.vpc_endpoints.id

@@ -16,6 +16,10 @@ module "vpc" {
   enable_vpc_endpoints  = var.enable_vpc_endpoints
   vpc_endpoint_services = var.vpc_endpoint_services
 
+  # API Gateway VPC Endpoint
+  create_api_gateway_endpoint            = true
+  api_gateway_endpoint_security_group_id = module.security_groups.api_gateway_vpc_endpoint_security_group_id
+
   additional_tags = local.default_tags
 }
 
@@ -45,6 +49,33 @@ module "ecs" {
   cluster_name = "${var.project_name}-${var.environment}"
 
   services = {}
+
+  additional_tags = local.default_tags
+}
+
+module "api_gateway" {
+  source = "../../modules/api-gateway"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  vpc_id             = module.vpc.vpc_id
+  vpc_cidr           = module.vpc.vpc_cidr
+  private_subnet_ids = module.vpc.private_subnet_ids
+
+  alb_arn      = module.ecs.alb_arn
+  alb_dns_name = module.ecs.alb_dns_name
+
+  cognito_user_pool_arn = ""
+
+  throttling_burst_limit = 100
+  throttling_rate_limit  = 50
+
+  # Security groups from security_groups module
+  vpc_link_security_group_id = module.security_groups.api_gateway_vpc_link_security_group_id
+
+  # VPC Endpoint from vpc module
+  vpc_endpoint_id = module.vpc.execute_api_endpoint_id
 
   additional_tags = local.default_tags
 }

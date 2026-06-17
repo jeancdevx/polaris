@@ -60,3 +60,13 @@ redis_at_rest_encryption_enabled = true
 # Backups
 redis_snapshot_retention_limit   = 7
 redis_daily_snapshot_time        = "03:00"
+
+# MSK Kafka
+kafka_version                    = "3.6.0"
+kafka_number_of_broker_nodes     = 3
+kafka_broker_instance_type       = "kafka.t3.small"
+kafka_broker_ebs_volume_size     = 100
+kafka_encryption_in_transit_client_broker = "TLS"
+kafka_encryption_in_transit_inter_broker  = "TLS"
+kafka_enable_cloudwatch_logs     = true
+kafka_enhanced_monitoring        = "PER_BROKER"

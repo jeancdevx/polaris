@@ -66,7 +66,7 @@ module "api_gateway" {
   alb_arn      = module.ecs.alb_arn
   alb_dns_name = module.ecs.alb_dns_name
 
-  cognito_user_pool_arn = ""
+  cognito_user_pool_arn = module.cognito.user_pool_arn
 
   throttling_burst_limit = 100
   throttling_rate_limit  = 50
@@ -110,6 +110,33 @@ module "security_groups" {
   kafka_ui_security_group_id = module.kafka_ui.security_group_id
 
   lambda_functions = local.lambda_sg_functions
+
+  additional_tags = local.default_tags
+}
+
+module "cognito" {
+  source = "../../modules/cognito"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  # Password policy
+  password_minimum_length    = 8
+  password_require_lowercase = true
+  password_require_uppercase = true
+  password_require_numbers   = true
+  password_require_symbols   = false
+
+  # MFA configuration
+  mfa_configuration = "OFF"
+
+  # Auto-verified attributes
+  auto_verified_attributes = ["email"]
+
+  # Token validity
+  access_token_validity  = 1
+  id_token_validity      = 1
+  refresh_token_validity = 30
 
   additional_tags = local.default_tags
 }

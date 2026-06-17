@@ -38,20 +38,22 @@ variable "cluster_name" {
 variable "services" {
   description = "Map of ECS services to create"
   type = map(object({
-    name              = string
-    container_name    = string
-    container_image   = string
-    container_port    = number
-    cpu               = number
-    memory            = number
-    desired_count     = number
-    max_count         = optional(number, 4)
-    min_count         = optional(number, 1)
-    health_check_path = optional(string, "/health")
-    health_check_type = optional(string, "http")
-    environment_vars  = optional(map(string), {})
-    secrets           = optional(map(string), {})
-    log_group_name    = optional(string, "")
+    name                      = string
+    container_name            = string
+    container_image           = string
+    container_port            = number
+    cpu                       = number
+    memory                    = number
+    desired_count             = number
+    max_count                 = optional(number, 4)
+    min_count                 = optional(number, 1)
+    health_check_path         = optional(string, "/health")
+    health_check_type         = optional(string, "http")
+    health_check_start_period = optional(number, 60)
+    environment_vars          = optional(map(string), {})
+    secrets                   = optional(map(string), {})
+    log_group_name            = optional(string, "")
+    task_role_arn             = optional(string, "")
   }))
   default = {}
 }

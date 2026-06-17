@@ -19,6 +19,17 @@ module "vpc" {
   additional_tags = local.default_tags
 }
 
+module "iam" {
+  source = "../../modules/iam"
+
+  environment        = var.environment
+  project_name       = var.project_name
+  kafka_cluster_arn  = module.kafka.cluster_arn
+  kafka_cluster_name = module.kafka.cluster_name
+
+  additional_tags = local.default_tags
+}
+
 module "ecs" {
   source = "../../modules/ecs"
 
@@ -32,6 +43,25 @@ module "ecs" {
   cluster_name = "${var.project_name}-${var.environment}"
 
   services = {}
+
+  additional_tags = local.default_tags
+}
+
+module "kafka_ui" {
+  source = "../../modules/kafka-ui"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_ids = module.vpc.public_subnet_ids
+
+  ecs_cluster_id          = module.ecs.cluster_id
+  task_execution_role_arn = module.ecs.task_execution_role_arn
+  task_role_arn           = module.iam.kafka_ui_task_role_arn
+
+  kafka_bootstrap_servers = module.kafka.bootstrap_brokers_sasl_iam
+  kafka_cluster_name      = module.kafka.cluster_name
 
   additional_tags = local.default_tags
 }

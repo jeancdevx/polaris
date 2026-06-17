@@ -7,6 +7,7 @@ resource "aws_ecs_task_definition" "services" {
   cpu                      = each.value.cpu
   memory                   = each.value.memory
   execution_role_arn       = var.task_execution_role_arn != "" ? var.task_execution_role_arn : aws_iam_role.task_execution[0].arn
+  task_role_arn            = each.value.task_role_arn != "" ? each.value.task_role_arn : null
 
   container_definitions = jsonencode([
     {
@@ -50,13 +51,13 @@ resource "aws_ecs_task_definition" "services" {
         interval    = 30
         timeout     = 5
         retries     = 3
-        startPeriod = 60
+        startPeriod = each.value.health_check_start_period
         } : {
         command     = ["CMD-SHELL", "echo > /dev/tcp/localhost/${each.value.container_port} || exit 1"]
         interval    = 30
         timeout     = 5
         retries     = 3
-        startPeriod = 60
+        startPeriod = each.value.health_check_start_period
       }
     }
   ])

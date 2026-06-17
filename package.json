@@ -12,6 +12,7 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "build": "pnpm -r build",
+    "build:lambdas": "./scripts/build-lambdas.sh",
     "typecheck": "tsc --noEmit",
     "typecheck:all": "pnpm -r typecheck",
     "prepare": "husky"
@@ -26,6 +27,9 @@
     ],
     "*.{json,md}": [
       "prettier --write"
+    ],
+    "*.tf": [
+      "terraform fmt -recursive"
     ]
   },
   "devDependencies": {

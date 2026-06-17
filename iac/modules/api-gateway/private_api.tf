@@ -12,10 +12,12 @@ resource "aws_api_gateway_rest_api" "private" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "execute-api:Invoke"
-        Resource  = "execute-api:/*"
+        Effect = "Allow"
+        Principal = {
+          AWS = data.aws_caller_identity.current.account_id
+        }
+        Action   = "execute-api:Invoke"
+        Resource = "execute-api:/*"
       },
       {
         Effect    = "Deny"

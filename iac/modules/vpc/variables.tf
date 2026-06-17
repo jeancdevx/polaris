@@ -80,6 +80,18 @@ variable "vpc_endpoint_services" {
   ]
 }
 
+variable "create_api_gateway_endpoint" {
+  description = "Whether to create VPC endpoint for API Gateway (execute-api)"
+  type        = bool
+  default     = false
+}
+
+variable "api_gateway_endpoint_security_group_id" {
+  description = "Security group ID for API Gateway VPC Endpoint (required if create_api_gateway_endpoint is true)"
+  type        = string
+  default     = null
+}
+
 variable "additional_tags" {
   description = "Additional tags to apply to all resources"
   type        = map(string)

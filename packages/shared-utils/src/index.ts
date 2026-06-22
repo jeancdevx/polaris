@@ -24,7 +24,7 @@ export const isValidVehiclePlate = (plate: string): boolean => {
   return plateRegex.test(plate.toUpperCase())
 }
 
-export const isValidRFIDUid = (uid: string): boolean => {
+export const isValidRfidUid = (uid: string): boolean => {
   const rfidRegex = /^([0-9A-F]{2}:){3}[0-9A-F]{2}$/i
   return rfidRegex.test(uid)
 }
@@ -35,8 +35,8 @@ export const sleep = (ms: number): Promise<void> => {
 
 export const retry = async <T>(
   fn: () => Promise<T>,
-  maxAttempts: number = 3,
-  delayMs: number = 1000
+  maxAttempts = 3,
+  delayMs = 1000
 ): Promise<T> => {
   let lastError: unknown
 

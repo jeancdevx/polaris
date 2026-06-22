@@ -1,26 +1,8 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@polaris/shared-types": ["packages/shared-types/src"],
-      "@polaris/shared-utils": ["packages/shared-utils/src"]
-    },
-    "ignoreDeprecations": "6.0"
-  },
-  "include": [
-    "packages/*/src/**/*.ts",
-    "services/backend/*/src/**/*.ts",
-    "services/lambdas/*/src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "**/*.test.ts",
-    "iac",
-    "firmware",
-    "apps"
+  "files": [],
+  "references": [
+    { "path": "./packages/shared-types" },
+    { "path": "./packages/shared-utils" },
+    { "path": "./packages/build-config" }
   ]
 }

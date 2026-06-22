@@ -1,0 +1,167 @@
+x-kafka-image: &kafka-image apache/kafka:4.3.1-rc2
+
+x-kafka-kraft-env: &kafka-kraft-env
+  CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+  KAFKA_PROCESS_ROLES: broker,controller
+  KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+  KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
+  KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  KAFKA_NUM_PARTITIONS: 3
+  KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+  KAFKA_MIN_INSYNC_REPLICAS: 2
+  KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+
+x-kafka-healthcheck: &kafka-healthcheck
+  interval: 10s
+  timeout: 10s
+  retries: 15
+  start_period: 40s
+
+services:
+  postgres:
+    image: postgres:17.10-alpine
+    container_name: polaris-postgres
+    environment:
+      POSTGRES_USER: parking_admin
+      POSTGRES_PASSWORD: parking_dev
+      POSTGRES_DB: parking_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U parking_admin -d parking_db']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8.6.4-alpine
+    container_name: polaris-redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kafka-1:
+    image: *kafka-image
+    container_name: polaris-kafka-1
+    hostname: kafka-1
+    environment:
+      <<: *kafka-kraft-env
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:29092,PLAINTEXT_HOST://localhost:9092
+    ports:
+      - '9092:9092'
+    volumes:
+      - kafka_1_data:/var/lib/kafka/data
+    healthcheck:
+      <<: *kafka-healthcheck
+      test:
+        [
+          'CMD-SHELL',
+          '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server
+          localhost:29092 >/dev/null 2>&1 || exit 1'
+        ]
+
+  kafka-2:
+    image: *kafka-image
+    container_name: polaris-kafka-2
+    hostname: kafka-2
+    environment:
+      <<: *kafka-kraft-env
+      KAFKA_NODE_ID: 2
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:29092,PLAINTEXT_HOST://localhost:9094
+    ports:
+      - '9094:9092'
+    volumes:
+      - kafka_2_data:/var/lib/kafka/data
+    healthcheck:
+      <<: *kafka-healthcheck
+      test:
+        [
+          'CMD-SHELL',
+          '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server
+          localhost:29092 >/dev/null 2>&1 || exit 1'
+        ]
+
+  kafka-3:
+    image: *kafka-image
+    container_name: polaris-kafka-3
+    hostname: kafka-3
+    environment:
+      <<: *kafka-kraft-env
+      KAFKA_NODE_ID: 3
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:29092,PLAINTEXT_HOST://localhost:9096
+    ports:
+      - '9096:9092'
+    volumes:
+      - kafka_3_data:/var/lib/kafka/data
+    healthcheck:
+      <<: *kafka-healthcheck
+      test:
+        [
+          'CMD-SHELL',
+          '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server
+          localhost:29092 >/dev/null 2>&1 || exit 1'
+        ]
+
+  kafka-init:
+    image: *kafka-image
+    container_name: polaris-kafka-init
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        BOOTSTRAP="kafka-1:29092,kafka-2:29092,kafka-3:29092"
+        for topic in vehicle.entry vehicle.exit sensor.occupancy sensor.proximity reservation.created reservation.cancelled rfid.validation audit.events; do
+          /opt/kafka/bin/kafka-topics.sh \
+            --bootstrap-server "$$BOOTSTRAP" \
+            --create --if-not-exists \
+            --topic "$$topic" \
+            --partitions 3 \
+            --replication-factor 3 \
+            --config min.insync.replicas=2
+        done
+        echo "Topics creados:"
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server "$$BOOTSTRAP" --describe
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: polaris-kafka-ui
+    ports:
+      - '8080:8080'
+    environment:
+      KAFKA_CLUSTERS_0_NAME: polaris-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:29092,kafka-2:29092,kafka-3:29092
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  kafka_1_data:
+  kafka_2_data:
+  kafka_3_data:

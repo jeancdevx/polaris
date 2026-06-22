@@ -1,31 +1,30 @@
 {
   "name": "polaris",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.12.4",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "lint": "eslint 'services/backend/*/src/**/*.ts' 'services/lambdas/*/src/**/*.ts' 'packages/*/src/**/*.ts' --no-error-on-unmatched-pattern",
-    "lint:fix": "eslint 'services/backend/*/src/**/*.ts' 'services/lambdas/*/src/**/*.ts' 'packages/*/src/**/*.ts' --fix --no-error-on-unmatched-pattern",
-    "format": "prettier --write 'packages/*/src/**/*.ts' '*.{js,mjs,json,md}' && (prettier --write 'services/backend/*/src/**/*.ts' 2>/dev/null || true) && (prettier --write 'services/lambdas/*/src/**/*.ts' 2>/dev/null || true) && (prettier --write 'apps/*/src/**/*.{ts,tsx}' 2>/dev/null || true)",
-    "format:check": "prettier --check 'packages/*/src/**/*.ts' '*.{js,mjs,json,md}'",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
     "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui",
-    "build": "pnpm -r build",
-    "build:lambdas": "./scripts/build-lambdas.sh",
-    "typecheck": "tsc --noEmit",
-    "typecheck:all": "pnpm -r typecheck",
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.ts": [
-      "eslint --fix",
+    "*.{ts,tsx,js,mjs}": [
+      "oxlint --fix",
       "prettier --write"
     ],
-    "*.{tsx,js,mjs}": [
-      "prettier --write"
-    ],
-    "*.{json,md}": [
+    "*.{json,md,yml,yaml}": [
       "prettier --write"
     ],
     "*.tf": [
@@ -35,20 +34,16 @@
   "devDependencies": {
     "@commitlint/cli": "21.0.2",
     "@commitlint/config-conventional": "21.0.2",
-    "@eslint/js": "10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
-    "@types/aws-lambda": "8.10.162",
-    "@types/node": "25.9.2",
-    "@vitest/coverage-v8": "4.1.8",
-    "@vitest/ui": "4.1.8",
-    "aws-lambda": "1.0.7",
-    "eslint": "10.4.1",
-    "globals": "17.6.0",
+    "@types/node": "26.0.0",
+    "@vitest/coverage-v8": "4.1.9",
     "husky": "9.1.7",
     "lint-staged": "17.0.7",
-    "prettier": "3.8.3",
+    "oxlint": "1.70.0",
+    "prettier": "3.8.4",
+    "rolldown": "1.1.2",
+    "turbo": "2.9.18",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.60.1",
-    "vitest": "4.1.8"
+    "vitest": "4.1.9"
   }
 }

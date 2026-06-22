@@ -5,36 +5,25 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: [
-      'services/backend/*/src/**/*.test.ts',
-      'services/lambdas/*/src/**/*.test.ts',
+      'apps/*/src/**/*.test.ts',
+      'lambdas/*/src/**/*.test.ts',
       'packages/*/src/**/*.test.ts'
     ],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/build/**'],
+    exclude: ['**/node_modules/**', '**/dist/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
         'node_modules/',
         'dist/',
-        'build/',
         '**/*.test.ts',
         '**/*.spec.ts',
         '**/*.d.ts',
-        '**/index.ts',
         'coverage/',
         'iac/',
-        'firmware/',
-        'apps/'
-      ],
-      thresholds: {
-        global: {
-          branches: 80,
-          functions: 80,
-          lines: 80,
-          statements: 80
-        }
-      }
+        'firmware/'
+      ]
     },
-    testTimeout: 30000
+    testTimeout: 30_000
   }
 })

@@ -3,10 +3,11 @@ export type DatabaseEnv = Readonly<{
   logging: boolean
 }>
 
-const defaultDatabaseUrl =
-  'postgresql://parking_admin:parking_dev@localhost:5432/parking_db'
-
 export const readDatabaseEnv = (): DatabaseEnv => ({
-  url: process.env.DATABASE_URL ?? defaultDatabaseUrl,
+  url:
+    process.env.DATABASE_URL ??
+    (() => {
+      throw new Error('DATABASE_URL is not set')
+    })(),
   logging: process.env.DB_LOGGING === 'true'
 })

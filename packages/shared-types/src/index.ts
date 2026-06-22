@@ -1,3 +1,16 @@
+export const KAFKA_TOPICS = {
+  VEHICLE_ENTRY: 'vehicle.entry',
+  VEHICLE_EXIT: 'vehicle.exit',
+  SENSOR_OCCUPANCY: 'sensor.occupancy',
+  SENSOR_PROXIMITY: 'sensor.proximity',
+  RESERVATION_CREATED: 'reservation.created',
+  RESERVATION_CANCELLED: 'reservation.cancelled',
+  RFID_VALIDATION: 'rfid.validation',
+  AUDIT_EVENTS: 'audit.events'
+} as const
+
+export type KafkaTopic = (typeof KAFKA_TOPICS)[keyof typeof KAFKA_TOPICS]
+
 export type ParkingSpotStatus = 'free' | 'occupied' | 'reserved'
 
 export type UserType = 'registered' | 'visitor'
@@ -65,7 +78,7 @@ export interface AuditLog {
   metadata?: Record<string, unknown>
 }
 
-export interface RFIDValidation {
+export interface RfidValidation {
   rfidUid: string
   userId: string
   userType: UserType

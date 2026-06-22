@@ -1,2 +1,0 @@
-kafka-python-ng
-aws-msk-iam-sasl-signer-python

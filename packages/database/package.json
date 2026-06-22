@@ -1,0 +1,35 @@
+{
+  "name": "@polaris/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src",
+    "migration:run": "tsx src/cli/migrate-run.ts",
+    "migration:revert": "tsx src/cli/migrate-revert.ts",
+    "migration:show": "tsx src/cli/migrate-show.ts"
+  },
+  "dependencies": {
+    "@polaris/shared-types": "workspace:*",
+    "dotenv": "17.4.2",
+    "pg": "8.22.0",
+    "typeorm": "1.0.0"
+  },
+  "devDependencies": {
+    "@polaris/tsconfig": "workspace:*",
+    "@types/pg": "8.20.0",
+    "tsx": "4.22.4",
+    "typescript": "6.0.3"
+  }
+}

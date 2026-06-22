@@ -17,3 +17,6 @@ iac/**/.terraform
 .pio
 firmware/esp32/.vscode
 .DS_Store
+.agents/
+docs/
+pnpm-lock.yaml

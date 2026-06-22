@@ -24,6 +24,7 @@ docs/           Arquitectura y roadmap
 ## Documentación
 
 - [Arquitectura](./docs/arquitectura.md)
+- [Flujos del sistema](./docs/flujos.md)
 - [Roadmap](./docs/roadmap.md)
 
 ## Inicio rápido

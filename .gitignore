@@ -6,29 +6,20 @@ Thumbs.db
 *~
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
 
 # Logs
 *.log
 logs/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 
 # Environment & Secrets
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 *.pem
 *.key
 *.crt
 !.env.example
-!*.pem.example
-!*.key.example
 
 # Node.js / TypeScript
 node_modules/
@@ -36,21 +27,11 @@ dist/
 build/
 .build/
 coverage/
-
-# Lambda builds
-services/lambdas/*/dist/
-.nyc_output/
-.npm
+.turbo/
 *.tsbuildinfo
-*.js.map
-*.d.ts
-!*.config.js
-!*.config.mjs
 
 # Testing
 junit.xml
-report.xml
-results.xml
 *.lcov
 
 # Terraform
@@ -60,67 +41,29 @@ results.xml
 *.tfvars
 !*.tfvars.example
 *.auto.tfvars
-crash.log
-crash.*.log
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-.terraformrc
-terraform.rc
-
-# Backend config with credentials
 **/backend.hcl
 !**/backend.hcl.example
 
-# Terraform lock file (commitear para versionar providers)
-# .terraform.lock.hcl
-
-# Firmware ESP32 (PlatformIO)
+# Firmware (PlatformIO)
 .pio/
 .pioenvs/
 .piolibdeps/
+firmware/esp32/.vscode/
 *.elf
 *.bin
 *.hex
-*.map
-*.o
-*.a
-*.lib
-firmware/esp32/.vscode/
 
-# Web Admin (Next.js)
+# Frontends (fases posteriores)
 apps/web-admin/.next/
 apps/web-admin/out/
-apps/web-admin/.turbo/
-
-# Mobile App (React Native / Expo)
-apps/mobile-app/.expo/
-apps/mobile-app/.expo-shared/
-apps/mobile-app/android/app/build/
-apps/mobile-app/ios/build/
-apps/mobile-app/ios/Pods/
+apps/mobile/.expo/
 *.apk
 *.aab
-*.ipa
-*.jks
-*.keystore
 
-# Docker
-docker-compose.override.yml
-.docker/
-
-# AWS
-.aws-sam/
-.serverless/
-cdk.out/
+# AWS artifacts
 *.zip
-*.tgz
+.aws-sam/
 
 # Misc
 .cache/
-.temp/
 tmp/
-*.bak
-*.backup
-*.orig

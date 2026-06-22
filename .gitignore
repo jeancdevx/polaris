@@ -29,6 +29,7 @@ build/
 coverage/
 .turbo/
 *.tsbuildinfo
+.pnpm-store/
 
 # Testing
 junit.xml

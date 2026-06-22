@@ -17,6 +17,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -37,6 +38,7 @@
     "@ianvs/prettier-plugin-sort-imports": "4.7.1",
     "@types/node": "26.0.0",
     "@vitest/coverage-v8": "4.1.9",
+    "@vitest/ui": "4.1.9",
     "husky": "9.1.7",
     "lint-staged": "17.0.7",
     "oxlint": "1.70.0",

@@ -3,6 +3,7 @@
   "references": [
     { "path": "./packages/shared-types" },
     { "path": "./packages/shared-utils" },
-    { "path": "./packages/build-config" }
+    { "path": "./packages/build-config" },
+    { "path": "./packages/domain" }
   ]
 }

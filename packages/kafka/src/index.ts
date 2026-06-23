@@ -1,6 +1,6 @@
 export { readKafkaEnv, type KafkaEnv } from './config/kafka-env.js'
 export { createKafka, createKafkaConfig } from './config/create-kafka.js'
-export { loadEnv } from './config/load-env.js'
+export { loadLocalEnv } from '@polaris/shared-utils'
 
 export {
   kafkaMessageError,

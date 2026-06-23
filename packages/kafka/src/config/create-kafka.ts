@@ -1,10 +1,11 @@
 import { Kafka, type KafkaConfig } from 'kafkajs'
 
+import { loadLocalEnv } from '@polaris/shared-utils'
+
 import { readKafkaEnv } from './kafka-env.js'
-import { loadEnv } from './load-env.js'
 
 export const createKafkaConfig = (): KafkaConfig => {
-  loadEnv()
+  loadLocalEnv(import.meta.url)
   const env = readKafkaEnv()
 
   return {

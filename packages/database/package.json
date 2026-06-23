@@ -25,7 +25,7 @@
   "dependencies": {
     "@polaris/domain": "workspace:*",
     "@polaris/shared-types": "workspace:*",
-    "dotenv": "17.4.2",
+    "@polaris/shared-utils": "workspace:*",
     "pg": "8.22.0",
     "typeorm": "1.0.0"
   },

@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "pnpm --filter @polaris/integration-tests test",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "db:migrate": "pnpm --filter @polaris/database migration:run",

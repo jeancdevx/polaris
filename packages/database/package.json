@@ -18,9 +18,12 @@
     "lint": "oxlint src",
     "migration:run": "tsx src/cli/migrate-run.ts",
     "migration:revert": "tsx src/cli/migrate-revert.ts",
-    "migration:show": "tsx src/cli/migrate-show.ts"
+    "migration:show": "tsx src/cli/migrate-show.ts",
+    "seed": "tsx src/cli/seed.ts",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@polaris/domain": "workspace:*",
     "@polaris/shared-types": "workspace:*",
     "dotenv": "17.4.2",
     "pg": "8.22.0",
@@ -29,7 +32,9 @@
   "devDependencies": {
     "@polaris/tsconfig": "workspace:*",
     "@types/pg": "8.20.0",
+    "@vitest/coverage-v8": "4.1.9",
     "tsx": "4.22.4",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   }
 }

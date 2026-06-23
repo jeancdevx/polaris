@@ -51,7 +51,7 @@ const runSmokeTest = async (): Promise<void> => {
         reject(new Error('Timed out waiting for Kafka message'))
       }, SMOKE_TIMEOUT_MS)
 
-      void consumer
+      consumer
         .run({
           eachMessage: async payload => {
             try {

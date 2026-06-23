@@ -23,7 +23,6 @@
     "@polaris/domain": "workspace:*",
     "@polaris/shared-types": "workspace:*",
     "@polaris/shared-utils": "workspace:*",
-    "dotenv": "17.4.2",
     "kafkajs": "2.2.4"
   },
   "devDependencies": {

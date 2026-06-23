@@ -42,7 +42,7 @@
 | 1.2 | Crear `packages/database` — TypeORM + migraciones | Migraciones corren en Postgres local ✅ |
 | 1.3 | Seed: 10 plazas, 1 admin, 1 usuario test | Script `pnpm db:seed` ✅ |
 | 1.4 | Crear `packages/kafka` — schemas de eventos, producer/consumer base | Publica/consume en Kafka local ✅ |
-| 1.5 | Tests integración con testcontainers (Postgres, Redis, Kafka) | CI local verde |
+| 1.5 | Tests integración con testcontainers (Postgres, Redis, Kafka) | CI local verde ✅ |
 
 **IaC:** ninguno.
 

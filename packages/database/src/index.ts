@@ -5,6 +5,10 @@ export {
   dataSource
 } from './config/create-data-source.js'
 
+export { runMigrations } from './migrations/run-migrations.js'
+
+export { runSeed, type SeedResult } from './seed/run-seed.js'
+
 export {
   auditLogSchema,
   entitySchemas,

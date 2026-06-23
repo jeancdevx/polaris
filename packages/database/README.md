@@ -43,6 +43,25 @@ pnpm db:migrate:revert
 pnpm --filter @polaris/database migration:show
 ```
 
+## Seed (datos de desarrollo)
+
+Requiere migraciones aplicadas y Postgres local en marcha.
+
+```bash
+pnpm db:seed
+```
+
+Carga idempotente:
+
+| Recurso      | Cantidad | Detalle                                             |
+| ------------ | -------- | --------------------------------------------------- |
+| Plazas       | 10       | `spot-01` … `spot-10`, estado `free`                |
+| Admin        | 1        | `usr-admin01`, `admin@polaris.local`                |
+| Usuario test | 1        | `usr-12345`, `juan@example.com`, RFID `A3:BF:22:01` |
+| RFID tags    | 2        | Uno por cada usuario seed                           |
+
+Los datos de usuario se validan con `@polaris/domain` antes de persistir.
+
 ## Build
 
 ```bash

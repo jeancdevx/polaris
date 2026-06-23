@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { config } from 'dotenv'
 
-const findRepoRoot = (startDir: string): string => {
+export const findMonorepoRoot = (startDir: string): string => {
   let current = startDir
 
   while (current !== dirname(current)) {
@@ -18,10 +18,9 @@ const findRepoRoot = (startDir: string): string => {
   return startDir
 }
 
-const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '../..')
-
-export const loadEnv = (): void => {
-  const repoRoot = findRepoRoot(packageRoot)
+export const loadLocalEnv = (callerModuleUrl: string): void => {
+  const packageRoot = join(dirname(fileURLToPath(callerModuleUrl)), '../..')
+  const repoRoot = findMonorepoRoot(packageRoot)
   const envFiles = [
     join(repoRoot, 'infra/local/.env'),
     join(repoRoot, 'infra/local/.env.local'),

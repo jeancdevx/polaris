@@ -16,12 +16,16 @@
     "build": "rolldown -c rolldown.config.ts && tsc --emitDeclarationOnly",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dotenv": "17.4.2"
   },
   "devDependencies": {
     "@polaris/build-config": "workspace:*",
     "@polaris/tsconfig": "workspace:*",
     "rolldown": "1.1.2",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   }
 }

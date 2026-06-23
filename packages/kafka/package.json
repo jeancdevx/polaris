@@ -1,5 +1,5 @@
 {
-  "name": "@polaris/database",
+  "name": "@polaris/kafka",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,26 +13,22 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rolldown -c rolldown.config.ts && tsc --emitDeclarationOnly",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src",
-    "migration:run": "tsx src/cli/migrate-run.ts",
-    "migration:revert": "tsx src/cli/migrate-revert.ts",
-    "migration:show": "tsx src/cli/migrate-show.ts",
-    "seed": "tsx src/cli/seed.ts",
+    "smoke": "tsx src/cli/smoke-test.ts",
     "test": "vitest run"
   },
   "dependencies": {
     "@polaris/domain": "workspace:*",
     "@polaris/shared-types": "workspace:*",
     "@polaris/shared-utils": "workspace:*",
-    "pg": "8.22.0",
-    "typeorm": "1.0.0"
+    "kafkajs": "2.2.4"
   },
   "devDependencies": {
+    "@polaris/build-config": "workspace:*",
     "@polaris/tsconfig": "workspace:*",
-    "@types/pg": "8.20.0",
-    "@vitest/coverage-v8": "4.1.9",
+    "rolldown": "1.1.2",
     "tsx": "4.22.4",
     "typescript": "6.0.3",
     "vitest": "4.1.9"

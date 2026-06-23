@@ -1,5 +1,7 @@
 import { randomBytes } from 'node:crypto'
 
+export { findMonorepoRoot, loadLocalEnv } from './load-local-env.js'
+
 export const generateId = (prefix: string): string => {
   const timestamp = Date.now().toString(36)
   const random = randomBytes(4).toString('hex')

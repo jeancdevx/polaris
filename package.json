@@ -22,6 +22,7 @@
     "db:migrate:revert": "pnpm --filter @polaris/database migration:revert",
     "db:migrate:show": "pnpm --filter @polaris/database migration:show",
     "db:seed": "pnpm --filter @polaris/database seed",
+    "kafka:smoke": "pnpm --filter @polaris/kafka smoke",
     "prepare": "husky"
   },
   "lint-staged": {

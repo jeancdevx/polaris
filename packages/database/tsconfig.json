@@ -6,5 +6,9 @@
     "composite": true
   },
   "include": ["src/**/*.ts"],
-  "references": [{ "path": "../domain" }, { "path": "../shared-types" }]
+  "references": [
+    { "path": "../domain" },
+    { "path": "../shared-types" },
+    { "path": "../shared-utils" }
+  ]
 }

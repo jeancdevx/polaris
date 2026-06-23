@@ -1,0 +1,15 @@
+{
+  "extends": "@polaris/tsconfig/node.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../database" },
+    { "path": "../domain" },
+    { "path": "../kafka" },
+    { "path": "../shared-types" }
+  ]
+}

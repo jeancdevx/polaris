@@ -18,6 +18,7 @@ terraform plan
 
 ## Módulos desplegados
 
-| Fase | Módulo | Estado |
-| ---- | ------ | ------ |
-| 2.1  | `vpc`  | ✅     |
+| Fase | Módulo            | Estado |
+| ---- | ----------------- | ------ |
+| 2.1  | `vpc`             | ✅     |
+| 2.2  | `security-groups` | ✅     |

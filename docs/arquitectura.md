@@ -182,8 +182,8 @@ Referencia: [Amazon MSK](https://docs.aws.amazon.com/msk/latest/developerguide/w
 
 | Entorno | Configuración |
 |---------|---------------|
-| **dev** | 3 brokers `kafka.t3.small`, IAM auth, 7 días retención |
-| **prod** | 3 brokers `kafka.m5.large`, RF=3, encryption in-transit |
+| **dev** | 3 brokers `kafka.m5.large`, IAM auth, 7 días retención |
+| **prod** | 3 brokers `kafka.m5.xlarge`, RF=3, encryption in-transit |
 
 ### Topics
 

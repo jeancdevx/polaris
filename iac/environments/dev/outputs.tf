@@ -18,6 +18,26 @@ output "security_group_ids" {
   value       = module.security_groups.security_group_ids
 }
 
+output "kafka_topic_creator_role_arn" {
+  description = "IAM role ARN for kafka-topic-creator Lambda"
+  value       = module.iam.kafka_topic_creator_role_arn
+}
+
+output "msk_client_role_arn" {
+  description = "IAM role ARN for MSK IAM SASL clients"
+  value       = module.iam.msk_client_role_arn
+}
+
+output "rds_enhanced_monitoring_role_arn" {
+  description = "IAM role ARN for Aurora enhanced monitoring"
+  value       = module.iam.rds_enhanced_monitoring_role_arn
+}
+
+output "secrets_rotation_role_arn" {
+  description = "IAM role ARN for Secrets Manager RDS rotation"
+  value       = module.iam.secrets_rotation_role_arn
+}
+
 output "availability_zones" {
   description = "Availability zones used by the VPC"
   value       = module.vpc.availability_zones

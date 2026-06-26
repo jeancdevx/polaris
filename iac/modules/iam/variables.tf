@@ -1,0 +1,45 @@
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
+  type        = string
+
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "environment must be dev, staging, or prod."
+  }
+}
+
+variable "kms_key_arns" {
+  description = "KMS key ARNs allowed for Secrets Manager decryption. Uses account keys when empty."
+  type        = list(string)
+  default     = []
+}
+
+variable "msk_cluster_arn" {
+  description = "MSK cluster ARN. Uses project naming wildcard when empty."
+  type        = string
+  default     = ""
+}
+
+variable "msk_cluster_name" {
+  description = "MSK cluster name for IAM resource ARNs. Defaults to project-environment-kafka."
+  type        = string
+  default     = null
+}
+
+variable "project_name" {
+  description = "Project name used for resource naming and tags"
+  type        = string
+  default     = "polaris"
+}
+
+variable "secrets_manager_secret_arns" {
+  description = "Secrets Manager secret ARNs for read access. Uses RDS naming patterns when empty."
+  type        = list(string)
+  default     = []
+}
+
+variable "tags" {
+  description = "Additional tags applied to IAM roles"
+  type        = map(string)
+  default     = {}
+}

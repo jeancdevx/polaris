@@ -1,3 +1,13 @@
+output "kafka_bootstrap_brokers_sasl_iam" {
+  description = "MSK bootstrap brokers for IAM SASL clients"
+  value       = module.kafka.bootstrap_brokers_sasl_iam
+}
+
+output "kafka_cluster_arn" {
+  description = "MSK cluster ARN"
+  value       = module.kafka.cluster_arn
+}
+
 output "msk_security_group_id" {
   description = "Amazon MSK security group ID"
   value       = module.security_groups.msk_security_group_id

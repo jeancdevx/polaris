@@ -5,11 +5,11 @@ ElastiCache Redis con topología distinta por entorno, según
 
 ## Modos de capacidad
 
-| Entorno     | Modo          | Configuración                                                      |
-| ----------- | ------------- | ------------------------------------------------------------------ |
-| **dev**     | `serverless`  | ElastiCache Serverless, hasta 10 GB / 5000 ECPU                    |
-| **staging** | `provisioned` | Cluster mode, 2 shards, 1 réplica por shard                        |
-| **prod**    | `provisioned` | Cluster mode, **3 shards**, 1 réplica por shard, `cache.r7g.large` |
+| Entorno     | Modo          | Configuración                                                       |
+| ----------- | ------------- | ------------------------------------------------------------------- |
+| **dev**     | `serverless`  | ElastiCache Serverless, hasta 10 GB / 5000 ECPU                     |
+| **staging** | `provisioned` | Cluster mode, 2 shards, 1 réplica por shard                         |
+| **prod**    | `provisioned` | Cluster mode, **3 shards**, 1 réplica por shard, `cache.r7g.xlarge` |
 
 Uso previsto: ocupación en tiempo real, caché, locks distribuidos (TTL 5 min en
 aplicación).

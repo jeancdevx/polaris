@@ -1,0 +1,39 @@
+aws_region  = "us-east-2"
+aws_profile = "your-sso-profile"
+
+project_name = "polaris"
+environment  = "prod"
+
+tags = {}
+
+vpc_cidr = "10.0.0.0/16"
+
+azs = ["us-east-2a", "us-east-2b", "us-east-2c"]
+
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+private_subnet_cidrs = ["10.0.10.0/24", "10.0.11.0/24", "10.0.12.0/24"]
+data_subnet_cidrs    = ["10.0.20.0/24", "10.0.21.0/24", "10.0.22.0/24"]
+
+enable_nat_gateway   = true
+single_nat_gateway   = false
+enable_vpc_endpoints = true
+
+rds_capacity_mode           = "provisioned"
+rds_serverless_min_capacity = 0.5
+rds_serverless_max_capacity = 2
+rds_engine_version          = "18.3"
+
+rds_reader_count            = 2
+rds_writer_instance_class   = "db.r6g.xlarge"
+rds_backup_retention_period = 30
+rds_deletion_protection     = true
+
+redis_capacity_mode                  = "provisioned"
+redis_engine_version                 = "7.1"
+redis_num_shards                     = 3
+redis_replicas_per_shard             = 1
+redis_node_type                      = "cache.r7g.xlarge"
+redis_transit_encryption_enabled     = true
+redis_major_engine_version           = "7"
+redis_serverless_max_data_storage_gb = 10
+redis_serverless_max_ecpu_per_second = 5000

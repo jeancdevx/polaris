@@ -18,6 +18,17 @@ output "security_group_ids" {
   value       = module.security_groups.security_group_ids
 }
 
+output "rds_cluster_endpoint" {
+  description = "Aurora PostgreSQL writer endpoint"
+  value       = module.rds.cluster_endpoint
+}
+
+output "rds_master_user_secret_arn" {
+  description = "Secrets Manager ARN for Aurora master credentials"
+  value       = module.rds.master_user_secret_arn
+  sensitive   = true
+}
+
 output "kafka_topic_creator_role_arn" {
   description = "IAM role ARN for kafka-topic-creator Lambda"
   value       = module.iam.kafka_topic_creator_role_arn

@@ -20,7 +20,7 @@ locals {
 
   node_type = coalesce(
     var.node_type,
-    var.environment == "prod" ? "cache.r7g.large" : "cache.t4g.medium"
+    var.environment == "prod" ? "cache.r7g.xlarge" : "cache.t4g.medium"
   )
 
   serverless_max_data_storage_gb = coalesce(

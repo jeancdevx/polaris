@@ -1,0 +1,9 @@
+aws_region  = "us-east-2"
+aws_profile = "your-sso-profile"
+
+project_name = "polaris"
+environment  = "dev"
+
+tags = {}
+
+single_nat_gateway = true

@@ -26,9 +26,15 @@ variable "data_subnet_cidrs" {
   default     = ["10.0.20.0/24", "10.0.21.0/24", "10.0.22.0/24"]
 
   validation {
-    condition     = length(var.data_subnet_cidrs) == var.az_count
-    error_message = "data_subnet_cidrs length must match az_count."
+    condition     = length(var.data_subnet_cidrs) == (length(var.availability_zones) > 0 ? length(var.availability_zones) : var.az_count)
+    error_message = "data_subnet_cidrs length must match the number of availability zones."
   }
+}
+
+variable "enable_nat_gateway" {
+  description = "Create NAT gateway resources and private subnet default routes"
+  type        = bool
+  default     = true
 }
 
 variable "enable_dns_hostnames" {
@@ -65,8 +71,8 @@ variable "private_subnet_cidrs" {
   default     = ["10.0.10.0/24", "10.0.11.0/24", "10.0.12.0/24"]
 
   validation {
-    condition     = length(var.private_subnet_cidrs) == var.az_count
-    error_message = "private_subnet_cidrs length must match az_count."
+    condition     = length(var.private_subnet_cidrs) == (length(var.availability_zones) > 0 ? length(var.availability_zones) : var.az_count)
+    error_message = "private_subnet_cidrs length must match the number of availability zones."
   }
 }
 
@@ -82,8 +88,8 @@ variable "public_subnet_cidrs" {
   default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
 
   validation {
-    condition     = length(var.public_subnet_cidrs) == var.az_count
-    error_message = "public_subnet_cidrs length must match az_count."
+    condition     = length(var.public_subnet_cidrs) == (length(var.availability_zones) > 0 ? length(var.availability_zones) : var.az_count)
+    error_message = "public_subnet_cidrs length must match the number of availability zones."
   }
 }
 

@@ -6,4 +6,24 @@ environment  = "dev"
 
 tags = {}
 
-single_nat_gateway = true
+vpc_cidr = "10.0.0.0/16"
+
+azs = ["us-east-2a", "us-east-2b", "us-east-2c"]
+
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+private_subnet_cidrs = ["10.0.10.0/24", "10.0.11.0/24", "10.0.12.0/24"]
+data_subnet_cidrs    = ["10.0.20.0/24", "10.0.21.0/24", "10.0.22.0/24"]
+
+enable_nat_gateway   = true
+single_nat_gateway   = true
+enable_vpc_endpoints = true
+
+rds_capacity_mode           = "serverless"
+rds_serverless_min_capacity = 0.5
+rds_serverless_max_capacity = 2
+rds_engine_version          = "18.3"
+
+rds_reader_count            = null
+rds_writer_instance_class   = null
+rds_backup_retention_period = null
+rds_deletion_protection     = null

@@ -117,6 +117,65 @@ variable "rds_writer_instance_class" {
   default     = null
 }
 
+variable "redis_capacity_mode" {
+  description = "Redis capacity mode: serverless or provisioned. Null auto-selects from environment."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.redis_capacity_mode == null ? true : contains(["serverless", "provisioned"], var.redis_capacity_mode)
+    error_message = "redis_capacity_mode must be serverless or provisioned."
+  }
+}
+
+variable "redis_engine_version" {
+  description = "Redis engine version for provisioned replication groups"
+  type        = string
+  default     = "7.1"
+}
+
+variable "redis_major_engine_version" {
+  description = "Redis major engine version for serverless caches"
+  type        = string
+  default     = "7"
+}
+
+variable "redis_node_type" {
+  description = "ElastiCache node type in provisioned mode. Null uses module default per environment."
+  type        = string
+  default     = null
+}
+
+variable "redis_num_shards" {
+  description = "Number of Redis shards in provisioned cluster mode. Null uses module default per environment."
+  type        = number
+  default     = null
+}
+
+variable "redis_replicas_per_shard" {
+  description = "Read replicas per Redis shard in provisioned mode. Null uses module default."
+  type        = number
+  default     = null
+}
+
+variable "redis_serverless_max_data_storage_gb" {
+  description = "Maximum data storage in GB for serverless Redis"
+  type        = number
+  default     = 10
+}
+
+variable "redis_serverless_max_ecpu_per_second" {
+  description = "Maximum ECPUs per second for serverless Redis"
+  type        = number
+  default     = 5000
+}
+
+variable "redis_transit_encryption_enabled" {
+  description = "Enable transit encryption for provisioned Redis. Null uses module default per environment."
+  type        = bool
+  default     = null
+}
+
 variable "tags" {
   description = "Additional tags applied to all resources"
   type        = map(string)

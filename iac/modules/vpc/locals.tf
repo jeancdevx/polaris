@@ -38,9 +38,11 @@ locals {
     }
   }
 
-  nat_gateway_keys = var.single_nat_gateway ? {
-    for az in [local.availability_zones[0]] : az => local.public_subnets[az]
-  } : local.public_subnets
+  nat_gateway_keys = var.enable_nat_gateway ? (
+    var.single_nat_gateway ? {
+      for az in [local.availability_zones[0]] : az => local.public_subnets[az]
+    } : local.public_subnets
+  ) : {}
 
   private_route_table_keys = var.single_nat_gateway ? toset(["shared"]) : toset(local.availability_zones)
 

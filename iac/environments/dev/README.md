@@ -20,18 +20,21 @@ terraform plan -var-file=dev.tfvars
 Los módulos derivan defaults de `environment`, pero conviene declarar en tfvars
 los knobs que cambian entre dev/staging/prod:
 
-| Variable                      | dev            | staging         | prod           |
-| ----------------------------- | -------------- | --------------- | -------------- |
-| `vpc_cidr`                    | `10.0.0.0/16`  | igual           | igual          |
-| `azs`                         | 3 AZ us-east-2 | igual           | igual          |
-| `enable_nat_gateway`          | `true`         | `true`          | `true`         |
-| `single_nat_gateway`          | `true`         | `true`          | `false`        |
-| `enable_vpc_endpoints`        | `true`         | `true`          | `true`         |
-| `rds_capacity_mode`           | `serverless`   | `provisioned`   | `provisioned`  |
-| `rds_serverless_min_capacity` | `0.5`          | —               | —              |
-| `rds_serverless_max_capacity` | `2`            | —               | —              |
-| `rds_reader_count`            | `null` (0)     | `1`             | `2`            |
-| `rds_writer_instance_class`   | `null`         | `db.t4g.medium` | `db.r6g.large` |
+| Variable                      | dev            | staging            | prod               |
+| ----------------------------- | -------------- | ------------------ | ------------------ |
+| `vpc_cidr`                    | `10.0.0.0/16`  | igual              | igual              |
+| `azs`                         | 3 AZ us-east-2 | igual              | igual              |
+| `enable_nat_gateway`          | `true`         | `true`             | `true`             |
+| `single_nat_gateway`          | `true`         | `true`             | `false`            |
+| `enable_vpc_endpoints`        | `true`         | `true`             | `true`             |
+| `rds_capacity_mode`           | `serverless`   | `provisioned`      | `provisioned`      |
+| `rds_serverless_min_capacity` | `0.5`          | —                  | —                  |
+| `rds_serverless_max_capacity` | `2`            | —                  | —                  |
+| `rds_reader_count`            | `null` (0)     | `1`                | `2`                |
+| `rds_writer_instance_class`   | `null`         | `db.t4g.medium`    | `db.r6g.xlarge`    |
+| `redis_capacity_mode`         | `serverless`   | `provisioned`      | `provisioned`      |
+| `redis_num_shards`            | —              | `2`                | `3`                |
+| `redis_node_type`             | —              | `cache.t4g.medium` | `cache.r7g.xlarge` |
 
 Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 `prod.tfvars.example`.
@@ -44,3 +47,4 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 | 2.2  | `security-groups` | ✅     |
 | 2.3  | `iam`             | ✅     |
 | 2.4  | `rds`             | ✅     |
+| 2.5  | `redis`           | ✅     |

@@ -9,7 +9,7 @@ Módulos planificados:
 2. `security-groups` ✅
 3. **`iam`** ✅
 4. `rds` ✅
-5. `redis`
+5. `redis` ✅
 6. `kafka` (Amazon MSK)
 7. `cognito`
 8. `dynamodb`

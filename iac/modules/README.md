@@ -8,7 +8,7 @@ Módulos planificados:
 1. `vpc` ✅
 2. `security-groups` ✅
 3. **`iam`** ✅
-4. `rds`
+4. `rds` ✅
 5. `redis`
 6. `kafka` (Amazon MSK)
 7. `cognito`

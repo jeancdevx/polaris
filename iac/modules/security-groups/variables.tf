@@ -1,0 +1,66 @@
+variable "alb_ingress_cidr_blocks" {
+  description = "CIDR blocks allowed to reach the application load balancer"
+  type        = list(string)
+  default     = null
+}
+
+variable "ecs_container_port" {
+  description = "Container port exposed by ECS services behind the load balancer"
+  type        = number
+  default     = 3000
+}
+
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
+  type        = string
+
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "environment must be dev, staging, or prod."
+  }
+}
+
+variable "msk_client_port" {
+  description = "MSK client port for IAM SASL authentication"
+  type        = number
+  default     = 9098
+}
+
+variable "project_name" {
+  description = "Project name used for resource naming and tags"
+  type        = string
+  default     = "polaris"
+}
+
+variable "rds_port" {
+  description = "PostgreSQL port for Aurora RDS"
+  type        = number
+  default     = 5432
+}
+
+variable "redis_port" {
+  description = "Redis port for ElastiCache"
+  type        = number
+  default     = 6379
+}
+
+variable "tags" {
+  description = "Additional tags applied to all security groups"
+  type        = map(string)
+  default     = {}
+}
+
+variable "vpc_cidr_block" {
+  description = "VPC CIDR block used for load balancer ingress from VPC Link and internal traffic"
+  type        = string
+
+  validation {
+    condition     = can(cidrhost(var.vpc_cidr_block, 0))
+    error_message = "vpc_cidr_block must be a valid IPv4 CIDR block."
+  }
+}
+
+variable "vpc_id" {
+  description = "VPC ID where security groups are created"
+  type        = string
+}

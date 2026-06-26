@@ -32,7 +32,7 @@
 
 ---
 
-## Fase 1 — Dominio y persistencia local (5–7 días)
+## Fase 1 — Dominio y persistencia local (5–7 días) ✅
 
 **Objetivo:** modelo de datos y reglas de negocio sin AWS.
 
@@ -45,6 +45,8 @@
 | 1.5 | Tests integración con testcontainers (Postgres, Redis, Kafka) | CI local verde ✅ |
 
 **IaC:** ninguno.
+
+**Estado:** completada.
 
 **Comandos de inicio:**
 
@@ -61,25 +63,63 @@ pnpm test
 
 **Objetivo:** red, datos y **Amazon MSK** en dev.
 
+### Convenciones IaC (Fase 2 en adelante)
+
+Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environments/*`:
+
+1. **Sin `main.tf` monolíticos** — un archivo por responsabilidad, con el scope mínimo necesario. Los recursos se agrupan por dominio, no en un único bloque gigante.
+2. **Archivos fijos por módulo** — `versions.tf`, `variables.tf`, `outputs.tf`, `locals.tf` (si aplica). El resto son archivos de recurso con nombre explícito.
+3. **Ejemplos de layout por módulo:**
+
+   ```
+   iac/modules/cognito/
+   ├── versions.tf
+   ├── variables.tf
+   ├── outputs.tf
+   ├── locals.tf
+   ├── user-pool.tf
+   ├── app-client.tf
+   └── domain.tf
+
+   iac/modules/vpc/
+   ├── versions.tf
+   ├── variables.tf
+   ├── outputs.tf
+   ├── locals.tf
+   ├── vpc.tf
+   ├── subnets.tf
+   ├── nat.tf
+   └── endpoints.tf
+   ```
+
+4. **Módulo `iam` centralizado** — roles, policies y attachments viven en `iac/modules/iam/`, **no** dentro de `rds`, `kafka`, `ecs`, etc. Los demás módulos solo consumen ARNs/outputs del módulo IAM. Crece por fases (Fase 2: MSK, RDS, Secrets; Fase 3+: ECS task roles; Fase 5+: Lambda execution roles).
+5. **Skills Terraform obligatorias** — al implementar o revisar cada módulo, usar las skills del repo: `terraform-style-guide`, `terraform-module-library`, `refactor-module` (y `terraform-stacks` si aplica).
+6. **Sin comentarios en módulos** — el HCL en `iac/modules/*` debe ser autodocumentado (nombres de recursos, variables y archivos claros). Documentación en `README.md` del módulo, no en línea.
+7. **Alineación con la arquitectura** — cada módulo debe reflejar [`arquitectura.md`](./arquitectura.md) (capas VPC, MSK, Cognito, etc.) y los flujos en [`flujos.md`](./flujos.md). No inventar recursos fuera del diseño acordado.
+
 | # | Módulo Terraform | DoD |
 |---|------------------|-----|
 | 2.1 | `vpc` | 3-tier subnets, NAT, VPC endpoints |
 | 2.2 | `security-groups` | SG sin dependencias circulares |
-| 2.3 | `rds` | Aurora PostgreSQL Serverless v2 dev |
-| 2.4 | `redis` | ElastiCache Serverless dev |
-| 2.5 | **`kafka`** | **MSK 3 brokers, IAM auth, encryption** |
-| 2.6 | `cognito` | User Pool + app client |
-| 2.7 | `dynamodb` | 3 tablas planificadas |
-| 2.8 | `s3` | Buckets audit, backups, assets |
-| 2.9 | `secrets-manager` | Secret RDS + rotación |
-| 2.10 | `environments/dev` | `terraform plan` sin errores |
+| 2.3 | **`iam`** | Roles/policies centralizados; MSK IAM auth, acceso RDS/Secrets (Fase 2) |
+| 2.4 | `rds` | Aurora PostgreSQL Serverless v2 dev |
+| 2.5 | `redis` | ElastiCache Serverless dev |
+| 2.6 | **`kafka`** | **MSK 3 brokers, IAM auth, encryption** |
+| 2.7 | `cognito` | User Pool + app client |
+| 2.8 | `dynamodb` | 3 tablas planificadas |
+| 2.9 | `s3` | Buckets audit, backups, assets |
+| 2.10 | `secrets-manager` | Secret RDS + rotación |
+| 2.11 | `environments/dev` | `terraform plan` sin errores |
 
 | # | Tarea Kafka | DoD |
 |---|-------------|-----|
-| 2.11 | Lambda `kafka-topic-creator` (Node 24) o provisioner | 8 topics creados en MSK |
-| 2.12 | Verificar conectividad IAM desde VPC | Script de smoke test |
+| 2.12 | Lambda `kafka-topic-creator` (Node 24) o provisioner | 8 topics creados en MSK |
+| 2.13 | Verificar conectividad IAM desde VPC | Script de smoke test |
 
-**Regla crítica:** el módulo `security-groups` **no depende** de otros módulos de aplicación (evitar ciclo vpc ↔ ecs).
+**Reglas críticas:**
+
+- El módulo `security-groups` **no depende** de otros módulos de aplicación (evitar ciclo vpc ↔ ecs).
+- Los módulos de servicio **no crean** `aws_iam_role` ni `aws_iam_policy`; delegan en `iam`.
 
 ---
 
@@ -186,8 +226,8 @@ pnpm test
 
 ```
 Fase 0  ✅ Fundación monorepo
-Fase 1     Dominio + DB + Kafka local
-Fase 2     IaC: VPC, RDS, Redis, MSK, Cognito, DynamoDB, S3
+Fase 1  ✅  Dominio + DB + Kafka local
+Fase 2     IaC: VPC, SG, IAM, RDS, Redis, MSK, Cognito, DynamoDB, S3
 Fase 3     api-service + ECS + API Gateway (slice #1)
 Fase 4     reservation-service + Kafka producers
 Fase 5     event-processor + Lambdas + EventBridge
@@ -216,11 +256,10 @@ Fase 10    Firmware ESP32
 
 ## Próxima acción inmediata
 
-**Iniciar Fase 1:** crear `packages/domain` y `packages/database`.
+**Iniciar Fase 2.1:** módulo `iac/modules/vpc` (archivos por responsabilidad, sin comentarios en HCL).
 
 ```bash
-docker compose -f infra/local/docker-compose.yml up -d
-pnpm install
-pnpm build
-pnpm test
+cd iac/environments/dev   # tras crear el entorno
+terraform init
+terraform plan
 ```

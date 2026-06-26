@@ -5,22 +5,34 @@ aplicación.
 
 Módulos planificados:
 
-1. `vpc`
+1. `vpc` ✅
 2. `security-groups`
-3. `rds`
-4. `redis`
-5. `kafka` (Amazon MSK)
-6. `cognito`
-7. `dynamodb`
-8. `s3`
-9. `ecs`
-10. `ecr`
-11. `api-gateway`
-12. `lambda`
-13. `eventbridge`
-14. `sqs`
-15. `iot-core`
-16. `appsync`
-17. `secrets-manager`
-18. `observability` (CloudWatch dashboards/alarms)
-19. `edge` (Route53, CloudFront, WAF — solo staging/prod)
+3. **`iam`** — roles y policies centralizados (no embebidos en otros módulos)
+4. `rds`
+5. `redis`
+6. `kafka` (Amazon MSK)
+7. `cognito`
+8. `dynamodb`
+9. `s3`
+10. `ecs`
+11. `ecr`
+12. `api-gateway`
+13. `lambda`
+14. `eventbridge`
+15. `sqs`
+16. `iot-core`
+17. `appsync`
+18. `secrets-manager`
+19. `observability` (CloudWatch dashboards/alarms)
+20. `edge` (Route53, CloudFront, WAF — solo staging/prod)
+
+## Convenciones
+
+- Un archivo por responsabilidad (`user-pool.tf`, `subnets.tf`, …); no monolitos
+  `main.tf`.
+- Archivos base: `versions.tf`, `variables.tf`, `outputs.tf`, `locals.tf` (si
+  aplica).
+- Permisos IAM solo en el módulo `iam`; el resto consume outputs/ARNs.
+- Sin comentarios en el HCL de módulos; documentar en el `README.md` del módulo.
+- Implementación según skills Terraform del repo y alineada con
+  `docs/arquitectura.md` + `docs/flujos.md`.

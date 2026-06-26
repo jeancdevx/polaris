@@ -21,7 +21,8 @@ VPC 10.0.0.0/16
 └── Data     10.0.20.0/24, 10.0.21.0/24, 10.0.22.0/24 → RDS, Redis, MSK
 ```
 
-- **NAT:** `single_nat_gateway = true` en dev (default); uno por AZ en prod.
+- **NAT:** `enable_nat_gateway` crea gateways y rutas;
+  `single_nat_gateway = true` en dev; uno por AZ en prod.
 - **Data tier:** sin ruta a internet; solo tráfico local VPC.
 - **Endpoints gateway:** S3, DynamoDB.
 - **Endpoints interface (private subnets):** ECR API/DKR, CloudWatch Logs, STS,

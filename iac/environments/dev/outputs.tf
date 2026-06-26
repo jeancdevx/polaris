@@ -1,3 +1,23 @@
+output "msk_security_group_id" {
+  description = "Amazon MSK security group ID"
+  value       = module.security_groups.msk_security_group_id
+}
+
+output "rds_security_group_id" {
+  description = "Aurora PostgreSQL security group ID"
+  value       = module.security_groups.rds_security_group_id
+}
+
+output "redis_security_group_id" {
+  description = "ElastiCache Redis security group ID"
+  value       = module.security_groups.redis_security_group_id
+}
+
+output "security_group_ids" {
+  description = "Map of security group names to IDs"
+  value       = module.security_groups.security_group_ids
+}
+
 output "availability_zones" {
   description = "Availability zones used by the VPC"
   value       = module.vpc.availability_zones

@@ -18,6 +18,17 @@ output "security_group_ids" {
   value       = module.security_groups.security_group_ids
 }
 
+output "redis_configuration_endpoint" {
+  description = "Redis configuration or primary endpoint"
+  value       = module.redis.configuration_endpoint
+}
+
+output "redis_url" {
+  description = "Redis connection URL for VPC clients"
+  value       = module.redis.redis_url
+  sensitive   = true
+}
+
 output "rds_cluster_endpoint" {
   description = "Aurora PostgreSQL writer endpoint"
   value       = module.rds.cluster_endpoint

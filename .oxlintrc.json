@@ -9,6 +9,8 @@
   "rules": {
     "no-console": "warn",
     "typescript/no-explicit-any": "error",
+    "typescript/no-extraneous-class": ["warn", { "allowWithDecorator": true }],
+    "import/no-unassigned-import": ["warn", { "allow": ["reflect-metadata"] }],
     "typescript/no-unused-vars": [
       "error",
       { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }

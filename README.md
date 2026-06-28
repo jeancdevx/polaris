@@ -53,5 +53,5 @@ docker compose -f infra/local/docker-compose.yml up -d
 
 ## Fase actual
 
-**Fase 0 completada** — ver [roadmap](./docs/roadmap.md). Siguiente: **Fase 1**
-(domain + database).
+**Fase 3 en curso** — scaffold `api-service` (3.1 ✅). Siguiente: auth Cognito
+(3.2). Ver [roadmap](./docs/roadmap.md).

@@ -144,7 +144,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 
 | # | Tarea | DoD |
 |---|-------|-----|
-| 3.1 | Scaffold `apps/api-service` — NestJS 11 + Fastify + ESM | `pnpm dev --filter api-service` |
+| 3.1 | Scaffold `apps/api-service` — NestJS 11 + Fastify + ESM | ✅ `pnpm dev --filter api-service` · `curl localhost:3001/health` |
 | 3.2 | Auth Cognito (signup/signin/refresh/logout) | Tests + integración dev |
 | 3.3 | `GET /parking/availability` — Redis + fallback RDS | Test integración |
 | 3.4 | Dockerfile multi-stage + push ECR | Imagen en registry |
@@ -243,7 +243,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 Fase 0  ✅ Fundación monorepo
 Fase 1  ✅  Dominio + DB + Kafka local
 Fase 2     IaC: VPC, SG, IAM, RDS, Redis, MSK, Cognito, DynamoDB, S3
-Fase 3     api-service + ECS + API Gateway (slice #1)
+Fase 3  ▶  api-service + ECS + API Gateway (slice #1) — 3.1 ✅
 Fase 4     reservation-service + Kafka producers
 Fase 5     event-processor + Lambdas + EventBridge
 Fase 6     admin-service + IoT Core

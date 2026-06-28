@@ -21,7 +21,7 @@ IDs de salida sin referencias cruzadas inversas.
 | Origen    | Destino | Puerto              |
 | --------- | ------- | ------------------- |
 | VPC CIDR  | ALB     | 80, 443             |
-| ALB SG    | ECS     | 3000 (configurable) |
+| ALB SG    | ECS     | 3001 (configurable) |
 | ECS SG    | RDS     | 5432                |
 | Lambda SG | RDS     | 5432                |
 | ECS SG    | Redis   | 6379                |

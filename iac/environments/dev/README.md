@@ -37,6 +37,7 @@ los knobs que cambian entre dev/staging/prod:
 | `redis_node_type`             | —                | `cache.t4g.medium` | `cache.r7g.xlarge` |
 | `kafka_broker_instance_type`  | `kafka.m5.large` | `kafka.m5.large`   | `kafka.m5.xlarge`  |
 | `kafka_log_retention_hours`   | `168`            | `168`              | `336`              |
+| `cognito_mfa_configuration`   | `OFF`            | `OPTIONAL`         | `OPTIONAL`         |
 
 Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 `prod.tfvars.example`.
@@ -51,3 +52,4 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 | 2.4  | `rds`             | ✅     |
 | 2.5  | `redis`           | ✅     |
 | 2.6  | `kafka`           | ✅     |
+| 2.7  | `cognito`         | ✅     |

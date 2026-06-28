@@ -1,3 +1,23 @@
+output "cognito_app_client_id" {
+  description = "Cognito app client ID"
+  value       = module.cognito.app_client_id
+}
+
+output "cognito_issuer_url" {
+  description = "Cognito OIDC issuer URL for JWT validation"
+  value       = module.cognito.issuer_url
+}
+
+output "cognito_jwks_uri" {
+  description = "Cognito JWKS URI for JWT validation"
+  value       = module.cognito.jwks_uri
+}
+
+output "cognito_user_pool_id" {
+  description = "Cognito user pool ID"
+  value       = module.cognito.user_pool_id
+}
+
 output "kafka_bootstrap_brokers_sasl_iam" {
   description = "MSK bootstrap brokers for IAM SASL clients"
   value       = module.kafka.bootstrap_brokers_sasl_iam

@@ -11,7 +11,7 @@ Módulos planificados:
 4. `rds` ✅
 5. `redis` ✅
 6. `kafka` (Amazon MSK) ✅
-7. `cognito`
+7. `cognito` ✅
 8. `dynamodb`
 9. `s3`
 10. `ecs`

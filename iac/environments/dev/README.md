@@ -60,3 +60,13 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 | 2.9  | `s3`                  | ✅     |
 | 2.10 | `secrets-manager`     | ✅     |
 | 2.12 | `kafka-topic-creator` | ✅     |
+| 2.13 | `kafka-msk-smoke`     | ✅     |
+
+## Smoke test MSK (2.13)
+
+Tras `terraform apply`:
+
+```bash
+pnpm --filter @polaris/kafka-msk-smoke build
+pnpm kafka:smoke:msk:dev
+```

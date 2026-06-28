@@ -13,7 +13,7 @@ Módulos planificados:
 6. `kafka` (Amazon MSK) ✅
 7. `cognito` ✅
 8. `dynamodb` ✅
-9. `s3`
+9. `s3` ✅
 10. `ecs`
 11. `ecr`
 12. `api-gateway`

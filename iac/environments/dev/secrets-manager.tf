@@ -10,9 +10,4 @@ module "secrets_manager" {
   enable_rds_rotation = var.secrets_manager_enable_rds_rotation
   rds_rotation_days   = var.secrets_manager_rds_rotation_days
   rotate_immediately  = var.secrets_manager_rotate_immediately
-
-  subnet_ids         = module.vpc.private_subnet_ids
-  security_group_ids = [module.security_groups.lambda_security_group_id]
-
-  tags = var.tags
 }

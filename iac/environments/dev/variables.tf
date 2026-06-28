@@ -206,6 +206,12 @@ variable "kafka_min_insync_replicas" {
   default     = null
 }
 
+variable "kafka_topic_creator_invoke_on_deploy" {
+  description = "Invoke kafka-topic-creator Lambda after deploy to ensure MSK topics exist"
+  type        = bool
+  default     = true
+}
+
 variable "kafka_version" {
   description = "Apache Kafka version for MSK"
   type        = string

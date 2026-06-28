@@ -8,9 +8,9 @@ locals {
 
   msk_cluster_resource = var.msk_cluster_arn != "" ? var.msk_cluster_arn : "arn:aws:kafka:${local.region}:${local.account_id}:cluster/${local.msk_cluster_name}/*"
 
-  msk_topic_resource = var.msk_cluster_arn != "" ? replace(var.msk_cluster_arn, ":cluster/", ":topic/") : "arn:aws:kafka:${local.region}:${local.account_id}:topic/${local.msk_cluster_name}/*/*"
+  msk_topic_resource = var.msk_cluster_arn != "" ? "${replace(var.msk_cluster_arn, ":cluster/", ":topic/")}/*" : "arn:aws:kafka:${local.region}:${local.account_id}:topic/${local.msk_cluster_name}/*/*"
 
-  msk_group_resource = var.msk_cluster_arn != "" ? replace(var.msk_cluster_arn, ":cluster/", ":group/") : "arn:aws:kafka:${local.region}:${local.account_id}:group/${local.msk_cluster_name}/*/*"
+  msk_group_resource = var.msk_cluster_arn != "" ? "${replace(var.msk_cluster_arn, ":cluster/", ":group/")}/*" : "arn:aws:kafka:${local.region}:${local.account_id}:group/${local.msk_cluster_name}/*/*"
 
   secrets_resource_arns = length(var.secrets_manager_secret_arns) > 0 ? var.secrets_manager_secret_arns : [
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${var.project_name}/${var.environment}/rds-*",

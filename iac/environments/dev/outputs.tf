@@ -90,6 +90,16 @@ output "rds_master_user_secret_arn" {
   sensitive   = true
 }
 
+output "kafka_topic_creator_function_arn" {
+  description = "ARN of the kafka-topic-creator Lambda function"
+  value       = module.kafka_topic_creator.function_arn
+}
+
+output "kafka_topic_creator_function_name" {
+  description = "Name of the kafka-topic-creator Lambda function"
+  value       = module.kafka_topic_creator.function_name
+}
+
 output "kafka_topic_creator_role_arn" {
   description = "IAM role ARN for kafka-topic-creator Lambda"
   value       = module.iam.kafka_topic_creator_role_arn

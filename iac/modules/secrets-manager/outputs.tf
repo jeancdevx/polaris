@@ -13,19 +13,9 @@ output "rds_rotation_enabled" {
   value       = local.enable_rds_rotation
 }
 
-output "rds_rotation_lambda_name" {
-  description = "Name of the AWS-hosted Lambda function that rotates the RDS master user secret"
-  value       = local.enable_rds_rotation ? local.rds_rotation_lambda_name : null
-}
-
-output "rds_rotation_schedule_id" {
-  description = "Secrets Manager rotation schedule ID when rotation is enabled"
-  value       = try(aws_cloudformation_stack.rds_secret_rotation[0].outputs["RotationScheduleId"], null)
-}
-
-output "rds_rotation_stack_id" {
-  description = "CloudFormation stack ID managing RDS secret rotation"
-  value       = try(aws_cloudformation_stack.rds_secret_rotation[0].id, null)
+output "rds_rotation_id" {
+  description = "Secrets Manager secret rotation resource ID when rotation is enabled"
+  value       = try(aws_secretsmanager_secret_rotation.rds_master[0].id, null)
 }
 
 output "rotation_lambda_role_arn" {

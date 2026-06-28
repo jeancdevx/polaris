@@ -1,0 +1,24 @@
+{
+  "name": "@polaris/kafka-msk-smoke",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rolldown -c rolldown.config.ts && printf '%s\\n' '{\"name\":\"@polaris/kafka-msk-smoke\",\"type\":\"module\"}' > dist/package.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@polaris/kafka": "workspace:*",
+    "@polaris/lambda-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@polaris/build-config": "workspace:*",
+    "@polaris/tsconfig": "workspace:*",
+    "@types/aws-lambda": "8.10.161",
+    "rolldown": "1.1.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

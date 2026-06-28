@@ -5,22 +5,18 @@ creado por el módulo `rds` (`manage_master_user_password = true`).
 
 ## Rotación RDS
 
-| Archivo           | Responsabilidad                                              |
-| ----------------- | ------------------------------------------------------------ |
-| `rds-rotation.tf` | `AWS::SecretsManager::RotationSchedule` con Lambda hospedada |
+| Archivo           | Responsabilidad                                 |
+| ----------------- | ----------------------------------------------- |
+| `rds-rotation.tf` | `aws_secretsmanager_secret_rotation` sin Lambda |
 
-Usa `HostedRotationLambda` con plantilla **PostgreSQLSingleUser**. Secrets
-Manager despliega la Lambda de rotación en la VPC; no requiere acceso a
-Serverless Application Repository.
+El secret creado por RDS es **service-managed** (`rds!cluster-*`). AWS rota las
+credenciales internamente; no se puede (ni hace falta) adjuntar una Lambda de
+rotación custom.
 
-El role `secrets_rotation` del módulo `iam` queda disponible para rotación de
-secretos custom (API keys, etc.) en fases posteriores.
+Solo se define el schedule (`automatically_after_days`).
 
-## Requisitos de red
-
-- Subnets privadas con ruta a Aurora
-- Security group Lambda con egress; el SG RDS debe permitir ingress desde el SG
-  Lambda (`rds_from_lambda` en `security-groups`)
+El role `secrets_rotation` del módulo `iam` queda disponible para secretos
+custom (API keys, etc.) en fases posteriores.
 
 ## Uso
 
@@ -33,22 +29,19 @@ module "secrets_manager" {
 
   rds_master_secret_arn    = module.rds.master_user_secret_arn
   rotation_lambda_role_arn = module.iam.secrets_rotation_role_arn
-
-  subnet_ids         = module.vpc.private_subnet_ids
-  security_group_ids = [module.security_groups.lambda_security_group_id]
 }
 ```
 
 ## Variables
 
-| Variable              | Default por entorno                                                       |
-| --------------------- | ------------------------------------------------------------------------- |
-| `enable_rds_rotation` | `true`                                                                    |
-| `rds_rotation_days`   | `30`                                                                      |
-| `rotate_immediately`  | `false` en dev, `true` resto (mapea a `RotateImmediatelyOnUpdate` en CFN) |
+| Variable              | Default por entorno          |
+| --------------------- | ---------------------------- |
+| `enable_rds_rotation` | `true`                       |
+| `rds_rotation_days`   | `30`                         |
+| `rotate_immediately`  | `false` en dev, `true` resto |
 
 ## Outputs
 
 - `rds_master_secret_arn`
 - `rds_rotation_enabled`, `rds_rotation_days`
-- `rds_rotation_lambda_name`, `rds_rotation_schedule_id`
+- `rds_rotation_id`

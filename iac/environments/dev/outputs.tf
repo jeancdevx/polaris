@@ -13,6 +13,11 @@ output "s3_bucket_arns" {
   value       = module.s3.bucket_arns
 }
 
+output "rds_rotation_lambda_name" {
+  description = "Name of the Lambda function that rotates the Aurora master user secret"
+  value       = module.secrets_manager.rds_rotation_lambda_name
+}
+
 output "cognito_app_client_id" {
   description = "Cognito app client ID"
   value       = module.cognito.app_client_id

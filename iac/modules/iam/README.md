@@ -13,6 +13,7 @@ propio.
 | `rds-enhanced-monitoring.tf`  | Role para Aurora enhanced monitoring          |
 | `msk-client-role.tf`          | Role ECS/Lambda + MSK + secrets read          |
 | `kafka-topic-creator-role.tf` | Role Lambda para crear topics MSK (Fase 2.12) |
+| `kafka-msk-smoke-role.tf`     | Role Lambda smoke test MSK IAM (Fase 2.13)    |
 | `secrets-rotation-role.tf`    | Role Lambda para rotación RDS (Fase 2.10)     |
 
 ## Fase 2
@@ -22,6 +23,7 @@ propio.
 | `rds_enhanced_monitoring` | Módulo `rds`                           |
 | `msk_client` policy/role  | Servicios NestJS + Lambda con IAM SASL |
 | `msk_topic_admin`         | Lambda `kafka-topic-creator`           |
+| `msk_client`              | Lambda `kafka-msk-smoke`, ECS (Fase 3) |
 | `secrets_read`            | Acceso a credenciales RDS              |
 | `secrets_rotation`        | Rotación automática en Secrets Manager |
 

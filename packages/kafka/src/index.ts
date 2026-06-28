@@ -1,6 +1,16 @@
-export { readKafkaEnv, type KafkaEnv } from './config/kafka-env.js'
+export {
+  readKafkaEnv,
+  type KafkaAuthMode,
+  type KafkaEnv
+} from './config/kafka-env.js'
 export { createKafka, createKafkaConfig } from './config/create-kafka.js'
 export { loadLocalEnv } from '@polaris/shared-utils'
+
+export {
+  runKafkaSmokeTest,
+  type KafkaSmokeTestOptions,
+  type KafkaSmokeTestResult
+} from './smoke/run-kafka-smoke-test.js'
 
 export {
   kafkaMessageError,

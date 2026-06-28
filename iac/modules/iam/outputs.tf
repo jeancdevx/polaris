@@ -1,3 +1,13 @@
+output "kafka_msk_smoke_role_arn" {
+  description = "IAM role ARN for the kafka-msk-smoke Lambda function"
+  value       = aws_iam_role.kafka_msk_smoke.arn
+}
+
+output "kafka_msk_smoke_role_name" {
+  description = "IAM role name for the kafka-msk-smoke Lambda function"
+  value       = aws_iam_role.kafka_msk_smoke.name
+}
+
 output "kafka_topic_creator_role_arn" {
   description = "IAM role ARN for the kafka-topic-creator Lambda function"
   value       = aws_iam_role.kafka_topic_creator.arn
@@ -31,6 +41,7 @@ output "msk_topic_admin_policy_arn" {
 output "policy_arns" {
   description = "Map of IAM policy names to ARNs"
   value = {
+    kafka_msk_smoke_execution     = aws_iam_policy.kafka_msk_smoke_execution.arn
     kafka_topic_creator_execution = aws_iam_policy.kafka_topic_creator_execution.arn
     msk_client                    = aws_iam_policy.msk_client.arn
     msk_topic_admin               = aws_iam_policy.msk_topic_admin.arn
@@ -52,6 +63,7 @@ output "rds_enhanced_monitoring_role_name" {
 output "role_arns" {
   description = "Map of IAM role names to ARNs"
   value = {
+    kafka_msk_smoke         = aws_iam_role.kafka_msk_smoke.arn
     kafka_topic_creator     = aws_iam_role.kafka_topic_creator.arn
     msk_client              = aws_iam_role.msk_client.arn
     rds_enhanced_monitoring = aws_iam_role.rds_enhanced_monitoring.arn

@@ -90,6 +90,21 @@ output "rds_master_user_secret_arn" {
   sensitive   = true
 }
 
+output "kafka_msk_smoke_function_arn" {
+  description = "ARN of the kafka-msk-smoke Lambda function"
+  value       = module.kafka_msk_smoke.function_arn
+}
+
+output "kafka_msk_smoke_function_name" {
+  description = "Name of the kafka-msk-smoke Lambda function"
+  value       = module.kafka_msk_smoke.function_name
+}
+
+output "kafka_msk_smoke_role_arn" {
+  description = "IAM role ARN for kafka-msk-smoke Lambda"
+  value       = module.iam.kafka_msk_smoke_role_arn
+}
+
 output "kafka_topic_creator_function_arn" {
   description = "ARN of the kafka-topic-creator Lambda function"
   value       = module.kafka_topic_creator.function_arn

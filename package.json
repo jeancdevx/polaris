@@ -24,6 +24,7 @@
     "db:migrate:show": "pnpm --filter @polaris/database migration:show",
     "db:seed": "pnpm --filter @polaris/database seed",
     "kafka:smoke": "pnpm --filter @polaris/kafka smoke",
+    "kafka:smoke:msk:dev": "bash scripts/kafka-msk-smoke-dev.sh",
     "prepare": "husky"
   },
   "lint-staged": {

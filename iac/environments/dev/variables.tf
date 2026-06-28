@@ -46,6 +46,65 @@ variable "enable_vpc_endpoints" {
   default     = true
 }
 
+variable "cognito_access_token_validity_hours" {
+  description = "Cognito access token validity in hours"
+  type        = number
+  default     = 1
+}
+
+variable "cognito_admin_create_user_only" {
+  description = "Restrict Cognito sign-up to administrators"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_create_user_pool_domain" {
+  description = "Create a Cognito hosted UI domain"
+  type        = bool
+  default     = false
+}
+
+variable "cognito_deletion_protection" {
+  description = "Enable Cognito user pool deletion protection. Null uses module default per environment."
+  type        = bool
+  default     = null
+}
+
+variable "cognito_domain_prefix" {
+  description = "Globally unique Cognito domain prefix when hosted UI domain is enabled"
+  type        = string
+  default     = null
+}
+
+variable "cognito_id_token_validity_hours" {
+  description = "Cognito ID token validity in hours"
+  type        = number
+  default     = 1
+}
+
+variable "cognito_mfa_configuration" {
+  description = "Cognito MFA setting: OFF, ON, or OPTIONAL. Null uses module default per environment."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.cognito_mfa_configuration == null ? true : contains(["OFF", "ON", "OPTIONAL"], var.cognito_mfa_configuration)
+    error_message = "cognito_mfa_configuration must be OFF, ON, or OPTIONAL."
+  }
+}
+
+variable "cognito_password_minimum_length" {
+  description = "Minimum password length for Cognito users"
+  type        = number
+  default     = 12
+}
+
+variable "cognito_refresh_token_validity_days" {
+  description = "Cognito refresh token validity in days"
+  type        = number
+  default     = 30
+}
+
 variable "kafka_broker_count" {
   description = "Number of MSK broker nodes. Null uses module default."
   type        = number

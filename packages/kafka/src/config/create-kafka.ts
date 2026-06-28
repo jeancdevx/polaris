@@ -1,12 +1,28 @@
+import { generateAuthToken } from 'aws-msk-iam-sasl-signer-js'
 import { Kafka, type KafkaConfig } from 'kafkajs'
-
-import { loadLocalEnv } from '@polaris/shared-utils'
 
 import { readKafkaEnv } from './kafka-env.js'
 
 export const createKafkaConfig = (): KafkaConfig => {
-  loadLocalEnv(import.meta.url)
   const env = readKafkaEnv()
+
+  if (env.authMode === 'iam') {
+    return {
+      clientId: env.clientId,
+      brokers: env.brokers,
+      ssl: true,
+      connectionTimeout: 10_000,
+      requestTimeout: 30_000,
+      sasl: {
+        mechanism: 'oauthbearer',
+        oauthBearerProvider: async () => {
+          const authToken = await generateAuthToken({ region: env.region })
+
+          return { value: authToken.token }
+        }
+      }
+    }
+  }
 
   return {
     clientId: env.clientId,

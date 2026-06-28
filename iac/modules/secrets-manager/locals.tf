@@ -15,16 +15,4 @@ locals {
     var.rotate_immediately,
     var.environment != "dev"
   )
-
-  rds_rotation_lambda_name = "${local.name_prefix}-rds-rotation"
-
-  common_tags = merge(
-    var.tags,
-    {
-      Project     = var.project_name
-      Environment = var.environment
-      ManagedBy   = "terraform"
-      Component   = "secrets-manager"
-    }
-  )
 }

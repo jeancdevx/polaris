@@ -55,10 +55,9 @@ data "aws_iam_policy_document" "msk_topic_admin" {
   statement {
     effect = "Allow"
     actions = [
-      "kafka-cluster:CreateTopic",
-      "kafka-cluster:DescribeTopic",
-      "kafka-cluster:AlterTopic",
-      "kafka-cluster:DeleteTopic"
+      "kafka-cluster:*Topic*",
+      "kafka-cluster:DescribeTopicDynamicConfiguration",
+      "kafka-cluster:AlterTopicDynamicConfiguration"
     ]
     resources = [local.msk_topic_resource]
   }

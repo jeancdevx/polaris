@@ -5,11 +5,11 @@ cuando `auto.create.topics.enable=false`.
 
 ## Archivos
 
-| Archivo         | Responsabilidad                                       |
-| --------------- | ----------------------------------------------------- |
-| `build.tf`      | Build Rolldown + zip del artefacto (`terraform_data`) |
-| `function.tf`   | Log group + Lambda en VPC                             |
-| `invocation.tf` | Invocación post-deploy vía Terraform                  |
+| Archivo         | Responsabilidad                                  |
+| --------------- | ------------------------------------------------ |
+| `build.tf`      | Zip del artefacto con `archive_file` (plan-time) |
+| `function.tf`   | Log group + Lambda en VPC                        |
+| `invocation.tf` | Invocación post-deploy vía Terraform             |
 
 ## Requisitos
 
@@ -39,17 +39,13 @@ module "kafka_topic_creator" {
 
 ## Build del artefacto
 
-El zip se genera en `apply` vía `terraform_data` (no usar `file()` sobre `dist/`
-— evita _inconsistent result_ entre plan y apply).
+1. Compilar la Lambda (Rolldown):
+   `pnpm --filter @polaris/kafka-topic-creator build`
+2. `terraform plan` empaqueta `dist/` en el zip vía `data.archive_file`
 
-Para un clone nuevo, `terraform plan` puede fallar si el zip aún no existe; usa
-`terraform apply` directamente o ejecuta antes:
-
-```bash
-pnpm --filter @polaris/kafka-topic-creator build
-mkdir -p iac/modules/kafka-topic-creator/.terraform
-(cd lambdas/kafka-topic-creator/dist && zip -j ../../../iac/modules/kafka-topic-creator/.terraform/polaris-dev-kafka-topic-creator.zip index.js package.json)
-```
+El zip y el `source_code_hash` se calculan en **plan** (provider `archive`). No
+uses `file()` sobre `dist/` en otros recursos — provoca _inconsistent result_ si
+el build corre en apply y el hash se lee en plan.
 
 ## Observabilidad
 

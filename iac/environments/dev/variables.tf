@@ -105,6 +105,65 @@ variable "cognito_refresh_token_validity_days" {
   default     = 30
 }
 
+variable "dynamodb_autoscaling_max_read_capacity" {
+  description = "DynamoDB autoscaling max read capacity. Null uses module default per environment."
+  type        = number
+  default     = null
+}
+
+variable "dynamodb_autoscaling_max_write_capacity" {
+  description = "DynamoDB autoscaling max write capacity. Null uses module default per environment."
+  type        = number
+  default     = null
+}
+
+variable "dynamodb_billing_mode" {
+  description = "DynamoDB billing mode: PAY_PER_REQUEST or PROVISIONED. Null auto-selects from environment."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.dynamodb_billing_mode == null ? true : contains(["PAY_PER_REQUEST", "PROVISIONED"], var.dynamodb_billing_mode)
+    error_message = "dynamodb_billing_mode must be PAY_PER_REQUEST or PROVISIONED."
+  }
+}
+
+variable "dynamodb_deletion_protection_enabled" {
+  description = "Enable DynamoDB deletion protection. Null uses module default per environment."
+  type        = bool
+  default     = null
+}
+
+variable "dynamodb_point_in_time_recovery_enabled" {
+  description = "Enable DynamoDB point-in-time recovery. Null uses module default per environment."
+  type        = bool
+  default     = null
+}
+
+variable "dynamodb_read_capacity" {
+  description = "DynamoDB initial read capacity per table in provisioned mode"
+  type        = number
+  default     = null
+}
+
+variable "dynamodb_sensor_readings_ttl_enabled" {
+  description = "Enable TTL on SensorReadings table"
+  type        = bool
+  default     = true
+}
+
+variable "dynamodb_websocket_connections_ttl_enabled" {
+  description = "Enable TTL on WebSocketConnections table"
+  type        = bool
+  default     = true
+}
+
+variable "dynamodb_write_capacity" {
+  description = "DynamoDB initial write capacity per table in provisioned mode"
+  type        = number
+  default     = null
+}
+
 variable "kafka_broker_count" {
   description = "Number of MSK broker nodes. Null uses module default."
   type        = number

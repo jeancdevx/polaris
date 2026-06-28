@@ -38,23 +38,7 @@ variable "rotate_immediately" {
 }
 
 variable "rotation_lambda_role_arn" {
-  description = "IAM role ARN for the RDS rotation Lambda. Reserved for custom rotation functions; hosted rotation uses AWS-managed Lambda IAM."
+  description = "IAM role ARN reserved for custom secret rotation Lambdas from the IAM module"
   type        = string
   default     = ""
-}
-
-variable "security_group_ids" {
-  description = "Security group IDs for the RDS rotation Lambda VPC configuration"
-  type        = list(string)
-}
-
-variable "subnet_ids" {
-  description = "Private subnet IDs for the RDS rotation Lambda VPC configuration"
-  type        = list(string)
-}
-
-variable "tags" {
-  description = "Additional tags applied to rotation resources"
-  type        = map(string)
-  default     = {}
 }

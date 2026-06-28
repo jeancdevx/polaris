@@ -310,7 +310,41 @@ Referencia: [Lambda Node.js 24](https://docs.aws.amazon.com/lambda/latest/dg/lam
 
 - Build: **Rolldown** → zip → runtime `nodejs24.x`.
 - Handlers: **async/await** (callbacks no soportados en Node 24).
+- Observabilidad: **`@polaris/lambda-core`** (Powertools Logger + Tracer + Metrics).
 - VPC: funciones que acceden RDS/Redis/MSK.
+
+### 12.1 Powertools for AWS Lambda (TypeScript)
+
+Referencia: [documentación oficial](https://docs.aws.amazon.com/powertools/typescript/latest/) · [GitHub](https://github.com/aws-powertools/powertools-lambda-typescript)
+
+Paquete compartido: **`@polaris/lambda-core`** — wrapper e instancias con defaults Polaris.
+Powertools está optimizado para **Lambda**; en ECS/NestJS usamos Pino + OpenTelemetry/X-Ray por separado (mismo formato JSON de logs).
+
+| Utilidad Powertools | Adopción Polaris | Lambdas / fases | Notas |
+|---------------------|------------------|-----------------|-------|
+| **Logger** | ✅ Adoptado | Todas (vía `instrumentLambdaHandler`) | Logs JSON + `requestId`, `functionName`, cold start |
+| **Tracer** | ✅ Adoptado | Todas con X-Ray activo | Alineado con §14; subsegmentos custom en handlers complejos |
+| **Metrics** | ✅ Base | Fase 5–6 | EMF namespace `Polaris`; métricas de negocio (ocupación, validaciones RFID) |
+| **Parameters** | 📋 Fase 5+ | `rfid-validator`, servicios con secrets | SSM, Secrets Manager, DynamoDB, AppConfig |
+| **Parser (Zod)** | 📋 Evaluar | IoT / EventBridge payloads | Complementa schemas de `@polaris/kafka`; no reemplaza domain |
+| **Validation** | 📋 Fase 5+ | EventBridge, API Lambda URLs | JSON Schema en bordes externos |
+| **Idempotency** | 📋 Fase 5–6 | `rfid-validator`, `sensor-data-processor` | DynamoDB; evita duplicados IoT/EventBridge |
+| **Batch Processing** | 📋 Si aplica | SQS / Kinesis / DDB Streams | Partial batch failures |
+| **Kafka consumer** | 📋 Fase 5+ | `occupancy-aggregator` (MSK trigger) | Deserialización records MSK en Lambda |
+| **Event Handler** | ❌ No | — | HTTP lo cubre NestJS + API Gateway en ECS |
+| **JMESPath** | ⏸️ Opcional | IoT Rules payloads | Solo si simplifica transformaciones |
+
+**Distribución:** bundle vía Rolldown en el zip de cada Lambda (dev). En prod se puede valorar [Lambda Layer](https://docs.aws.amazon.com/powertools/typescript/latest/#lambda-layers) de Powertools para reducir tamaño del artefacto.
+
+**Variables de entorno estándar (Terraform):**
+
+| Variable | Valor típico |
+|----------|--------------|
+| `POWERTOOLS_SERVICE_NAME` | `{project}-{env}-{function}` |
+| `POWERTOOLS_LOG_LEVEL` | `INFO` |
+| `POWERTOOLS_METRICS_NAMESPACE` | `Polaris` |
+
+**Fuera de Lambda (ECS NestJS):** no usar Powertools en runtime; reutilizar convenciones (JSON estructurado, namespace `Polaris`, trace IDs correlacionados con X-Ray).
 
 ---
 
@@ -330,10 +364,10 @@ Referencia: [Lambda Node.js 24](https://docs.aws.amazon.com/lambda/latest/dg/lam
 
 Referencia: [CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html)
 
-- Logs estructurados JSON en todos los servicios.
-- Métricas custom: ocupación, latencia API, lag consumidor Kafka.
+- Logs estructurados JSON en todos los servicios (Lambda: Powertools Logger; ECS: Pino).
+- Métricas custom: ocupación, latencia API, lag consumidor Kafka (Lambda: Powertools EMF; ECS: CloudWatch agent/OTel).
 - Alarmas: CPU > 80 %, error rate > 5 %, ocupación > 90 %.
-- **X-Ray** activo en API Gateway y ECS (tracing distribuido).
+- **X-Ray** activo en Lambda (Powertools Tracer), API Gateway y ECS (tracing distribuido).
 - Dashboards: sistema general + ocupación en tiempo real.
 
 ---
@@ -370,6 +404,7 @@ polaris/
 │   ├── kafka/           (fase 4)
 │   ├── shared-types/
 │   ├── shared-utils/
+│   ├── lambda-core/     (Powertools — Logger, Tracer, Metrics)
 │   ├── build-config/
 │   └── tsconfig/
 ├── firmware/esp32/
@@ -426,6 +461,7 @@ polaris/
 | ADR-004 | EventBridge + SQS complementan Kafka | Orquestación AWS-native sin reemplazar MSK |
 | ADR-005 | Rolldown para bundles | Performance; alineado con ecosistema Oxc/Vite |
 | ADR-006 | Terraform propio (no CDK) | Control granular; módulos por responsabilidad |
+| ADR-007 | Powertools TS en Lambdas vía `@polaris/lambda-core` | Logs/metrics/traces estándar AWS; modular; ECS usa Pino+OTel aparte |
 
 ---
 

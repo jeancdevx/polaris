@@ -55,3 +55,5 @@ dynamodb_sensor_readings_ttl_enabled       = true
 dynamodb_websocket_connections_ttl_enabled = true
 
 s3_lifecycle_glacier_transition_days = 90
+
+secrets_manager_rds_rotation_days = 30

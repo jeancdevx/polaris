@@ -12,6 +12,21 @@
 3. **Vertical slices** — cada fase entrega algo demostrable.
 4. **Versiones exactas** — `pnpm add -E` para todas las dependencias.
 5. **Commits convencionales** — `feat:`, `fix:`, `chore:`, etc.
+6. **Lambdas** — handlers envueltos con `@polaris/lambda-core` (`instrumentLambdaHandler`); Powertools Logger + Tracer; X-Ray activo en Terraform.
+
+---
+
+## Convenciones Lambda (Powertools)
+
+Paquete: `@polaris/lambda-core` · Docs: [Powertools TypeScript](https://docs.aws.amazon.com/powertools/typescript/latest/)
+
+| Fase | Utilidades Powertools |
+|------|----------------------|
+| **2.12+** | Logger, Tracer (base en todas las Lambdas) |
+| **5–6** | Metrics, Parameters, Idempotency, Parser, Kafka consumer |
+| **ECS** | No Powertools — Pino JSON + OTel/X-Ray (ver `arquitectura.md` §12.1) |
+
+Matriz completa de adopción: `docs/arquitectura.md` §12.1.
 
 ---
 
@@ -24,7 +39,7 @@
 | 0.1 | Reset repo: conservar `iac/bootstrap`, eliminar módulos viejos | Solo bootstrap en `iac/` |
 | 0.2 | Estructura `apps/`, `packages/`, `lambdas/`, `firmware/`, `infra/local/` | Carpetas creadas |
 | 0.3 | Turborepo + pnpm workspaces + oxlint + Prettier + Vitest + Rolldown | `pnpm lint`, `pnpm build` pasan |
-| 0.4 | Packages base: `@polaris/tsconfig`, `@polaris/build-config`, `shared-types`, `shared-utils` | Build exitoso |
+| 0.4 | Packages base: `@polaris/tsconfig`, `@polaris/build-config`, `shared-types`, `shared-utils`, `lambda-core` | Build exitoso |
 | 0.5 | `infra/local/docker-compose.yml` (Postgres, Redis, Kafka + topics) | `docker compose up` healthy |
 | 0.6 | Documentación: `arquitectura.md`, `roadmap.md` | Docs en `docs/` |
 
@@ -159,7 +174,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | 5.1 | Scaffold `apps/event-processor-service` — consumidor KafkaJS + IAM | Consume 8 topics |
 | 5.2 | Handlers: `vehicle.entry`, `vehicle.exit`, `sensor.occupancy` | Redis + RDS actualizados |
 | 5.3 | Publicar a EventBridge tras procesar eventos | Regla dispara Lambda |
-| 5.4 | `lambdas/rfid-validator` — Rolldown + Node 24 | Deploy dev |
+| 5.4 | `lambdas/rfid-validator` — Rolldown + Node 24 + `@polaris/lambda-core` | Deploy dev |
 | 5.5 | `lambdas/audit-logger` | Logs + S3 |
 | 5.6 | IaC: `lambda`, `eventbridge`, `sqs` | Triggers activos |
 | 5.7 | IaC: desplegar event-processor en ECS | Consumer group estable |

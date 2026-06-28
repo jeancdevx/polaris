@@ -3,6 +3,16 @@ output "dynamodb_table_names" {
   value       = module.dynamodb.table_names
 }
 
+output "s3_bucket_names" {
+  description = "S3 bucket names by logical key"
+  value       = module.s3.bucket_names
+}
+
+output "s3_bucket_arns" {
+  description = "S3 bucket ARNs by logical key"
+  value       = module.s3.bucket_arns
+}
+
 output "cognito_app_client_id" {
   description = "Cognito app client ID"
   value       = module.cognito.app_client_id

@@ -342,6 +342,24 @@ variable "redis_transit_encryption_enabled" {
   default     = null
 }
 
+variable "s3_force_destroy" {
+  description = "Allow S3 bucket deletion when objects remain. Null enables in dev only."
+  type        = bool
+  default     = null
+}
+
+variable "s3_kms_key_arn" {
+  description = "KMS key ARN for S3 bucket encryption. Empty uses SSE-S3."
+  type        = string
+  default     = ""
+}
+
+variable "s3_lifecycle_glacier_transition_days" {
+  description = "Days before S3 objects transition to Glacier storage class"
+  type        = number
+  default     = null
+}
+
 variable "tags" {
   description = "Additional tags applied to all resources"
   type        = map(string)

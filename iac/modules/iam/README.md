@@ -27,8 +27,8 @@ propio.
 
 ## Variables opcionales
 
-- `msk_cluster_arn` — ARN exacto tras desplegar MSK; si vacío usa wildcard
-  `polaris-dev-kafka/*`
+- `msk_cluster_arn` — ARN exacto tras desplegar MSK; topic/group ARNs se derivan
+  con sufijo `/*`; si vacío usa wildcard `polaris-dev-kafka/*/*`
 - `secrets_manager_secret_arns` — ARNs explícitos; si vacío usa patrones
   `polaris/dev/rds-*`
 - `kms_key_arns` — claves KMS para decrypt; si vacío permite keys de la cuenta

@@ -87,3 +87,43 @@ resource "aws_security_group_rule" "msk_from_lambda" {
   to_port                  = var.msk_client_port
   source_security_group_id = aws_security_group.lambda.id
 }
+
+resource "aws_security_group_rule" "lambda_egress_https_vpc" {
+  type              = "egress"
+  security_group_id = aws_security_group.lambda.id
+  protocol          = "tcp"
+  from_port         = 443
+  to_port           = 443
+  cidr_blocks       = [var.vpc_cidr_block]
+  description       = "HTTPS to interface VPC endpoints (STS, Logs, Secrets Manager)"
+}
+
+resource "aws_security_group_rule" "lambda_egress_msk" {
+  type                     = "egress"
+  security_group_id        = aws_security_group.lambda.id
+  protocol                 = "tcp"
+  from_port                = var.msk_client_port
+  to_port                  = var.msk_client_port
+  source_security_group_id = aws_security_group.msk.id
+  description              = "MSK IAM SASL client port"
+}
+
+resource "aws_security_group_rule" "lambda_egress_rds" {
+  type                     = "egress"
+  security_group_id        = aws_security_group.lambda.id
+  protocol                 = "tcp"
+  from_port                = var.rds_port
+  to_port                  = var.rds_port
+  source_security_group_id = aws_security_group.rds.id
+  description              = "Aurora PostgreSQL"
+}
+
+resource "aws_security_group_rule" "lambda_egress_redis" {
+  type                     = "egress"
+  security_group_id        = aws_security_group.lambda.id
+  protocol                 = "tcp"
+  from_port                = var.redis_port
+  to_port                  = var.redis_port
+  source_security_group_id = aws_security_group.redis.id
+  description              = "ElastiCache Redis"
+}

@@ -6,8 +6,8 @@ resource "aws_lambda_function" "main" {
   timeout       = var.timeout_seconds
   memory_size   = 256
 
-  filename         = local.lambda_zip_path
-  source_code_hash = filebase64sha256(local.lambda_zip_path)
+  filename         = data.archive_file.lambda_package.output_path
+  source_code_hash = data.archive_file.lambda_package.output_base64sha256
 
   environment {
     variables = {
@@ -36,6 +36,5 @@ resource "aws_lambda_function" "main" {
 
   depends_on = [
     aws_cloudwatch_log_group.main,
-    terraform_data.build_lambda,
   ]
 }

@@ -1,3 +1,8 @@
+output "dynamodb_table_names" {
+  description = "DynamoDB table names by logical key"
+  value       = module.dynamodb.table_names
+}
+
 output "cognito_app_client_id" {
   description = "Cognito app client ID"
   value       = module.cognito.app_client_id

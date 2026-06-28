@@ -7,7 +7,7 @@ variable "alb_ingress_cidr_blocks" {
 variable "ecs_container_port" {
   description = "Container port exposed by ECS services behind the load balancer"
   type        = number
-  default     = 3000
+  default     = 3001
 }
 
 variable "environment" {

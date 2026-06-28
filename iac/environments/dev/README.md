@@ -47,15 +47,16 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 
 ## Módulos desplegados
 
-| Fase | Módulo            | Estado |
-| ---- | ----------------- | ------ |
-| 2.1  | `vpc`             | ✅     |
-| 2.2  | `security-groups` | ✅     |
-| 2.3  | `iam`             | ✅     |
-| 2.4  | `rds`             | ✅     |
-| 2.5  | `redis`           | ✅     |
-| 2.6  | `kafka`           | ✅     |
-| 2.7  | `cognito`         | ✅     |
-| 2.8  | `dynamodb`        | ✅     |
-| 2.9  | `s3`              | ✅     |
-| 2.10 | `secrets-manager` | ✅     |
+| Fase | Módulo                | Estado |
+| ---- | --------------------- | ------ |
+| 2.1  | `vpc`                 | ✅     |
+| 2.2  | `security-groups`     | ✅     |
+| 2.3  | `iam`                 | ✅     |
+| 2.4  | `rds`                 | ✅     |
+| 2.5  | `redis`               | ✅     |
+| 2.6  | `kafka`               | ✅     |
+| 2.7  | `cognito`             | ✅     |
+| 2.8  | `dynamodb`            | ✅     |
+| 2.9  | `s3`                  | ✅     |
+| 2.10 | `secrets-manager`     | ✅     |
+| 2.12 | `kafka-topic-creator` | ✅     |

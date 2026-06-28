@@ -360,6 +360,24 @@ variable "s3_lifecycle_glacier_transition_days" {
   default     = null
 }
 
+variable "secrets_manager_enable_rds_rotation" {
+  description = "Enable automatic rotation for the Aurora master user secret"
+  type        = bool
+  default     = null
+}
+
+variable "secrets_manager_rds_rotation_days" {
+  description = "Days between automatic RDS credential rotations"
+  type        = number
+  default     = null
+}
+
+variable "secrets_manager_rotate_immediately" {
+  description = "Run an initial RDS secret rotation when the schedule is created"
+  type        = bool
+  default     = null
+}
+
 variable "tags" {
   description = "Additional tags applied to all resources"
   type        = map(string)

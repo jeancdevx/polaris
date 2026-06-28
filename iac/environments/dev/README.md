@@ -20,25 +20,26 @@ terraform plan -var-file=dev.tfvars
 Los módulos derivan defaults de `environment`, pero conviene declarar en tfvars
 los knobs que cambian entre dev/staging/prod:
 
-| Variable                      | dev               | staging            | prod               |
-| ----------------------------- | ----------------- | ------------------ | ------------------ |
-| `vpc_cidr`                    | `10.0.0.0/16`     | igual              | igual              |
-| `azs`                         | 3 AZ us-east-2    | igual              | igual              |
-| `enable_nat_gateway`          | `true`            | `true`             | `true`             |
-| `single_nat_gateway`          | `true`            | `true`             | `false`            |
-| `enable_vpc_endpoints`        | `true`            | `true`             | `true`             |
-| `rds_capacity_mode`           | `serverless`      | `provisioned`      | `provisioned`      |
-| `rds_serverless_min_capacity` | `0.5`             | —                  | —                  |
-| `rds_serverless_max_capacity` | `2`               | —                  | —                  |
-| `rds_reader_count`            | `null` (0)        | `1`                | `2`                |
-| `rds_writer_instance_class`   | `null`            | `db.t4g.medium`    | `db.r6g.xlarge`    |
-| `redis_capacity_mode`         | `serverless`      | `provisioned`      | `provisioned`      |
-| `redis_num_shards`            | —                 | `2`                | `3`                |
-| `redis_node_type`             | —                 | `cache.t4g.medium` | `cache.r7g.xlarge` |
-| `kafka_broker_instance_type`  | `kafka.m5.large`  | `kafka.m5.large`   | `kafka.m5.xlarge`  |
-| `kafka_log_retention_hours`   | `168`             | `168`              | `336`              |
-| `cognito_mfa_configuration`   | `OFF`             | `OPTIONAL`         | `OPTIONAL`         |
-| `dynamodb_billing_mode`       | `PAY_PER_REQUEST` | `PROVISIONED`      | `PROVISIONED`      |
+| Variable                               | dev               | staging            | prod               |
+| -------------------------------------- | ----------------- | ------------------ | ------------------ |
+| `vpc_cidr`                             | `10.0.0.0/16`     | igual              | igual              |
+| `azs`                                  | 3 AZ us-east-2    | igual              | igual              |
+| `enable_nat_gateway`                   | `true`            | `true`             | `true`             |
+| `single_nat_gateway`                   | `true`            | `true`             | `false`            |
+| `enable_vpc_endpoints`                 | `true`            | `true`             | `true`             |
+| `rds_capacity_mode`                    | `serverless`      | `provisioned`      | `provisioned`      |
+| `rds_serverless_min_capacity`          | `0.5`             | —                  | —                  |
+| `rds_serverless_max_capacity`          | `2`               | —                  | —                  |
+| `rds_reader_count`                     | `null` (0)        | `1`                | `2`                |
+| `rds_writer_instance_class`            | `null`            | `db.t4g.medium`    | `db.r6g.xlarge`    |
+| `redis_capacity_mode`                  | `serverless`      | `provisioned`      | `provisioned`      |
+| `redis_num_shards`                     | —                 | `2`                | `3`                |
+| `redis_node_type`                      | —                 | `cache.t4g.medium` | `cache.r7g.xlarge` |
+| `kafka_broker_instance_type`           | `kafka.m5.large`  | `kafka.m5.large`   | `kafka.m5.xlarge`  |
+| `kafka_log_retention_hours`            | `168`             | `168`              | `336`              |
+| `cognito_mfa_configuration`            | `OFF`             | `OPTIONAL`         | `OPTIONAL`         |
+| `dynamodb_billing_mode`                | `PAY_PER_REQUEST` | `PROVISIONED`      | `PROVISIONED`      |
+| `s3_lifecycle_glacier_transition_days` | `90`              | `90`               | `90`               |
 
 Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 `prod.tfvars.example`.
@@ -55,3 +56,4 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 | 2.6  | `kafka`           | ✅     |
 | 2.7  | `cognito`         | ✅     |
 | 2.8  | `dynamodb`        | ✅     |
+| 2.9  | `s3`              | ✅     |

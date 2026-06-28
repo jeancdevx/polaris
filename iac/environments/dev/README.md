@@ -40,6 +40,7 @@ los knobs que cambian entre dev/staging/prod:
 | `cognito_mfa_configuration`            | `OFF`             | `OPTIONAL`         | `OPTIONAL`         |
 | `dynamodb_billing_mode`                | `PAY_PER_REQUEST` | `PROVISIONED`      | `PROVISIONED`      |
 | `s3_lifecycle_glacier_transition_days` | `90`              | `90`               | `90`               |
+| `secrets_manager_rds_rotation_days`    | `30`              | `30`               | `30`               |
 
 Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 `prod.tfvars.example`.
@@ -57,3 +58,4 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 | 2.7  | `cognito`         | ✅     |
 | 2.8  | `dynamodb`        | ✅     |
 | 2.9  | `s3`              | ✅     |
+| 2.10 | `secrets-manager` | ✅     |

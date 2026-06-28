@@ -1,0 +1,30 @@
+locals {
+  name_prefix = "${var.project_name}-${var.environment}"
+
+  enable_rds_rotation = coalesce(
+    var.enable_rds_rotation,
+    true
+  )
+
+  rds_rotation_days = coalesce(
+    var.rds_rotation_days,
+    30
+  )
+
+  rotate_immediately = coalesce(
+    var.rotate_immediately,
+    var.environment != "dev"
+  )
+
+  rds_rotation_lambda_name = "${local.name_prefix}-rds-rotation"
+
+  common_tags = merge(
+    var.tags,
+    {
+      Project     = var.project_name
+      Environment = var.environment
+      ManagedBy   = "terraform"
+      Component   = "secrets-manager"
+    }
+  )
+}

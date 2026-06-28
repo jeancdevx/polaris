@@ -129,7 +129,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | # | Tarea Kafka | DoD |
 |---|-------------|-----|
 | 2.12 | Lambda `kafka-topic-creator` (Node 24) o provisioner | 8 topics creados en MSK |
-| 2.13 | Verificar conectividad IAM desde VPC | Script de smoke test |
+| 2.13 | Verificar conectividad IAM desde VPC | ✅ Lambda `kafka-msk-smoke` + `pnpm kafka:smoke:msk:dev` |
 
 **Reglas críticas:**
 

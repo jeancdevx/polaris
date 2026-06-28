@@ -23,8 +23,9 @@ Módulos planificados:
 16. `iot-core`
 17. `appsync`
 18. `secrets-manager` ✅
-19. `observability` (CloudWatch dashboards/alarms)
-20. `edge` (Route53, CloudFront, WAF — solo staging/prod)
+19. `kafka-topic-creator` ✅ (Fase 2.12 — Lambda infra MSK topics)
+20. `observability` (CloudWatch dashboards/alarms)
+21. `edge` (Route53, CloudFront, WAF — solo staging/prod)
 
 ## Convenciones
 

@@ -24,8 +24,9 @@ Módulos planificados:
 17. `appsync`
 18. `secrets-manager` ✅
 19. `kafka-topic-creator` ✅ (Fase 2.12 — Lambda infra MSK topics)
-20. `observability` (CloudWatch dashboards/alarms)
-21. `edge` (Route53, CloudFront, WAF — solo staging/prod)
+20. `kafka-msk-smoke` ✅ (Fase 2.13 — Lambda smoke MSK IAM desde VPC)
+21. `observability` (CloudWatch dashboards/alarms)
+22. `edge` (Route53, CloudFront, WAF — solo staging/prod)
 
 ## Convenciones
 

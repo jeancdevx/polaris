@@ -3,5 +3,8 @@ module "iam" {
 
   project_name = var.project_name
   environment  = var.environment
-  tags         = var.tags
+
+  msk_cluster_arn = module.kafka.cluster_arn
+
+  tags = var.tags
 }

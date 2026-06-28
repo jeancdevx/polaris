@@ -207,7 +207,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 |---|-------|-----|
 | 9.1 | IaC: `edge` — Route53, CloudFront, WAF | Solo staging/prod |
 | 9.2 | `environments/staging` + `environments/prod` | Plans independientes |
-| 9.3 | MSK prod: brokers `kafka.m5.large`, RF=3 | Documentado en tfvars |
+| 9.3 | MSK prod: brokers `kafka.m5.xlarge`, RF=3 | Documentado en tfvars |
 | 9.4 | Load tests k6 — 1000 usuarios concurrentes | Reporte latencia p95 |
 
 ---

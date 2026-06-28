@@ -46,6 +46,54 @@ variable "enable_vpc_endpoints" {
   default     = true
 }
 
+variable "kafka_broker_count" {
+  description = "Number of MSK broker nodes. Null uses module default."
+  type        = number
+  default     = null
+}
+
+variable "kafka_broker_instance_type" {
+  description = "MSK broker instance type. Null uses module default per environment."
+  type        = string
+  default     = null
+}
+
+variable "kafka_broker_volume_size_gb" {
+  description = "EBS volume size per MSK broker in GB. Null uses module default."
+  type        = number
+  default     = null
+}
+
+variable "kafka_default_num_partitions" {
+  description = "Default Kafka topic partition count"
+  type        = number
+  default     = null
+}
+
+variable "kafka_default_replication_factor" {
+  description = "Default Kafka topic replication factor"
+  type        = number
+  default     = null
+}
+
+variable "kafka_log_retention_hours" {
+  description = "Kafka log retention in hours. Null uses module default per environment."
+  type        = number
+  default     = null
+}
+
+variable "kafka_min_insync_replicas" {
+  description = "Kafka min.insync.replicas setting"
+  type        = number
+  default     = null
+}
+
+variable "kafka_version" {
+  description = "Apache Kafka version for MSK"
+  type        = string
+  default     = "3.9.x.kraft"
+}
+
 variable "private_subnet_cidrs" {
   description = "CIDR blocks for private tier subnets"
   type        = list(string)

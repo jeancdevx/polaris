@@ -37,3 +37,12 @@ redis_transit_encryption_enabled     = true
 redis_major_engine_version           = "7"
 redis_serverless_max_data_storage_gb = 10
 redis_serverless_max_ecpu_per_second = 5000
+
+kafka_version                    = "3.9.x.kraft"
+kafka_broker_count               = 3
+kafka_broker_instance_type       = "kafka.m5.xlarge"
+kafka_broker_volume_size_gb      = 500
+kafka_log_retention_hours        = 336
+kafka_default_replication_factor = 3
+kafka_min_insync_replicas        = 2
+kafka_default_num_partitions     = 3

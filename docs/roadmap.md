@@ -145,7 +145,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | # | Tarea | DoD |
 |---|-------|-----|
 | 3.1 | Scaffold `apps/api-service` — NestJS 11 + Fastify + ESM | ✅ `pnpm dev --filter api-service` · `curl localhost:3001/health` |
-| 3.2 | Auth Cognito (signup/signin/refresh/logout) | Tests + integración dev |
+| 3.2 | Auth Cognito (signup/signin/refresh/logout) | ✅ Tests Vitest + `pnpm test:integration:auth` contra User Pool dev |
 | 3.3 | `GET /parking/availability` — Redis + fallback RDS | Test integración |
 | 3.4 | Dockerfile multi-stage + push ECR | Imagen en registry |
 | 3.5 | IaC: `ecr` + `ecs` — **solo api-service** (1 servicio) | ALB health check verde |

@@ -22,7 +22,7 @@ Módulos planificados:
 15. `sqs`
 16. `iot-core`
 17. `appsync`
-18. `secrets-manager`
+18. `secrets-manager` ✅
 19. `observability` (CloudWatch dashboards/alarms)
 20. `edge` (Route53, CloudFront, WAF — solo staging/prod)
 

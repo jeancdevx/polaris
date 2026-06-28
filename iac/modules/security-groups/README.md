@@ -30,8 +30,17 @@ IDs de salida sin referencias cruzadas inversas.
 | Lambda SG | MSK     | 9098                |
 | MSK SG    | MSK SG  | all (inter-broker)  |
 
-ALB acepta tráfico desde el CIDR de la VPC (API Gateway VPC Link en Fase 3). ECS
-y Lambda conservan egress por defecto de AWS hacia NAT/endpoints.
+**Egress Lambda:** los SG creados vía Terraform no incluyen egress implícito.
+Reglas explícitas en `rules.tf`:
+
+| Lambda SG → | Puerto | Uso                                          |
+| ----------- | ------ | -------------------------------------------- |
+| VPC CIDR    | 443    | Interface endpoints (STS para MSK IAM, Logs) |
+| MSK SG      | 9098   | Cliente Kafka                                |
+| RDS SG      | 5432   | Lambdas con Aurora                           |
+| Redis SG    | 6379   | Lambdas con cache                            |
+
+ALB acepta tráfico desde el CIDR de la VPC (API Gateway VPC Link en Fase 3).
 
 ## Uso
 

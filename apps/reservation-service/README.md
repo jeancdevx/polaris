@@ -21,10 +21,10 @@ Health check (puerto por defecto **3002**):
 curl http://localhost:3002/health
 ```
 
-### Reservas (4.2)
+### Reservas (4.2 + 4.5)
 
-`api-service` reenviará el `userId` del JWT en el header `X-User-Id` (Fase 4.5).
-En local, pásalo manualmente:
+API Gateway inyecta `X-User-Id` desde `preferred_username` del **idToken**
+Cognito. Ver `iac/modules/api-gateway/README.md` para E2E. Local:
 
 ```bash
 curl -X POST http://localhost:3002/parking/reserve \
@@ -83,10 +83,10 @@ cd iac/environments/dev && terraform apply
 
 ## Roadmap
 
-| Fase | Tarea                          |
-| ---- | ------------------------------ |
-| 4.1  | Scaffold                       |
-| 4.2  | `POST/DELETE /parking/reserve` |
-| 4.3  | Kafka producers                |
-| 4.4  | IaC ECS                        |
-| 4.5  | API Gateway                    |
+| Fase | Tarea                             |
+| ---- | --------------------------------- |
+| 4.1  | Scaffold                          |
+| 4.2  | `POST/DELETE /parking/reserve`    |
+| 4.3  | Kafka producers                   |
+| 4.4  | IaC ECS                           |
+| 4.5  | API Gateway — rutas de reserva ✅ |

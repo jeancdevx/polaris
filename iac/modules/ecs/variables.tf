@@ -87,6 +87,11 @@ variable "ecs_api_service_task_role_arn" {
   type        = string
 }
 
+variable "ecs_reservation_service_task_role_arn" {
+  description = "IAM task role ARN for reservation-service"
+  type        = string
+}
+
 variable "ecs_security_group_id" {
   description = "Security group ID for ECS Fargate tasks"
   type        = string
@@ -117,6 +122,12 @@ variable "health_check_path" {
   description = "HTTP path for target group health checks"
   type        = string
   default     = "/health"
+}
+
+variable "kafka_bootstrap_brokers_sasl_iam" {
+  description = "MSK bootstrap brokers for IAM SASL clients"
+  type        = string
+  sensitive   = true
 }
 
 variable "log_retention_days" {
@@ -166,6 +177,47 @@ variable "redis_url" {
   description = "Redis connection URL for api-service"
   type        = string
   sensitive   = true
+}
+
+variable "reservation_service_container_port" {
+  description = "Container port exposed by reservation-service"
+  type        = number
+  default     = 3002
+}
+
+variable "reservation_service_cpu" {
+  description = "Fargate CPU units for reservation-service"
+  type        = number
+  default     = 256
+}
+
+variable "reservation_service_desired_count" {
+  description = "Desired task count for reservation-service"
+  type        = number
+  default     = 2
+}
+
+variable "reservation_service_ecr_repository_url" {
+  description = "ECR repository URL for reservation-service"
+  type        = string
+}
+
+variable "reservation_service_image_tag" {
+  description = "Container image tag for reservation-service"
+  type        = string
+  default     = "latest"
+}
+
+variable "reservation_service_memory" {
+  description = "Fargate memory (MiB) for reservation-service"
+  type        = number
+  default     = 512
+}
+
+variable "reservation_service_name" {
+  description = "Override for reservation-service ECS resource names"
+  type        = string
+  default     = null
 }
 
 variable "tags" {

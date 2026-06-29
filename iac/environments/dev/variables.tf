@@ -5,9 +5,9 @@ variable "alb_logs_prefix" {
 }
 
 variable "alb_ingress_cidr_blocks" {
-  description = "CIDR blocks allowed to reach the ALB. Default 0.0.0.0/0 in dev for direct health checks until API Gateway (3.6)."
+  description = "Optional CIDR ingress to internal ALB for debug (curl from VPC). Empty = VPC Link only."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []
 }
 
 variable "api_service_cpu" {

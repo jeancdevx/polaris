@@ -5,36 +5,14 @@ import {
   parseBearerAccessToken,
   parseLogoutBody,
   parseRefreshBody,
-  parseSigninBody,
-  parseSignupBody
+  parseSigninBody
 } from './auth-body.validation.js'
 
 describe('auth body validation', () => {
-  it('parses signup body', () => {
-    expect(
-      parseSignupBody({
-        email: 'User@Example.com',
-        password: 'Secret123!'
-      })
-    ).toEqual({
-      email: 'user@example.com',
-      password: 'Secret123!'
-    })
-  })
-
-  it('rejects invalid signup email', () => {
-    expect(() =>
-      parseSignupBody({
-        email: 'not-an-email',
-        password: 'Secret123!'
-      })
-    ).toThrow(BadRequestException)
-  })
-
   it('parses signin body', () => {
     expect(
       parseSigninBody({
-        email: 'user@example.com',
+        email: 'User@Example.com',
         password: 'Secret123!'
       })
     ).toEqual({

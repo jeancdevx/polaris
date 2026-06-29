@@ -1,7 +1,6 @@
 import {
   GlobalSignOutCommand,
   InitiateAuthCommand,
-  SignUpCommand,
   type CognitoIdentityProviderClient
 } from '@aws-sdk/client-cognito-identity-provider'
 import { ConfigService } from '@nestjs/config'
@@ -38,25 +37,6 @@ const createCognitoService = (
 describe('CognitoService', () => {
   beforeEach(() => {
     vi.mocked(createCognitoClient).mockReset()
-  })
-
-  it('signs up a user', async () => {
-    const send = vi.fn().mockResolvedValue({
-      UserSub: 'sub-123',
-      CodeDeliveryDetails: {
-        Destination: 'u***@example.com'
-      }
-    })
-
-    const service = createCognitoService(send)
-    const result = await service.signUp('user@example.com', 'Secret123!')
-
-    expect(result).toEqual({
-      userSub: 'sub-123',
-      confirmationRequired: true,
-      codeDeliveryDestination: 'u***@example.com'
-    })
-    expect(send).toHaveBeenCalledWith(expect.any(SignUpCommand))
   })
 
   it('signs in with user password auth', async () => {

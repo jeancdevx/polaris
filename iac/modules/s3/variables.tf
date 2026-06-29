@@ -1,3 +1,9 @@
+variable "alb_logs_prefix" {
+  description = "S3 key prefix for ALB access logs (must match the prefix on the load balancer)"
+  type        = string
+  default     = ""
+}
+
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string

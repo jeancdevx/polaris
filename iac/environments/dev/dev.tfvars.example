@@ -18,9 +18,9 @@ enable_nat_gateway   = true
 single_nat_gateway   = true
 enable_vpc_endpoints = true
 
-# ALB interno — tráfico solo desde VPC (API Gateway VPC Link)
+# ALB interno — entrada vía API Gateway VPC Link. Opcional debug desde VPC:
 # alb_ingress_cidr_blocks = ["10.0.0.0/16"]
-alb_logs_prefix         = "api-service"
+alb_logs_prefix = "api-service"
 
 rds_capacity_mode           = "serverless"
 rds_serverless_min_capacity = 0.5

@@ -14,8 +14,8 @@ Módulos planificados:
 7. `cognito` ✅
 8. `dynamodb` ✅
 9. `s3` ✅
-10. `ecs`
-11. `ecr`
+10. `ecs` ✅ (Fase 3.5 — api-service)
+11. `ecr` ✅ (Fase 3.5 — api-service)
 12. `api-gateway`
 13. `lambda`
 14. `eventbridge`

@@ -65,6 +65,51 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 | 3.5  | `ecr`                 | ✅     |
 | 3.5  | `ecs` (api-service)   | ✅     |
 | 3.6  | `api-gateway`         | ✅     |
+| 4.4  | `ecr` (reservation)   | ✅     |
+| 4.4  | `ecs` (reservation)   | ✅     |
+
+## ECS reservation-service (4.4)
+
+1. Importar ECR si ya existe:
+
+```bash
+terraform import 'module.ecr_reservation_service.aws_ecr_repository.service' polaris-dev-reservation-service
+```
+
+2. Build y push:
+
+```bash
+pnpm docker:push:reservation-service:dev
+```
+
+3. Aplicar (mismo `terraform apply` que el resto del entorno).
+
+4. Verificar 2 tasks:
+
+```bash
+aws ecs describe-services \
+  --cluster "$(terraform output -raw api_service_ecs_cluster_name)" \
+  --services "$(terraform output -raw reservation_service_ecs_service_name)" \
+  --region us-east-2 \
+  --query 'services[0].{desired:desiredCount,running:runningCount}'
+```
+
+Desde VPC (con `alb_ingress_cidr_blocks`):
+
+```bash
+ALB=$(terraform output -raw api_service_alb_dns_name)
+curl -s -X POST "http://${ALB}/parking/reserve" \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: usr-12345" \
+  -d '{"parkingSpotId":"spot-07","reservationDate":"2025-06-19T14:00:00.000Z"}'
+```
+
+Tras cambiar el secret de reservation-service, redeploy:
+
+```bash
+aws ecs update-service --cluster polaris-dev-cluster \
+  --service polaris-dev-reservation-service --force-new-deployment --region us-east-2
+```
 
 ## ECS api-service (3.5)
 

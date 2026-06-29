@@ -1,11 +1,13 @@
 resource "aws_security_group_rule" "alb_to_ecs" {
+  for_each = toset([for port in var.ecs_container_ports : tostring(port)])
+
   type                     = "egress"
   security_group_id        = aws_security_group.alb.id
   protocol                 = "tcp"
-  from_port                = var.ecs_container_port
-  to_port                  = var.ecs_container_port
+  from_port                = tonumber(each.key)
+  to_port                  = tonumber(each.key)
   source_security_group_id = aws_security_group.ecs.id
-  description              = "Forward traffic to ECS tasks"
+  description              = "Forward traffic to ECS tasks on port ${each.key}"
 }
 
 resource "aws_security_group_rule" "alb_from_vpc_link" {
@@ -91,12 +93,15 @@ resource "aws_security_group_rule" "alb_http_ingress" {
 }
 
 resource "aws_security_group_rule" "ecs_from_alb" {
+  for_each = toset([for port in var.ecs_container_ports : tostring(port)])
+
   type                     = "ingress"
   security_group_id        = aws_security_group.ecs.id
   protocol                 = "tcp"
-  from_port                = var.ecs_container_port
-  to_port                  = var.ecs_container_port
+  from_port                = tonumber(each.key)
+  to_port                  = tonumber(each.key)
   source_security_group_id = aws_security_group.alb.id
+  description              = "HTTP from ALB on port ${each.key}"
 }
 
 resource "aws_security_group_rule" "rds_from_ecs" {

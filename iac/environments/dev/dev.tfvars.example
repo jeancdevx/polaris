@@ -22,6 +22,10 @@ enable_vpc_endpoints = true
 # alb_ingress_cidr_blocks = ["10.0.0.0/16"]
 alb_logs_prefix = "api-service"
 
+api_service_desired_count = 1
+
+reservation_service_desired_count = 2
+
 rds_capacity_mode           = "serverless"
 rds_serverless_min_capacity = 0.5
 rds_serverless_max_capacity = 2

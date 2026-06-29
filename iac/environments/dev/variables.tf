@@ -390,6 +390,30 @@ variable "redis_transit_encryption_enabled" {
   default     = null
 }
 
+variable "reservation_service_cpu" {
+  description = "Fargate CPU units for reservation-service"
+  type        = number
+  default     = 256
+}
+
+variable "reservation_service_desired_count" {
+  description = "Desired ECS task count for reservation-service"
+  type        = number
+  default     = 2
+}
+
+variable "reservation_service_image_tag" {
+  description = "ECR image tag deployed for reservation-service"
+  type        = string
+  default     = "latest"
+}
+
+variable "reservation_service_memory" {
+  description = "Fargate memory (MiB) for reservation-service"
+  type        = number
+  default     = 512
+}
+
 variable "s3_force_destroy" {
   description = "Allow S3 bucket deletion when objects remain. Null enables in dev only."
   type        = bool

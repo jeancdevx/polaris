@@ -4,10 +4,15 @@ variable "alb_ingress_cidr_blocks" {
   default     = []
 }
 
-variable "ecs_container_port" {
-  description = "Container port exposed by ECS services behind the load balancer"
-  type        = number
-  default     = 3001
+variable "ecs_container_ports" {
+  description = "Container ports exposed by ECS services behind the load balancer"
+  type        = list(number)
+  default     = [3001, 3002]
+
+  validation {
+    condition     = length(var.ecs_container_ports) > 0
+    error_message = "ecs_container_ports must include at least one port."
+  }
 }
 
 variable "environment" {

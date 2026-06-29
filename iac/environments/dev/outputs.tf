@@ -33,6 +33,16 @@ output "api_service_ecr_repository_url" {
   value       = module.ecr.repository_url
 }
 
+output "reservation_service_ecr_repository_url" {
+  description = "ECR repository URL for reservation-service"
+  value       = module.ecr_reservation_service.repository_url
+}
+
+output "reservation_service_ecs_service_name" {
+  description = "ECS service name for reservation-service"
+  value       = "${var.project_name}-${var.environment}-reservation-service"
+}
+
 output "api_service_ecs_cluster_name" {
   description = "ECS cluster name"
   value       = module.ecs.cluster_name
@@ -61,6 +71,11 @@ output "cognito_user_pool_id" {
 output "ecs_api_service_task_role_arn" {
   description = "IAM task role ARN for api-service ECS tasks"
   value       = module.iam.ecs_api_service_task_role_arn
+}
+
+output "ecs_reservation_service_task_role_arn" {
+  description = "IAM task role ARN for reservation-service ECS tasks"
+  value       = module.iam.ecs_reservation_service_task_role_arn
 }
 
 output "ecs_task_execution_role_arn" {

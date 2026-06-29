@@ -22,7 +22,7 @@ IDs de salida sin referencias cruzadas inversas.
 | Origen      | Destino | Puerto                                                         |
 | ----------- | ------- | -------------------------------------------------------------- |
 | VPC link SG | ALB     | 80 (entrada pública vía API GW)                                |
-| ALB SG      | ECS     | 3001 (egress ALB → targets)                                    |
+| ALB SG      | ECS     | 3001, 3002 (egress ALB → targets)                              |
 | VPC CIDR    | ALB     | 80 (opcional, solo si `alb_ingress_cidr_blocks` no está vacío) |
 | ECS SG      | RDS     | 5432                                                           |
 | Lambda SG   | RDS     | 5432                                                           |
@@ -41,7 +41,7 @@ IDs de salida sin referencias cruzadas inversas.
 | RDS SG      | 5432     | Aurora PostgreSQL                 |
 | Redis SG    | 6379     | ElastiCache Redis                 |
 | MSK SG      | 9098     | Cliente Kafka (fases posteriores) |
-| ALB SG      | ECS      | 3001 (egress ALB → targets)       |
+| ALB SG      | ECS      | 3001, 3002 (egress ALB → targets) |
 | VPC link SG | ALB      | 80 (egress)                       |
 | ALB SG      | VPC link | 80 (ingress)                      |
 

@@ -74,6 +74,13 @@ pnpm --filter reservation-service test:integration:reservation
 pnpm --filter reservation-service test:integration:kafka
 ```
 
+### Despliegue ECS (4.4)
+
+```bash
+pnpm docker:push:reservation-service:dev
+cd iac/environments/dev && terraform apply
+```
+
 ## Roadmap
 
 | Fase | Tarea                          |

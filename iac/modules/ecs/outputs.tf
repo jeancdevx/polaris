@@ -39,6 +39,27 @@ output "api_service_task_definition_arn" {
   value       = aws_ecs_task_definition.api_service.arn
 }
 
+output "reservation_service_env_secret_arn" {
+  description = "Secrets Manager ARN with DATABASE_URL, REDIS_URL and KAFKA_BROKERS for reservation-service"
+  value       = aws_secretsmanager_secret.reservation_service_env.arn
+  sensitive   = true
+}
+
+output "reservation_service_log_group_name" {
+  description = "CloudWatch log group for reservation-service ECS tasks"
+  value       = aws_cloudwatch_log_group.reservation_service.name
+}
+
+output "reservation_service_target_group_arn" {
+  description = "Target group ARN for reservation-service"
+  value       = aws_lb_target_group.reservation_service.arn
+}
+
+output "reservation_service_task_definition_arn" {
+  description = "Task definition ARN for reservation-service"
+  value       = aws_ecs_task_definition.reservation_service.arn
+}
+
 output "cluster_arn" {
   description = "ECS cluster ARN"
   value       = aws_ecs_cluster.main.arn

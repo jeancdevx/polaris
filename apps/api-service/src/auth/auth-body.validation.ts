@@ -1,13 +1,6 @@
 import { BadRequestException } from '@nestjs/common'
 
-import type {
-  LogoutBody,
-  RefreshBody,
-  SigninBody,
-  SignupBody
-} from './types/auth.types.js'
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+import type { LogoutBody, RefreshBody, SigninBody } from './types/auth.types.js'
 
 const readStringField = (
   body: Record<string, unknown>,
@@ -27,18 +20,6 @@ const readObjectBody = (body: unknown): Record<string, unknown> => {
   }
 
   return body as Record<string, unknown>
-}
-
-export const parseSignupBody = (body: unknown): SignupBody => {
-  const record = readObjectBody(body)
-  const email = readStringField(record, 'email').toLowerCase()
-  const password = readStringField(record, 'password')
-
-  if (!EMAIL_PATTERN.test(email)) {
-    throw new BadRequestException('email must be a valid email address')
-  }
-
-  return { email, password }
 }
 
 export const parseSigninBody = (body: unknown): SigninBody => {

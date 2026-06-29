@@ -68,6 +68,12 @@ importers:
       '@nestjs/platform-fastify':
         specifier: 11.1.27
         version: 11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@polaris/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@polaris/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
       redis:
         specifier: 6.0.0
         version: 6.0.0

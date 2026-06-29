@@ -159,7 +159,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 
 | # | Tarea | DoD |
 |---|-------|-----|
-| 4.1 | Scaffold `apps/reservation-service` | Servicio arranca |
+| 4.1 | Scaffold `apps/reservation-service` | ✅ `pnpm dev --filter reservation-service` · `curl localhost:3002/health` |
 | 4.2 | `POST /parking/reserve`, `DELETE /parking/reserve/{id}` | Lock Redis, persist RDS |
 | 4.3 | Publicar `reservation.created` / `reservation.cancelled` a **MSK** | Mensaje en topic |
 | 4.4 | IaC: desplegar reservation-service en ECS | 2 tasks dev |
@@ -244,7 +244,7 @@ Fase 0  ✅ Fundación monorepo
 Fase 1  ✅  Dominio + DB + Kafka local
 Fase 2     IaC: VPC, SG, IAM, RDS, Redis, MSK, Cognito, DynamoDB, S3
 Fase 3  ▶  api-service + ECS + API Gateway (slice #1) — 3.1 ✅
-Fase 4     reservation-service + Kafka producers
+Fase 4  ▶  reservation-service + Kafka producers — 4.1 ✅
 Fase 5     event-processor + Lambdas + EventBridge
 Fase 6     admin-service + IoT Core
 Fase 7     AppSync + frontends

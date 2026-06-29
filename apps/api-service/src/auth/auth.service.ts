@@ -4,24 +4,14 @@ import {
   parseBearerAccessToken,
   parseLogoutBody,
   parseRefreshBody,
-  parseSigninBody,
-  parseSignupBody
+  parseSigninBody
 } from './auth-body.validation.js'
 import { CognitoService } from './cognito.service.js'
-import type {
-  AuthTokensResponse,
-  MessageResponse,
-  SignupResponse
-} from './types/auth.types.js'
+import type { AuthTokensResponse, MessageResponse } from './types/auth.types.js'
 
 @Injectable()
 export class AuthService {
   constructor(private readonly cognitoService: CognitoService) {}
-
-  signUp(body: unknown): Promise<SignupResponse> {
-    const { email, password } = parseSignupBody(body)
-    return this.cognitoService.signUp(email, password)
-  }
 
   signIn(body: unknown): Promise<AuthTokensResponse> {
     const { email, password } = parseSigninBody(body)

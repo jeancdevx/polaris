@@ -38,6 +38,7 @@ los knobs que cambian entre dev/staging/prod:
 | `kafka_broker_instance_type`           | `kafka.m5.large`  | `kafka.m5.large`   | `kafka.m5.xlarge`  |
 | `kafka_log_retention_hours`            | `168`             | `168`              | `336`              |
 | `cognito_mfa_configuration`            | `OFF`             | `OPTIONAL`         | `OPTIONAL`         |
+| `cognito_admin_create_user_only`       | `true`            | `true`             | `true`             |
 | `dynamodb_billing_mode`                | `PAY_PER_REQUEST` | `PROVISIONED`      | `PROVISIONED`      |
 | `s3_lifecycle_glacier_transition_days` | `90`              | `90`               | `90`               |
 | `secrets_manager_rds_rotation_days`    | `30`              | `30`               | `30`               |

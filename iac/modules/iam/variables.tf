@@ -1,3 +1,9 @@
+variable "cognito_user_pool_arn" {
+  description = "Cognito user pool ARN for api-service task role auth permissions"
+  type        = string
+  default     = ""
+}
+
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string

@@ -14,21 +14,28 @@ Amazon Cognito User Pool para identidades de app móvil/web, según
 
 ## Configuración por entorno
 
-| Entorno          | MFA      | Deletion protection | Dominio hosted UI                    |
-| ---------------- | -------- | ------------------- | ------------------------------------ |
-| **dev**          | OFF      | off                 | opcional (`create_user_pool_domain`) |
-| **staging/prod** | OPTIONAL | prod on             | opcional                             |
+| Entorno          | MFA      | Deletion protection | Alta usuarios                         |
+| ---------------- | -------- | ------------------- | ------------------------------------- |
+| **dev**          | OFF      | off                 | solo admin (`admin_create_user_only`) |
+| **staging/prod** | OPTIONAL | prod on             | solo admin                            |
 
 MFA opcional para admins (arquitectura): habilitado fuera de dev; los admins
 pueden activar TOTP en Cognito.
 
-## Flujos soportados (Fase 3)
+## Flujos soportados
 
-El app client expone flujos para `api-service`:
+| Actor                                 | Flujo                                                          |
+| ------------------------------------- | -------------------------------------------------------------- |
+| **Usuario final** (`api-service`)     | Sign in, refresh, logout — cuenta creada previamente por admin |
+| **Admin** (`admin-service`, Flujo 20) | `AdminCreateUser` + grupo `user`/`admin` + RDS + RFID          |
 
-- Sign up / sign in (`ALLOW_USER_PASSWORD_AUTH`, `ALLOW_USER_SRP_AUTH`)
+El app client expone para `api-service`:
+
+- Sign in (`ALLOW_USER_PASSWORD_AUTH`, `ALLOW_USER_SRP_AUTH`)
 - Refresh (`ALLOW_REFRESH_TOKEN_AUTH`)
 - JWT para API Gateway HTTP API authorizer
+
+**No hay signup público** — `allow_admin_create_user_only = true`.
 
 ## Uso
 
@@ -36,8 +43,9 @@ El app client expone flujos para `api-service`:
 module "cognito" {
   source = "../../modules/cognito"
 
-  project_name = "polaris"
-  environment  = "dev"
+  project_name             = "polaris"
+  environment              = "dev"
+  admin_create_user_only   = true
 }
 ```
 

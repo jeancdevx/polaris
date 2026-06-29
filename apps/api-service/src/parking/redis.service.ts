@@ -1,6 +1,6 @@
-import { createClient, type RedisClientType } from 'redis'
 import { Injectable, type OnModuleDestroy } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { createClient, type RedisClientType } from 'redis'
 
 import { PARKING_CONFIG_KEY, type ParkingConfig } from './parking.config.js'
 

@@ -1,82 +1,78 @@
 # ECS module
 
-Cluster ECS Fargate, ALB y despliegue de **api-service** (Fase 3.5).
+Cluster ECS Fargate, ALB interno y despliegue de **api-service** (Fase 3.5) y
+**reservation-service** (Fase 4.4).
 
 ## Archivos
 
-| Archivo                  | Responsabilidad                               |
-| ------------------------ | --------------------------------------------- |
-| `cluster.tf`             | ECS cluster                                   |
-| `alb.tf`                 | Application Load Balancer                     |
-| `target-group.tf`        | Target group + listener HTTP                  |
-| `log-group.tf`           | CloudWatch Logs                               |
-| `api-service-secrets.tf` | Secret compuesto `DATABASE_URL` + `REDIS_URL` |
-| `api-service-task.tf`    | Task definition Fargate                       |
-| `api-service-service.tf` | ECS service + registro en ALB                 |
+| Archivo                                 | Responsabilidad                               |
+| --------------------------------------- | --------------------------------------------- |
+| `cluster.tf`                            | ECS cluster                                   |
+| `alb.tf`                                | Application Load Balancer                     |
+| `target-group.tf`                       | Target group api-service + listener HTTP      |
+| `reservation-service-target-group.tf`   | Target group reservation-service              |
+| `reservation-service-listener-rules.tf` | Reglas ALB `/parking/reserve`                 |
+| `log-group.tf`                          | CloudWatch Logs                               |
+| `api-service-secrets.tf`                | Secret `DATABASE_URL` + `REDIS_URL`           |
+| `reservation-service-secrets.tf`        | Secret + `KAFKA_BROKERS` (MSK IAM)            |
+| `api-service-task.tf`                   | Task definition api-service                   |
+| `reservation-service-task.tf`           | Task definition reservation-service           |
+| `api-service-service.tf`                | ECS service api-service                       |
+| `reservation-service-service.tf`        | ECS service reservation-service (2 tasks dev) |
 
-## Secret de aplicación
+## Routing ALB
 
-El secret `{project}-{env}-api-service-env` combina credenciales RDS (username y
-password del secret gestionado de Aurora) con endpoint/puerto/base de datos del
-módulo `rds` y `REDIS_URL`. `DATABASE_URL` usa TLS con
-`uselibpqcompat=true&sslmode=require` (cifrado sin verificar CA del bundle RDS
-en dev; en prod valorar `verify-full` + CA bundle en la imagen).
+| Prioridad | Método   | Path                 | Target              |
+| --------- | -------- | -------------------- | ------------------- |
+| default   | \*       | \*                   | api-service         |
+| 10        | `POST`   | `/parking/reserve`   | reservation-service |
+| 11        | `DELETE` | `/parking/reserve/*` | reservation-service |
 
-## Health check
+## Secret reservation-service
 
-- Target group: `GET /health` → 200
-- Container: mismo path vía `fetch` en Node 24
+`{project}-{env}-reservation-service-env`:
 
-El ALB es **interno** por defecto (`alb_internal = true`, subnets privadas).
-Requerido para API Gateway VPC Link. La entrada pública es HTTP API, no el ALB.
+- `DATABASE_URL` — igual que api-service (RDS TLS)
+- `REDIS_URL`
+- `KAFKA_BROKERS` — bootstrap brokers SASL IAM de MSK
 
-## Uso
+Variables de entorno: `KAFKA_AUTH_MODE=iam`,
+`KAFKA_CLIENT_ID=reservation-service`.
 
-```hcl
-module "ecs" {
-  source = "../../modules/ecs"
-
-  project_name = "polaris"
-  environment  = "dev"
-  aws_region   = "us-east-2"
-
-  vpc_id             = module.vpc.vpc_id
-  public_subnet_ids  = module.vpc.public_subnet_ids
-  private_subnet_ids = module.vpc.private_subnet_ids
-
-  alb_security_group_id = module.security_groups.alb_security_group_id
-  ecs_security_group_id = module.security_groups.ecs_security_group_id
-
-  ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
-  ecs_api_service_task_role_arn = module.iam.ecs_api_service_task_role_arn
-
-  ecr_repository_url    = module.ecr.repository_url
-  api_service_image_tag   = "latest"
-  api_service_desired_count = 1
-
-  rds_master_user_secret_arn = module.rds.master_user_secret_arn
-  rds_cluster_endpoint       = module.rds.cluster_endpoint
-  rds_cluster_port           = module.rds.cluster_port
-  rds_database_name          = module.rds.database_name
-  redis_url                  = module.redis.redis_url
-
-  cognito_user_pool_id  = module.cognito.user_pool_id
-  cognito_app_client_id = module.cognito.app_client_id
-  cognito_issuer_url    = module.cognito.issuer_url
-
-  alb_logs_bucket_name = module.s3.alb_logs_bucket_name
-}
-```
+Task role: policy `msk_client` (publicar `reservation.created` /
+`reservation.cancelled`).
 
 ## Verificación post-apply
 
 ```bash
+# Imagen en ECR
+pnpm docker:push:reservation-service:dev
+
+cd iac/environments/dev
+terraform apply
+
+# Health api-service (listener default)
 ALB=$(terraform output -raw api_service_alb_dns_name)
 curl -s "http://${ALB}/health"
+
+# 2 tasks reservation-service
+aws ecs describe-services \
+  --cluster "$(terraform output -raw api_service_ecs_cluster_name)" \
+  --services "$(terraform output -raw reservation_service_ecs_service_name)" \
+  --query 'services[0].{desired:desiredCount,running:runningCount}'
+```
+
+Desde VPC (con `alb_ingress_cidr_blocks` o bastion):
+
+```bash
+curl -s -X POST "http://${ALB}/parking/reserve" \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: usr-12345" \
+  -d '{"parkingSpotId":"spot-07","reservationDate":"2025-06-19T14:00:00.000Z"}'
 ```
 
 ## Outputs
 
-- `alb_dns_name` — DNS del ALB (health check directo en 3.5)
-- `cluster_name`, `api_service_target_group_arn`
-- `api_service_env_secret_arn` (sensitive)
+- `reservation_service_target_group_arn`
+- `reservation_service_env_secret_arn` (sensitive)
+- `reservation_service_log_group_name`

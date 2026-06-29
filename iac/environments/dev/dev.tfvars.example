@@ -18,6 +18,10 @@ enable_nat_gateway   = true
 single_nat_gateway   = true
 enable_vpc_endpoints = true
 
+# ALB: 0.0.0.0/0 en dev para curl directo al ALB hasta API Gateway (3.6)
+alb_ingress_cidr_blocks = ["0.0.0.0/0"]
+alb_logs_prefix         = "api-service"
+
 rds_capacity_mode           = "serverless"
 rds_serverless_min_capacity = 0.5
 rds_serverless_max_capacity = 2

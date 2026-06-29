@@ -114,7 +114,29 @@ pnpm test:integration:parking    # Redis + RDS fallback
 
 Auth requiere credenciales AWS y `COGNITO_*` en `infra/local/.env.local`.
 
+### Docker (3.4)
+
+Build desde la raíz del monorepo (contexto = repo completo):
+
+```bash
+pnpm docker:build:api-service
+docker run --rm -p 3001:3001 \
+  -e DATABASE_URL=postgresql://user:pass@host:5432/polaris \
+  -e REDIS_URL=redis://host:6379 \
+  polaris-api-service:local
+curl http://localhost:3001/health
+```
+
+Push a ECR dev (requiere AWS CLI + Docker; crea el repo si no existe):
+
+```bash
+pnpm docker:push:api-service:dev
+# IMAGE_TAG=abc123 pnpm docker:push:api-service:dev
+```
+
+Repositorio ECR: `polaris-dev-api-service` (`{project}-{env}-api-service`).
+
 ## Roadmap
 
-Ver [docs/roadmap.md](../../docs/roadmap.md) Fase 3: Dockerfile (3.4), ECS
-(3.5).
+Ver [docs/roadmap.md](../../docs/roadmap.md) Fase 3: ECS (3.5), API Gateway
+(3.6).

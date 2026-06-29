@@ -28,14 +28,20 @@ output "redis_security_group_id" {
   value       = aws_security_group.redis.id
 }
 
+output "vpc_link_security_group_id" {
+  description = "Security group ID for API Gateway VPC link ENIs"
+  value       = aws_security_group.vpc_link.id
+}
+
 output "security_group_ids" {
   description = "Map of security group names to IDs"
   value = {
-    alb    = aws_security_group.alb.id
-    ecs    = aws_security_group.ecs.id
-    lambda = aws_security_group.lambda.id
-    msk    = aws_security_group.msk.id
-    rds    = aws_security_group.rds.id
-    redis  = aws_security_group.redis.id
+    alb      = aws_security_group.alb.id
+    ecs      = aws_security_group.ecs.id
+    lambda   = aws_security_group.lambda.id
+    msk      = aws_security_group.msk.id
+    rds      = aws_security_group.rds.id
+    redis    = aws_security_group.redis.id
+    vpc_link = aws_security_group.vpc_link.id
   }
 }

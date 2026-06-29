@@ -32,6 +32,7 @@ import {
   type ReservationConfig
 } from './reservation.config.js'
 import { generateReservationId } from './reservation-id.js'
+import { ReservationEventPublisher } from './reservation-event.publisher.js'
 import { mapReservationRow } from './reservation.mapper.js'
 import { ReservationRepository } from './reservation.repository.js'
 
@@ -42,7 +43,8 @@ export class ReservationService {
   constructor(
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-    private readonly reservationRepository: ReservationRepository
+    private readonly reservationRepository: ReservationRepository,
+    private readonly reservationEventPublisher: ReservationEventPublisher
   ) {}
 
   async create(
@@ -98,7 +100,10 @@ export class ReservationService {
           `Reservation ${row.reservationId} created for spot ${spotId.value}`
         )
 
-        return mapReservationRow(row)
+        const reservationDto = mapReservationRow(row)
+        await this.reservationEventPublisher.publishCreated(reservationDto)
+
+        return reservationDto
       } finally {
         await client.del(lockKey)
       }
@@ -151,7 +156,10 @@ export class ReservationService {
 
       this.logger.log(`Reservation ${updatedRow.reservationId} cancelled`)
 
-      return mapReservationRow(updatedRow)
+      const reservationDto = mapReservationRow(updatedRow)
+      await this.reservationEventPublisher.publishCancelled(reservationDto)
+
+      return reservationDto
     } catch (error) {
       throw this.mapDomainError(error)
     }

@@ -6,17 +6,6 @@ export type AuthTokensResponse = {
   tokenType: 'Bearer'
 }
 
-export type SignupResponse = {
-  userSub: string
-  confirmationRequired: true
-  codeDeliveryDestination?: string
-}
-
-export type SignupBody = {
-  email: string
-  password: string
-}
-
 export type SigninBody = {
   email: string
   password: string

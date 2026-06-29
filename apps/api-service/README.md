@@ -25,6 +25,10 @@ Respuesta esperada:
 
 ### Auth Cognito (3.2)
 
+Los usuarios **no se auto-registran**. Un admin los da de alta (Flujo 20 →
+`admin-service`, Fase 6). `api-service` solo expone **signin / refresh /
+logout** para cuentas ya existentes en Cognito.
+
 Configura en `infra/local/.env.local` los outputs del User Pool dev:
 
 ```bash
@@ -45,12 +49,11 @@ Endpoints:
 
 | Método | Ruta            | Body                                       |
 | ------ | --------------- | ------------------------------------------ |
-| `POST` | `/auth/signup`  | `{ "email", "password" }`                  |
 | `POST` | `/auth/signin`  | `{ "email", "password" }`                  |
 | `POST` | `/auth/refresh` | `{ "refreshToken" }`                       |
 | `POST` | `/auth/logout`  | Bearer `accessToken` o `{ "accessToken" }` |
 
-Ejemplo signin:
+Ejemplo signin (usuario previamente creado por admin):
 
 ```bash
 curl -s -X POST http://localhost:3001/auth/signin \

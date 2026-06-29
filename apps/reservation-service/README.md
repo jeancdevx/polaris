@@ -46,13 +46,32 @@ Flujo interno:
 2. Verificar plaza libre en Redis
 3. Insertar reserva en RDS + actualizar `parking_spots`
 4. Actualizar hash Redis y contadores
-5. Liberar lock
+5. Publicar `reservation.created` o `reservation.cancelled` en Kafka
+6. Liberar lock
+
+### Kafka (4.3)
+
+Variables en `infra/local/.env.local` (mismas que el smoke test):
+
+```env
+KAFKA_BROKERS=localhost:9092,localhost:9094,localhost:9096
+KAFKA_CLIENT_ID=reservation-service
+```
+
+En MSK dev:
+
+```env
+KAFKA_BROKERS=<bootstrap_brokers_sasl_iam>
+KAFKA_AUTH_MODE=iam
+AWS_REGION=us-east-2
+```
 
 ## Tests
 
 ```bash
 pnpm --filter reservation-service test
 pnpm --filter reservation-service test:integration:reservation
+pnpm --filter reservation-service test:integration:kafka
 ```
 
 ## Roadmap

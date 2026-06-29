@@ -61,8 +61,33 @@ curl -s -X POST http://localhost:3001/auth/signin \
   -d '{"email":"juan@example.com","password":"..."}'
 ```
 
+### Disponibilidad (3.3)
+
+`GET /parking/availability` — lectura pública (Flujo 23). Redis primero
+(`parking:spot:*`), fallback a Aurora si la caché está fría.
+
+Requiere Postgres + Redis locales (`docker compose up`) y migraciones/seed:
+
+```bash
+pnpm db:migrate
+pnpm db:seed
+pnpm db:sync-redis   # opcional: calienta Redis desde RDS (dev local)
+```
+
+```bash
+curl -s http://localhost:3001/parking/availability
+```
+
+Respuesta tipada con `ParkingStatus` de `@polaris/shared-types`
+(`Cache-Control: max-age=30`).
+
 Variables generales (dev): carga automática desde `infra/local/.env.local` vía
 `@nestjs/config`.
+
+| Variable       | Descripción                      |
+| -------------- | -------------------------------- |
+| `DATABASE_URL` | Postgres (fallback RDS)          |
+| `REDIS_URL`    | Redis (ocupación en tiempo real) |
 
 | Variable | Default   | Descripción                              |
 | -------- | --------- | ---------------------------------------- |
@@ -71,25 +96,25 @@ Variables generales (dev): carga automática desde `infra/local/.env.local` vía
 
 ## Scripts
 
-| Comando                 | Descripción                             |
-| ----------------------- | --------------------------------------- |
-| `pnpm dev`              | Nest watch mode                         |
-| `pnpm build`            | Compila a `dist/`                       |
-| `pnpm start`            | Ejecuta `dist/main.js`                  |
-| `pnpm test`             | Vitest (unitarios)                      |
-| `pnpm test:integration` | Integración Cognito dev (User Pool AWS) |
+| Comando                         | Descripción                               |
+| ------------------------------- | ----------------------------------------- |
+| `pnpm dev`                      | Nest watch mode                           |
+| `pnpm build`                    | Compila a `dist/`                         |
+| `pnpm start`                    | Ejecuta `dist/main.js`                    |
+| `pnpm test`                     | Vitest (unitarios)                        |
+| `pnpm test:integration`         | Integración (auth + parking)              |
+| `pnpm test:integration:parking` | Integración availability (testcontainers) |
 
 Desde la raíz del monorepo:
 
 ```bash
-pnpm test:integration:auth
-# equivalente:
-pnpm --filter api-service test:integration
+pnpm test:integration:auth      # Cognito dev (AWS creds)
+pnpm test:integration:parking    # Redis + RDS fallback
 ```
 
-Requiere credenciales AWS y `COGNITO_*` en `infra/local/.env.local`.
+Auth requiere credenciales AWS y `COGNITO_*` en `infra/local/.env.local`.
 
 ## Roadmap
 
-Ver [docs/roadmap.md](../../docs/roadmap.md) Fase 3: availability (3.3), ECS
+Ver [docs/roadmap.md](../../docs/roadmap.md) Fase 3: Dockerfile (3.4), ECS
 (3.5).

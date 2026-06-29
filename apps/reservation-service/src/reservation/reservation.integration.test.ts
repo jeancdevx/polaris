@@ -2,6 +2,10 @@ import { ConflictException } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { Test, type TestingModule } from '@nestjs/testing'
 import {
+  KafkaContainer,
+  type StartedKafkaContainer
+} from '@testcontainers/kafka'
+import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer
 } from '@testcontainers/postgresql'
@@ -18,6 +22,9 @@ import {
   runSeed,
   type ParkingSpotRow
 } from '@polaris/database'
+import { createKafka } from '@polaris/kafka'
+import { KAFKA_TOPICS } from '@polaris/shared-types'
+import { sleep } from '@polaris/shared-utils'
 
 import {
   PARKING_SPOT_KEY_PREFIX,
@@ -25,6 +32,43 @@ import {
 } from './reservation.constants.js'
 import { ReservationModule } from './reservation.module.js'
 import { ReservationService } from './reservation.service.js'
+
+const kafkaBrokerAddress = (kafka: StartedKafkaContainer): string =>
+  `${kafka.getHost()}:${kafka.getMappedPort(9093)}`
+
+const ensureKafkaTopics = async (brokers: string[]): Promise<void> => {
+  const kafka = createKafka({
+    clientId: 'reservation-integration-test',
+    brokers,
+    logLevel: 0
+  })
+  const admin = kafka.admin()
+
+  for (let attempt = 0; attempt < 30; attempt++) {
+    try {
+      await admin.connect()
+      break
+    } catch {
+      await sleep(500)
+    }
+  }
+
+  await admin.createTopics({
+    topics: [
+      {
+        topic: KAFKA_TOPICS.RESERVATION_CREATED,
+        numPartitions: 1,
+        replicationFactor: 1
+      },
+      {
+        topic: KAFKA_TOPICS.RESERVATION_CANCELLED,
+        numPartitions: 1,
+        replicationFactor: 1
+      }
+    ]
+  })
+  await admin.disconnect()
+}
 
 const syncRedisFromRds = async (redisUrl: string): Promise<void> => {
   const dataSource = createDataSource()
@@ -67,36 +111,42 @@ const syncRedisFromRds = async (redisUrl: string): Promise<void> => {
 describe('reservation integration', () => {
   let postgres: StartedPostgreSqlContainer
   let redis: StartedRedisContainer
+  let kafka: StartedKafkaContainer
   let moduleRef: TestingModule
   let reservationService: ReservationService
 
   beforeAll(async () => {
-    ;[postgres, redis] = await Promise.all([
+    ;[postgres, redis, kafka] = await Promise.all([
       new PostgreSqlContainer('postgres:17.10-alpine')
         .withDatabase('parking_db')
         .withUsername('parking_admin')
         .withPassword('parking_dev')
         .start(),
-      new RedisContainer('redis:8.6.4-alpine').start()
+      new RedisContainer('redis:8.6.4-alpine').start(),
+      new KafkaContainer('confluentinc/cp-kafka:7.6.1').withKraft().start()
     ])
 
     process.env.DATABASE_URL = postgres.getConnectionUri()
     process.env.REDIS_URL = redis.getConnectionUrl()
+    process.env.KAFKA_BROKERS = kafkaBrokerAddress(kafka)
+    process.env.KAFKA_CLIENT_ID = 'reservation-service-test'
+    process.env.KAFKAJS_NO_PARTITIONER_WARNING = '1'
 
     await runMigrations()
     await runSeed()
     await syncRedisFromRds(process.env.REDIS_URL)
+    await ensureKafkaTopics(process.env.KAFKA_BROKERS.split(','))
 
     moduleRef = await Test.createTestingModule({
       imports: [ConfigModule.forRoot({ isGlobal: true }), ReservationModule]
     }).compile()
 
     reservationService = moduleRef.get(ReservationService)
-  }, 180_000)
+  }, 240_000)
 
   afterAll(async () => {
     await moduleRef?.close()
-    await Promise.all([postgres.stop(), redis.stop()])
+    await Promise.all([postgres.stop(), redis.stop(), kafka.stop()])
   }, 60_000)
 
   it('creates and cancels a reservation with Redis lock and RDS persistence', async () => {

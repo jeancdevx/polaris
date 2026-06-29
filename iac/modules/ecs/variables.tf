@@ -1,3 +1,9 @@
+variable "alb_internal" {
+  description = "Deploy an internal ALB in private subnets (required for API Gateway VPC Link)"
+  type        = bool
+  default     = true
+}
+
 variable "alb_logs_bucket_name" {
   description = "S3 bucket name for ALB access logs. Empty disables access logging."
   type        = string

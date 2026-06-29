@@ -18,8 +18,8 @@ enable_nat_gateway   = true
 single_nat_gateway   = true
 enable_vpc_endpoints = true
 
-# ALB: 0.0.0.0/0 en dev para curl directo al ALB hasta API Gateway (3.6)
-alb_ingress_cidr_blocks = ["0.0.0.0/0"]
+# ALB interno — tráfico solo desde VPC (API Gateway VPC Link)
+# alb_ingress_cidr_blocks = ["10.0.0.0/16"]
 alb_logs_prefix         = "api-service"
 
 rds_capacity_mode           = "serverless"

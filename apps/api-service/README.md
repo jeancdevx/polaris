@@ -138,16 +138,22 @@ Repositorio ECR: `polaris-dev-api-service` (`{project}-{env}-api-service`).
 
 ### ECS dev (3.5)
 
-Tras `terraform apply` en `iac/environments/dev`:
+El ALB es **interno** (solo accesible desde la VPC). Verificación vía API
+Gateway (3.6).
+
+### API Gateway dev (3.6)
+
+Entrada pública:
 
 ```bash
-curl -s "http://$(cd iac/environments/dev && terraform output -raw api_service_alb_dns_name)/health"
+API=$(cd iac/environments/dev && terraform output -raw api_gateway_endpoint)
+curl -s "${API}health"
+curl -s "${API}parking/availability"
 ```
 
-Variables de task: `DATABASE_URL` y `REDIS_URL` desde Secrets Manager;
-`COGNITO_*` y `AWS_REGION` como env plain.
+Rutas expuestas: `POST /auth/signin`, `/auth/refresh`, `/auth/logout`,
+`GET /parking/availability`, `GET /health`.
 
 ## Roadmap
 
-Ver [docs/roadmap.md](../../docs/roadmap.md) Fase 3: ECS (3.5), API Gateway
-(3.6).
+Ver [docs/roadmap.md](../../docs/roadmap.md) — Fase 3 completada.

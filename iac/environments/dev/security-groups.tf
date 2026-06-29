@@ -7,5 +7,7 @@ module "security_groups" {
   vpc_id         = module.vpc.vpc_id
   vpc_cidr_block = module.vpc.vpc_cidr_block
 
+  alb_ingress_cidr_blocks = var.alb_ingress_cidr_blocks
+
   tags = var.tags
 }

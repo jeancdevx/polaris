@@ -148,7 +148,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | 3.2 | Auth Cognito (signin/refresh/logout) — sin signup público | ✅ Tests Vitest + `pnpm test:integration:auth` contra User Pool dev |
 | 3.3 | `GET /parking/availability` — Redis + fallback RDS | ✅ `pnpm test:integration:parking` |
 | 3.4 | Dockerfile multi-stage + push ECR | ✅ `pnpm docker:build:api-service` + `pnpm docker:push:api-service:dev` |
-| 3.5 | IaC: `ecr` + `ecs` — **solo api-service** (1 servicio) | ALB health check verde |
+| 3.5 | IaC: `ecr` + `ecs` — **solo api-service** (1 servicio) | `terraform apply` + `curl ALB/health` verde |
 | 3.6 | IaC: `api-gateway` — HTTP API público, rutas auth + parking | curl devuelve JSON |
 
 **No desplegar** event-processor, reservation, admin hasta Fase 4–5.

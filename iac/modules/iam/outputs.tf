@@ -1,3 +1,23 @@
+output "ecs_api_service_task_role_arn" {
+  description = "IAM task role ARN for api-service ECS tasks"
+  value       = aws_iam_role.ecs_api_service_task.arn
+}
+
+output "ecs_api_service_task_role_name" {
+  description = "IAM task role name for api-service ECS tasks"
+  value       = aws_iam_role.ecs_api_service_task.name
+}
+
+output "ecs_task_execution_role_arn" {
+  description = "IAM execution role ARN for ECS Fargate tasks"
+  value       = aws_iam_role.ecs_task_execution.arn
+}
+
+output "ecs_task_execution_role_name" {
+  description = "IAM execution role name for ECS Fargate tasks"
+  value       = aws_iam_role.ecs_task_execution.name
+}
+
 output "kafka_msk_smoke_role_arn" {
   description = "IAM role ARN for the kafka-msk-smoke Lambda function"
   value       = aws_iam_role.kafka_msk_smoke.arn
@@ -63,6 +83,8 @@ output "rds_enhanced_monitoring_role_name" {
 output "role_arns" {
   description = "Map of IAM role names to ARNs"
   value = {
+    ecs_api_service_task    = aws_iam_role.ecs_api_service_task.arn
+    ecs_task_execution      = aws_iam_role.ecs_task_execution.arn
     kafka_msk_smoke         = aws_iam_role.kafka_msk_smoke.arn
     kafka_topic_creator     = aws_iam_role.kafka_topic_creator.arn
     msk_client              = aws_iam_role.msk_client.arn

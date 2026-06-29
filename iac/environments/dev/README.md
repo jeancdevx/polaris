@@ -62,6 +62,32 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 | 2.10 | `secrets-manager`     | ✅     |
 | 2.12 | `kafka-topic-creator` | ✅     |
 | 2.13 | `kafka-msk-smoke`     | ✅     |
+| 3.5  | `ecr`                 | ✅     |
+| 3.5  | `ecs` (api-service)   | ✅     |
+
+## ECS api-service (3.5)
+
+1. Importar ECR si ya existe (push manual en 3.4):
+
+```bash
+terraform import 'module.ecr.aws_ecr_repository.service' polaris-dev-api-service
+```
+
+2. Asegurar imagen en ECR (`pnpm docker:push:api-service:dev`).
+
+3. Aplicar:
+
+```bash
+cd iac/environments/dev
+terraform plan -var-file=dev.tfvars
+terraform apply -var-file=dev.tfvars
+```
+
+4. Health check:
+
+```bash
+curl -s "http://$(terraform output -raw api_service_alb_dns_name)/health"
+```
 
 ## Smoke test MSK (2.13)
 

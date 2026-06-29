@@ -136,6 +136,17 @@ pnpm docker:push:api-service:dev
 
 Repositorio ECR: `polaris-dev-api-service` (`{project}-{env}-api-service`).
 
+### ECS dev (3.5)
+
+Tras `terraform apply` en `iac/environments/dev`:
+
+```bash
+curl -s "http://$(cd iac/environments/dev && terraform output -raw api_service_alb_dns_name)/health"
+```
+
+Variables de task: `DATABASE_URL` y `REDIS_URL` desde Secrets Manager;
+`COGNITO_*` y `AWS_REGION` como env plain.
+
 ## Roadmap
 
 Ver [docs/roadmap.md](../../docs/roadmap.md) Fase 3: ECS (3.5), API Gateway

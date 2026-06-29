@@ -67,16 +67,43 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
 
 data "aws_iam_policy_document" "alb_logs" {
   statement {
-    sid    = "ALBAccessLogs"
+    sid    = "AWSLogDeliveryWrite"
     effect = "Allow"
 
     principals {
-      type        = "AWS"
-      identifiers = [data.aws_elb_service_account.main.arn]
+      type        = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
     }
 
-    actions   = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.alb_logs.arn}/AWSLogs/${local.account_id}/*"]
+    actions = ["s3:PutObject"]
+
+    resources = ["${aws_s3_bucket.alb_logs.arn}/${local.alb_logs_object_prefix}/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [local.account_id]
+    }
+  }
+
+  statement {
+    sid    = "AWSLogDeliveryAclCheck"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
+    }
+
+    actions = ["s3:GetBucketAcl"]
+
+    resources = [aws_s3_bucket.alb_logs.arn]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [local.account_id]
+    }
   }
 
   statement {

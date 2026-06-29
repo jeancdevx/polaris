@@ -15,6 +15,8 @@ locals {
     90
   )
 
+  alb_logs_object_prefix = var.alb_logs_prefix != "" ? "${var.alb_logs_prefix}/AWSLogs/${local.account_id}" : "AWSLogs/${local.account_id}"
+
   common_tags = merge(
     var.tags,
     {

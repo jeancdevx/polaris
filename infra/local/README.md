@@ -51,3 +51,13 @@ REDIS_URL=redis://localhost:6379
 KAFKA_BROKERS=localhost:9092,localhost:9094,localhost:9096
 AWS_REGION=us-east-2
 ```
+
+`pnpm db:seed` solo carga Postgres. Para que `GET /parking/availability` lea
+desde Redis en local, ejecuta después:
+
+```bash
+pnpm db:sync-redis
+```
+
+En AWS, Redis lo calienta `event-processor-service` (Fase 5) al consumir eventos
+Kafka.

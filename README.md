@@ -53,5 +53,5 @@ docker compose -f infra/local/docker-compose.yml up -d
 
 ## Fase actual
 
-**Fase 3 en curso** — auth Cognito (3.2 ✅). Siguiente: availability (3.3). Ver
+**Fase 3 en curso** — availability (3.3 ✅). Siguiente: Dockerfile (3.4). Ver
 [roadmap](./docs/roadmap.md).

@@ -20,6 +20,7 @@
     "migration:revert": "tsx src/cli/migrate-revert.ts",
     "migration:show": "tsx src/cli/migrate-show.ts",
     "seed": "tsx src/cli/seed.ts",
+    "seed:redis": "tsx src/cli/sync-redis.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "@polaris/shared-types": "workspace:*",
     "@polaris/shared-utils": "workspace:*",
     "pg": "8.22.0",
+    "redis": "6.0.0",
     "typeorm": "1.0.0"
   },
   "devDependencies": {

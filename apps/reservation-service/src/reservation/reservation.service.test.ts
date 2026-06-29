@@ -4,6 +4,7 @@ import { Test, type TestingModule } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RedisService } from './redis.service.js'
+import { ReservationEventPublisher } from './reservation-event.publisher.js'
 import { reservationConfig } from './reservation.config.js'
 import { ReservationRepository } from './reservation.repository.js'
 import { ReservationService } from './reservation.service.js'
@@ -62,6 +63,13 @@ describe('ReservationService', () => {
         {
           provide: ReservationRepository,
           useValue: repository
+        },
+        {
+          provide: ReservationEventPublisher,
+          useValue: {
+            publishCreated: vi.fn().mockResolvedValue(undefined),
+            publishCancelled: vi.fn().mockResolvedValue(undefined)
+          }
         }
       ]
     }).compile()

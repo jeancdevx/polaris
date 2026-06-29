@@ -1,4 +1,5 @@
-import { ConflictException } from '@nestjs/common'
+import { randomUUID } from 'node:crypto'
+
 import { ConfigModule } from '@nestjs/config'
 import { Test, type TestingModule } from '@nestjs/testing'
 import {
@@ -22,7 +23,13 @@ import {
   runSeed,
   type ParkingSpotRow
 } from '@polaris/database'
-import { createKafka } from '@polaris/kafka'
+import {
+  createConsumer,
+  createKafka,
+  disconnectConsumer,
+  parseReservationCancelledEvent,
+  parseReservationCreatedEvent
+} from '@polaris/kafka'
 import { KAFKA_TOPICS } from '@polaris/shared-types'
 import { sleep } from '@polaris/shared-utils'
 
@@ -108,7 +115,7 @@ const syncRedisFromRds = async (redisUrl: string): Promise<void> => {
   }
 }
 
-describe('reservation integration', () => {
+describe('reservation kafka integration', () => {
   let postgres: StartedPostgreSqlContainer
   let redis: StartedRedisContainer
   let kafka: StartedKafkaContainer
@@ -149,84 +156,85 @@ describe('reservation integration', () => {
     await Promise.all([postgres.stop(), redis.stop(), kafka.stop()])
   }, 60_000)
 
-  it('creates and cancels a reservation with Redis lock and RDS persistence', async () => {
-    const created = await reservationService.create('usr-12345', {
-      parkingSpotId: 'spot-07',
-      reservationDate: '2025-06-19T14:00:00.000Z'
+  it('publishes reservation.created and reservation.cancelled to Kafka', async () => {
+    const brokers = process.env.KAFKA_BROKERS?.split(',') ?? []
+    const kafkaClient = createKafka({
+      clientId: 'reservation-kafka-consumer-test',
+      brokers,
+      logLevel: 0
     })
+    const groupId = `reservation-kafka-${randomUUID()}`
+    const consumer = await createConsumer(groupId, kafkaClient)
 
-    expect(created.status).toBe('active')
-    expect(created.parkingSpotId).toBe('spot-07')
-    expect(created.userId).toBe('usr-12345')
-
-    const dataSource = createDataSource()
-    await dataSource.initialize()
-
-    try {
-      const reservationRow = await dataSource
-        .getRepository('Reservation')
-        .findOne({ where: { reservationId: created.reservationId } })
-
-      expect(reservationRow?.status).toBe('active')
-
-      const spotRow = await dataSource
-        .getRepository<ParkingSpotRow>('ParkingSpot')
-        .findOne({ where: { spotId: 'spot-07' } })
-
-      expect(spotRow?.status).toBe('reserved')
-      expect(spotRow?.reservationId).toBe(created.reservationId)
-    } finally {
-      await dataSource.destroy()
-    }
-
-    const redisClient = createClient({ url: process.env.REDIS_URL })
-    await redisClient.connect()
+    const createdEvents: ReturnType<typeof parseReservationCreatedEvent>[] = []
+    const cancelledEvents: ReturnType<typeof parseReservationCancelledEvent>[] =
+      []
 
     try {
-      const spotHash = await redisClient.hGetAll(
-        `${PARKING_SPOT_KEY_PREFIX}spot-07`
-      )
-
-      expect(spotHash.status).toBe('reserved')
-      expect(spotHash.reservationId).toBe(created.reservationId)
-    } finally {
-      await redisClient.quit()
-    }
-
-    const cancelled = await reservationService.cancel(
-      'usr-12345',
-      created.reservationId
-    )
-
-    expect(cancelled.status).toBe('cancelled')
-    expect(cancelled.cancelledAt).toBeDefined()
-
-    const redisAfterCancel = createClient({ url: process.env.REDIS_URL })
-    await redisAfterCancel.connect()
-
-    try {
-      const spotHash = await redisAfterCancel.hGetAll(
-        `${PARKING_SPOT_KEY_PREFIX}spot-07`
-      )
-
-      expect(spotHash.status).toBe('free')
-      expect(spotHash.reservationId).toBeUndefined()
-    } finally {
-      await redisAfterCancel.quit()
-    }
-  })
-
-  it('rejects a second reservation on the same spot', async () => {
-    await reservationService.create('usr-12345', {
-      parkingSpotId: 'spot-03',
-      reservationDate: '2025-06-19T15:00:00.000Z'
-    })
-
-    await expect(
-      reservationService.create('usr-12345', {
-        parkingSpotId: 'spot-03',
-        reservationDate: '2025-06-19T16:00:00.000Z'
+      const joined = new Promise<void>(resolve => {
+        consumer.on(consumer.events.GROUP_JOIN, () => {
+          resolve()
+        })
       })
-    ).rejects.toBeInstanceOf(ConflictException)
+
+      await consumer.subscribe({
+        topics: [
+          KAFKA_TOPICS.RESERVATION_CREATED,
+          KAFKA_TOPICS.RESERVATION_CANCELLED
+        ],
+        fromBeginning: true
+      })
+
+      await consumer.run({
+        eachMessage: async payload => {
+          const raw = JSON.parse(
+            payload.message.value?.toString('utf8') ?? '{}'
+          )
+
+          if (payload.topic === KAFKA_TOPICS.RESERVATION_CREATED) {
+            createdEvents.push(parseReservationCreatedEvent(raw))
+            return
+          }
+
+          if (payload.topic === KAFKA_TOPICS.RESERVATION_CANCELLED) {
+            cancelledEvents.push(parseReservationCancelledEvent(raw))
+          }
+        }
+      })
+
+      await joined
+      await sleep(250)
+
+      const created = await reservationService.create('usr-12345', {
+        parkingSpotId: 'spot-08',
+        reservationDate: '2025-06-19T14:00:00.000Z'
+      })
+
+      await expect.poll(() => createdEvents.length, { timeout: 15_000 }).toBe(1)
+
+      expect(createdEvents[0]).toMatchObject({
+        eventName: KAFKA_TOPICS.RESERVATION_CREATED,
+        reservationId: created.reservationId,
+        userId: 'usr-12345',
+        parkingSpotId: 'spot-08',
+        expiresAt: created.expiresAt
+      })
+
+      await reservationService.cancel('usr-12345', created.reservationId)
+
+      await expect
+        .poll(() => cancelledEvents.length, { timeout: 15_000 })
+        .toBe(1)
+
+      expect(cancelledEvents[0]).toMatchObject({
+        eventName: KAFKA_TOPICS.RESERVATION_CANCELLED,
+        reservationId: created.reservationId,
+        userId: 'usr-12345',
+        parkingSpotId: 'spot-08',
+        reason: 'user_cancelled'
+      })
+    } finally {
+      await disconnectConsumer(consumer)
+    }
   })
 })

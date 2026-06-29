@@ -135,9 +135,15 @@ importers:
       '@polaris/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@polaris/kafka':
+        specifier: workspace:*
+        version: link:../../packages/kafka
       '@polaris/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+      '@polaris/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
       redis:
         specifier: 6.0.0
         version: 6.0.0
@@ -160,6 +166,9 @@ importers:
       '@polaris/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
+      '@testcontainers/kafka':
+        specifier: 12.0.3
+        version: 12.0.3
       '@testcontainers/postgresql':
         specifier: 12.0.3
         version: 12.0.3

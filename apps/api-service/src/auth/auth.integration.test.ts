@@ -1,10 +1,12 @@
 import {
-  AdminConfirmSignUpCommand,
+  AdminAddUserToGroupCommand,
+  AdminCreateUserCommand,
   AdminDeleteUserCommand,
+  AdminSetUserPasswordCommand,
   CognitoIdentityProviderClient
 } from '@aws-sdk/client-cognito-identity-provider'
 import { ConfigService } from '@nestjs/config'
-import { afterAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { CognitoService } from './cognito.service.js'
 
@@ -18,15 +20,44 @@ const requiredEnv = [
 
 const missingEnv = requiredEnv.filter(name => !process.env[name])
 
-if (integrationEnabled && missingEnv.length > 0) {
-  console.warn(
-    `[auth integration] skipped — missing env: ${missingEnv.join(', ')}. ` +
-      'Set them in infra/local/.env.local and run pnpm test:integration:auth'
-  )
-}
-
 const describeIntegration =
   integrationEnabled && missingEnv.length === 0 ? describe : describe.skip
+
+const provisionAdminUser = async (
+  client: CognitoIdentityProviderClient,
+  userPoolId: string,
+  email: string,
+  password: string
+): Promise<void> => {
+  await client.send(
+    new AdminCreateUserCommand({
+      UserPoolId: userPoolId,
+      Username: email,
+      UserAttributes: [
+        { Name: 'email', Value: email },
+        { Name: 'email_verified', Value: 'true' }
+      ],
+      MessageAction: 'SUPPRESS'
+    })
+  )
+
+  await client.send(
+    new AdminSetUserPasswordCommand({
+      UserPoolId: userPoolId,
+      Username: email,
+      Password: password,
+      Permanent: true
+    })
+  )
+
+  await client.send(
+    new AdminAddUserToGroupCommand({
+      UserPoolId: userPoolId,
+      Username: email,
+      GroupName: 'user'
+    })
+  )
+}
 
 describeIntegration('auth cognito integration', () => {
   const region = process.env.AWS_REGION ?? 'us-east-2'
@@ -46,6 +77,10 @@ describeIntegration('auth cognito integration', () => {
   const testEmail = `polaris-auth-${Date.now()}@example.com`
   const testPassword = 'PolarisTest1!'
 
+  beforeAll(async () => {
+    await provisionAdminUser(client, userPoolId, testEmail, testPassword)
+  })
+
   afterAll(async () => {
     await client.send(
       new AdminDeleteUserCommand({
@@ -55,18 +90,7 @@ describeIntegration('auth cognito integration', () => {
     )
   })
 
-  it('runs signup, signin, refresh and logout against dev user pool', async () => {
-    const signup = await cognitoService.signUp(testEmail, testPassword)
-
-    expect(signup.confirmationRequired).toBe(true)
-
-    await client.send(
-      new AdminConfirmSignUpCommand({
-        UserPoolId: userPoolId,
-        Username: testEmail
-      })
-    )
-
+  it('runs signin, refresh and logout for an admin-provisioned user', async () => {
     const signin = await cognitoService.signIn(testEmail, testPassword)
 
     expect(signin.accessToken).toBeTruthy()

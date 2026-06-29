@@ -1,7 +1,6 @@
 import {
   GlobalSignOutCommand,
   InitiateAuthCommand,
-  SignUpCommand,
   type AuthenticationResultType,
   type CognitoIdentityProviderClient
 } from '@aws-sdk/client-cognito-identity-provider'
@@ -10,7 +9,7 @@ import { ConfigService } from '@nestjs/config'
 
 import { COGNITO_CONFIG_KEY, type CognitoConfig } from './cognito.config.js'
 import { mapCognitoError } from './cognito-error.mapper.js'
-import type { AuthTokensResponse, SignupResponse } from './types/auth.types.js'
+import type { AuthTokensResponse } from './types/auth.types.js'
 import { createCognitoClient } from './cognito-client.factory.js'
 
 @Injectable()
@@ -30,33 +29,6 @@ export class CognitoService {
       throw new InternalServerErrorException(
         'COGNITO_USER_POOL_ID and COGNITO_CLIENT_ID must be configured'
       )
-    }
-  }
-
-  async signUp(email: string, password: string): Promise<SignupResponse> {
-    this.assertConfigured()
-
-    try {
-      const output = await this.client.send(
-        new SignUpCommand({
-          ClientId: this.config.clientId,
-          Username: email,
-          Password: password,
-          UserAttributes: [{ Name: 'email', Value: email }]
-        })
-      )
-
-      if (!output.UserSub) {
-        throw new Error('Cognito SignUp did not return userSub')
-      }
-
-      return {
-        userSub: output.UserSub,
-        confirmationRequired: true,
-        codeDeliveryDestination: output.CodeDeliveryDetails?.Destination
-      }
-    } catch (error) {
-      return mapCognitoError(error)
     }
   }
 

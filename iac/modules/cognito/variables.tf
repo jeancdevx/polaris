@@ -5,9 +5,9 @@ variable "access_token_validity_hours" {
 }
 
 variable "admin_create_user_only" {
-  description = "Restrict user creation to administrators"
+  description = "Restrict user creation to administrators (Flujo 20)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "create_user_pool_domain" {

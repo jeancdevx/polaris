@@ -46,3 +46,5 @@ kafka_log_retention_hours        = 168
 kafka_default_replication_factor = 3
 kafka_min_insync_replicas        = 2
 kafka_default_num_partitions     = 3
+
+cognito_admin_create_user_only = true

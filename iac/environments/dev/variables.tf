@@ -53,9 +53,9 @@ variable "cognito_access_token_validity_hours" {
 }
 
 variable "cognito_admin_create_user_only" {
-  description = "Restrict Cognito sign-up to administrators"
+  description = "Restrict Cognito sign-up to administrators (Flujo 20 — alta solo por admin)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "cognito_create_user_pool_domain" {

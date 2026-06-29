@@ -819,7 +819,7 @@ Métricas CloudWatch para dashboard admin.
 
 `POST /admin/users` (API privada, rol admin):
 
-1. Cognito: crear usuario.
+1. Cognito: `AdminCreateUser` + `AdminAddUserToGroup` → grupo `user` (o `admin`).
 2. RDS: INSERT `users`, `vehicles`, `rfid_tags`.
 3. DynamoDB `RFIDValidations`: `PutItem` con UID de una de las **10 tarjetas**
    disponibles.

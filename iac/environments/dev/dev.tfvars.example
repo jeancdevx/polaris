@@ -44,7 +44,7 @@ kafka_default_num_partitions     = 3
 
 cognito_mfa_configuration           = "OFF"
 cognito_create_user_pool_domain     = false
-cognito_admin_create_user_only      = false
+cognito_admin_create_user_only      = true
 cognito_password_minimum_length     = 12
 cognito_access_token_validity_hours = 1
 cognito_id_token_validity_hours     = 1

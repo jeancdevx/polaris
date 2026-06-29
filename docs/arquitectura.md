@@ -85,10 +85,9 @@ Referencia: [HTTP APIs](https://docs.aws.amazon.com/apigateway/latest/developerg
 | **Pública** | Internet + Cognito JWT | VPC Link → ALB → `api-service` |
 | **Privada** | Solo VPC (resource policy + VPCE) | VPC Link → ALB → servicios internos |
 
-Endpoints públicos:
+Endpoints públicos (usuarios finales — identidades creadas por admin, Flujo 20):
 
 ```
-POST   /auth/signup
 POST   /auth/signin
 POST   /auth/refresh
 POST   /auth/logout
@@ -140,10 +139,10 @@ Referencia: [ECS Fargate](https://docs.aws.amazon.com/AmazonECS/latest/developer
 
 | Servicio | Responsabilidad | Escala mínima (prod) |
 |----------|-----------------|----------------------|
-| **api-service** | REST público, auth Cognito, CRUD usuarios/reservas consulta | 3 tasks / 3 AZ |
+| **api-service** | REST público, signin/refresh/logout Cognito, consultas (availability, profile, reservas) | 3 tasks / 3 AZ |
 | **event-processor-service** | Consumidor Kafka, actualiza Redis/RDS, publica EventBridge | 3 tasks |
 | **reservation-service** | Lógica de reservas, locks Redis, expiración | 2 tasks |
-| **admin-service** | Gestión usuarios admin, auditoría, métricas | 2 tasks |
+| **admin-service** | Alta de usuarios (Cognito + RDS + RFID), auditoría, métricas | 2 tasks |
 
 - Runtime contenedor: **Node 24**.
 - Build: bundle con **Rolldown** → imagen Docker multi-stage → **ECR**.

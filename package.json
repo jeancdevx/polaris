@@ -17,6 +17,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:integration": "pnpm --filter @polaris/integration-tests test",
+    "test:integration:auth": "pnpm --filter api-service test:integration",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "db:migrate": "pnpm --filter @polaris/database migration:run",

@@ -26,7 +26,8 @@ resource "aws_cognito_user_pool_client" "app" {
 
   read_attributes = [
     "email",
-    "email_verified"
+    "email_verified",
+    "preferred_username"
   ]
 
   write_attributes = [

@@ -18,6 +18,21 @@ output "rds_rotation_id" {
   value       = module.secrets_manager.rds_rotation_id
 }
 
+output "api_service_alb_dns_name" {
+  description = "DNS name of the api-service application load balancer"
+  value       = module.ecs.alb_dns_name
+}
+
+output "api_service_ecr_repository_url" {
+  description = "ECR repository URL for api-service"
+  value       = module.ecr.repository_url
+}
+
+output "api_service_ecs_cluster_name" {
+  description = "ECS cluster name"
+  value       = module.ecs.cluster_name
+}
+
 output "cognito_app_client_id" {
   description = "Cognito app client ID"
   value       = module.cognito.app_client_id
@@ -36,6 +51,16 @@ output "cognito_jwks_uri" {
 output "cognito_user_pool_id" {
   description = "Cognito user pool ID"
   value       = module.cognito.user_pool_id
+}
+
+output "ecs_api_service_task_role_arn" {
+  description = "IAM task role ARN for api-service ECS tasks"
+  value       = module.iam.ecs_api_service_task_role_arn
+}
+
+output "ecs_task_execution_role_arn" {
+  description = "IAM execution role ARN for ECS Fargate tasks"
+  value       = module.iam.ecs_task_execution_role_arn
 }
 
 output "kafka_bootstrap_brokers_sasl_iam" {

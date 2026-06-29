@@ -1,7 +1,7 @@
 resource "aws_apigatewayv2_api" "public" {
   name          = local.api_name
   protocol_type = "HTTP"
-  description   = "Public HTTP API for Polaris api-service (Fase 3.6)"
+  description   = "Public HTTP API for Polaris (api-service + reservation-service)"
 
   tags = merge(local.common_tags, {
     Name = local.api_name

@@ -1,3 +1,39 @@
+variable "alb_logs_prefix" {
+  description = "S3 key prefix for ALB access logs (shared with the S3 module bucket policy)"
+  type        = string
+  default     = "api-service"
+}
+
+variable "alb_ingress_cidr_blocks" {
+  description = "CIDR blocks allowed to reach the ALB. Default 0.0.0.0/0 in dev for direct health checks until API Gateway (3.6)."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "api_service_cpu" {
+  description = "Fargate CPU units for api-service"
+  type        = number
+  default     = 256
+}
+
+variable "api_service_desired_count" {
+  description = "Desired ECS task count for api-service"
+  type        = number
+  default     = 1
+}
+
+variable "api_service_image_tag" {
+  description = "ECR image tag deployed for api-service"
+  type        = string
+  default     = "latest"
+}
+
+variable "api_service_memory" {
+  description = "Fargate memory (MiB) for api-service"
+  type        = number
+  default     = 512
+}
+
 variable "aws_profile" {
   description = "AWS CLI profile to use (SSO profile name)"
   type        = string
@@ -32,6 +68,12 @@ variable "data_subnet_cidrs" {
   description = "CIDR blocks for data tier subnets"
   type        = list(string)
   default     = ["10.0.20.0/24", "10.0.21.0/24", "10.0.22.0/24"]
+}
+
+variable "ecs_enable_deletion_protection" {
+  description = "Enable ALB deletion protection for the ECS load balancer"
+  type        = bool
+  default     = false
 }
 
 variable "enable_nat_gateway" {

@@ -9,7 +9,6 @@ const createAuthService = (): {
   cognitoService: CognitoService
 } => {
   const cognitoService = {
-    signUp: vi.fn(),
     signIn: vi.fn(),
     refresh: vi.fn(),
     signOut: vi.fn()
@@ -22,25 +21,6 @@ const createAuthService = (): {
 }
 
 describe('AuthService', () => {
-  it('delegates signup to CognitoService', async () => {
-    const { authService, cognitoService } = createAuthService()
-
-    vi.mocked(cognitoService.signUp).mockResolvedValue({
-      userSub: 'sub-123',
-      confirmationRequired: true
-    })
-
-    await expect(
-      authService.signUp({
-        email: 'user@example.com',
-        password: 'Secret123!'
-      })
-    ).resolves.toEqual({
-      userSub: 'sub-123',
-      confirmationRequired: true
-    })
-  })
-
   it('delegates signin to CognitoService', async () => {
     const { authService, cognitoService } = createAuthService()
 

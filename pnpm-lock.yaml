@@ -129,6 +129,18 @@ importers:
       '@nestjs/platform-fastify':
         specifier: 11.1.27
         version: 11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@polaris/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@polaris/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@polaris/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      redis:
+        specifier: 6.0.0
+        version: 6.0.0
       reflect-metadata:
         specifier: 0.2.2
         version: 0.2.2
@@ -148,9 +160,18 @@ importers:
       '@polaris/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
+      '@testcontainers/postgresql':
+        specifier: 12.0.3
+        version: 12.0.3
+      '@testcontainers/redis':
+        specifier: 12.0.3
+        version: 12.0.3
       '@types/node':
         specifier: 26.0.0
         version: 26.0.0
+      testcontainers:
+        specifier: 12.0.3
+        version: 12.0.3
       typescript:
         specifier: 6.0.3
         version: 6.0.3

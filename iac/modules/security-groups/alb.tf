@@ -1,11 +1,11 @@
 resource "aws_security_group" "alb" {
   name_prefix = "${local.name_prefix}-alb-"
-  description = "Application load balancer in public subnets"
+  description = "Internal application load balancer (API Gateway VPC Link → ECS)"
   vpc_id      = var.vpc_id
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-alb-sg"
-    Tier = "public"
+    Tier = "private"
   })
 
   lifecycle {

@@ -64,6 +64,7 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 | 2.13 | `kafka-msk-smoke`     | ✅     |
 | 3.5  | `ecr`                 | ✅     |
 | 3.5  | `ecs` (api-service)   | ✅     |
+| 3.6  | `api-gateway`         | ✅     |
 
 ## ECS api-service (3.5)
 
@@ -83,10 +84,36 @@ terraform plan -var-file=dev.tfvars
 terraform apply -var-file=dev.tfvars
 ```
 
-4. Health check:
+4. Health check (vía API Gateway — el ALB es interno):
 
 ```bash
-curl -s "http://$(terraform output -raw api_service_alb_dns_name)/health"
+API=$(terraform output -raw api_gateway_endpoint)
+curl -s "${API}health"
+curl -s "${API}parking/availability"
+```
+
+## API Gateway (3.6)
+
+Tras `terraform apply`:
+
+```bash
+API=$(terraform output -raw api_gateway_endpoint)
+curl -s "${API}health"
+curl -s "${API}parking/availability"
+```
+
+Entrada pública recomendada: `api_gateway_endpoint`. Opcionalmente restringir el
+ALB al CIDR de la VPC en `alb_ingress_cidr_blocks` (p. ej. `["10.0.0.0/16"]`).
+
+**Prerequisitos datos (primera vez):** migraciones y seed contra Aurora dev,
+luego opcional `pnpm db:sync-redis` con `DATABASE_URL`/`REDIS_URL` de dev
+apuntando a AWS.
+
+Tras cambiar el secret de aplicación, forzar redeploy ECS:
+
+```bash
+aws ecs update-service --cluster polaris-dev-cluster \
+  --service polaris-dev-api-service --force-new-deployment --region us-east-2
 ```
 
 ## Smoke test MSK (2.13)

@@ -18,6 +18,11 @@ output "rds_rotation_id" {
   value       = module.secrets_manager.rds_rotation_id
 }
 
+output "api_gateway_endpoint" {
+  description = "Public HTTP API invoke URL for api-service"
+  value       = module.api_gateway.api_endpoint
+}
+
 output "api_service_alb_dns_name" {
   description = "DNS name of the api-service application load balancer"
   value       = module.ecs.alb_dns_name

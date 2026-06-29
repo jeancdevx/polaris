@@ -7,7 +7,7 @@ locals {
 
   api_service_env = {
     DATABASE_URL = format(
-      "postgresql://%s:%s@%s:%s/%s",
+      "postgresql://%s:%s@%s:%s/%s?uselibpqcompat=true&sslmode=require",
       urlencode(local.rds_credentials.username),
       urlencode(local.rds_credentials.password),
       var.rds_cluster_endpoint,

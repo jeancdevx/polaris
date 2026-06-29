@@ -1,7 +1,7 @@
 variable "alb_ingress_cidr_blocks" {
-  description = "CIDR blocks allowed to reach the application load balancer"
+  description = "Optional CIDR blocks for direct HTTP ingress to the internal ALB (debug). Empty = only API Gateway VPC Link SG on :80."
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "ecs_container_port" {

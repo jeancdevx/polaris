@@ -16,7 +16,7 @@ Módulos planificados:
 9. `s3` ✅
 10. `ecs` ✅ (Fase 3.5 — api-service)
 11. `ecr` ✅ (Fase 3.5 — api-service)
-12. `api-gateway`
+12. `api-gateway` ✅ (Fase 3.6 — api-service público)
 13. `lambda`
 14. `eventbridge`
 15. `sqs`

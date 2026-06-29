@@ -8,6 +8,26 @@ resource "aws_security_group_rule" "alb_to_ecs" {
   description              = "Forward traffic to ECS tasks"
 }
 
+resource "aws_security_group_rule" "alb_from_vpc_link" {
+  type                     = "ingress"
+  security_group_id        = aws_security_group.alb.id
+  protocol                 = "tcp"
+  from_port                = 80
+  to_port                  = 80
+  source_security_group_id = aws_security_group.vpc_link.id
+  description              = "HTTP from API Gateway VPC link"
+}
+
+resource "aws_security_group_rule" "vpc_link_to_alb" {
+  type                     = "egress"
+  security_group_id        = aws_security_group.vpc_link.id
+  protocol                 = "tcp"
+  from_port                = 80
+  to_port                  = 80
+  source_security_group_id = aws_security_group.alb.id
+  description              = "HTTP to application load balancer"
+}
+
 resource "aws_security_group_rule" "ecs_egress_https_vpc" {
   type              = "egress"
   security_group_id = aws_security_group.ecs.id
@@ -59,21 +79,15 @@ resource "aws_security_group_rule" "ecs_egress_msk" {
 }
 
 resource "aws_security_group_rule" "alb_http_ingress" {
+  count = length(var.alb_ingress_cidr_blocks) > 0 ? 1 : 0
+
   type              = "ingress"
   security_group_id = aws_security_group.alb.id
   protocol          = "tcp"
   from_port         = 80
   to_port           = 80
-  cidr_blocks       = local.alb_ingress_cidr_blocks
-}
-
-resource "aws_security_group_rule" "alb_https_ingress" {
-  type              = "ingress"
-  security_group_id = aws_security_group.alb.id
-  protocol          = "tcp"
-  from_port         = 443
-  to_port           = 443
-  cidr_blocks       = local.alb_ingress_cidr_blocks
+  cidr_blocks       = var.alb_ingress_cidr_blocks
+  description       = "Optional direct HTTP to internal ALB (debug)"
 }
 
 resource "aws_security_group_rule" "ecs_from_alb" {

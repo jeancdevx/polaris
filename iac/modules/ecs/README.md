@@ -18,13 +18,17 @@ Cluster ECS Fargate, ALB y despliegue de **api-service** (Fase 3.5).
 
 El secret `{project}-{env}-api-service-env` combina credenciales RDS (username y
 password del secret gestionado de Aurora) con endpoint/puerto/base de datos del
-módulo `rds` y `REDIS_URL`. Tras rotación automática de RDS, ejecutar
-`terraform apply` para refrescar el secret compuesto.
+módulo `rds` y `REDIS_URL`. `DATABASE_URL` usa TLS con
+`uselibpqcompat=true&sslmode=require` (cifrado sin verificar CA del bundle RDS
+en dev; en prod valorar `verify-full` + CA bundle en la imagen).
 
 ## Health check
 
 - Target group: `GET /health` → 200
 - Container: mismo path vía `fetch` en Node 24
+
+El ALB es **interno** por defecto (`alb_internal = true`, subnets privadas).
+Requerido para API Gateway VPC Link. La entrada pública es HTTP API, no el ALB.
 
 ## Uso
 

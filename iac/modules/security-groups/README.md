@@ -30,6 +30,17 @@ IDs de salida sin referencias cruzadas inversas.
 | Lambda SG | MSK     | 9098                |
 | MSK SG    | MSK SG  | all (inter-broker)  |
 
+**Egress ECS:** reglas explícitas en `rules.tf`:
+
+| ECS SG → | Puerto | Uso                               |
+| -------- | ------ | --------------------------------- |
+| VPC CIDR | 443    | Interface VPC endpoints           |
+| Internet | 443    | Cognito y APIs AWS públicas (NAT) |
+| RDS SG   | 5432   | Aurora PostgreSQL                 |
+| Redis SG | 6379   | ElastiCache Redis                 |
+| MSK SG   | 9098   | Cliente Kafka (fases posteriores) |
+| ALB SG   | ECS    | 3001 (egress ALB → targets)       |
+
 **Egress Lambda:** los SG creados vía Terraform no incluyen egress implícito.
 Reglas explícitas en `rules.tf`:
 

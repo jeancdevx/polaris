@@ -160,7 +160,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | # | Tarea | DoD |
 |---|-------|-----|
 | 4.1 | Scaffold `apps/reservation-service` | ✅ `pnpm dev --filter reservation-service` · `curl localhost:3002/health` |
-| 4.2 | `POST /parking/reserve`, `DELETE /parking/reserve/{id}` | Lock Redis, persist RDS |
+| 4.2 | `POST /parking/reserve`, `DELETE /parking/reserve/{id}` | ✅ Lock Redis, persist RDS · `pnpm test:integration:reservation` |
 | 4.3 | Publicar `reservation.created` / `reservation.cancelled` a **MSK** | Mensaje en topic |
 | 4.4 | IaC: desplegar reservation-service en ECS | 2 tasks dev |
 | 4.5 | API Gateway: rutas de reserva | E2E via API GW |

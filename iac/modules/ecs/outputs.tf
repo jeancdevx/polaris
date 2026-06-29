@@ -8,6 +8,11 @@ output "alb_dns_name" {
   value       = aws_lb.main.dns_name
 }
 
+output "alb_listener_arn" {
+  description = "ARN of the ALB HTTP listener for API Gateway VPC Link integration"
+  value       = aws_lb_listener.http.arn
+}
+
 output "alb_zone_id" {
   description = "Route53 zone ID of the application load balancer"
   value       = aws_lb.main.zone_id

@@ -32,8 +32,10 @@ pueden activar TOTP en Cognito.
 El app client expone para `api-service`:
 
 - Sign in (`ALLOW_USER_PASSWORD_AUTH`, `ALLOW_USER_SRP_AUTH`)
-- Refresh (`ALLOW_REFRESH_TOKEN_AUTH`)
-- JWT para API Gateway HTTP API authorizer
+- Refresh (`ALLOW_REFRESH_TOKEN_AUTH`) El app client lee `preferred_username`
+  (p. ej. `usr-12345`) para el authorizer JWT de API Gateway en rutas de
+  reserva. Asignar con `admin-update-user-attributes` al crear usuarios hasta
+  Flujo 20 (`admin-service`).
 
 **No hay signup público** — `allow_admin_create_user_only = true`.
 

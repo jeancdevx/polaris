@@ -5,7 +5,7 @@ import type { Reservation } from '@polaris/shared-types'
 import {
   parseCreateReserveBody,
   parseReservationIdParam,
-  parseUserIdHeader
+  parseUserIdentity
 } from './reservation-body.validation.js'
 import { ReservationService } from './reservation.service.js'
 
@@ -16,10 +16,11 @@ export class ReservationController {
   @Post('reserve')
   create(
     @Headers('x-user-id') userId: string | undefined,
+    @Headers('authorization') authorization: string | undefined,
     @Body() body: unknown
   ): Promise<Reservation> {
     return this.reservationService.create(
-      parseUserIdHeader(userId),
+      parseUserIdentity(userId, authorization),
       parseCreateReserveBody(body)
     )
   }
@@ -27,10 +28,11 @@ export class ReservationController {
   @Delete('reserve/:id')
   cancel(
     @Headers('x-user-id') userId: string | undefined,
+    @Headers('authorization') authorization: string | undefined,
     @Param('id') reservationId: string
   ): Promise<Reservation> {
     return this.reservationService.cancel(
-      parseUserIdHeader(userId),
+      parseUserIdentity(userId, authorization),
       parseReservationIdParam(reservationId)
     )
   }

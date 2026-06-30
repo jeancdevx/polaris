@@ -180,6 +180,21 @@ output "rfid_validator_role_arn" {
   value       = module.iam.rfid_validator_role_arn
 }
 
+output "audit_logger_function_arn" {
+  description = "ARN of the audit-logger Lambda function"
+  value       = module.audit_logger.function_arn
+}
+
+output "audit_logger_function_name" {
+  description = "Name of the audit-logger Lambda function"
+  value       = module.audit_logger.function_name
+}
+
+output "audit_logger_role_arn" {
+  description = "IAM role ARN for audit-logger Lambda"
+  value       = module.iam.audit_logger_role_arn
+}
+
 output "msk_client_role_arn" {
   description = "IAM role ARN for MSK IAM SASL clients"
   value       = module.iam.msk_client_role_arn

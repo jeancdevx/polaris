@@ -92,6 +92,11 @@ variable "ecs_reservation_service_task_role_arn" {
   type        = string
 }
 
+variable "ecs_event_processor_task_role_arn" {
+  description = "IAM task role ARN for event-processor-service"
+  type        = string
+}
+
 variable "ecs_security_group_id" {
   description = "Security group ID for ECS Fargate tasks"
   type        = string
@@ -116,6 +121,53 @@ variable "environment" {
     condition     = contains(["dev", "staging", "prod"], var.environment)
     error_message = "environment must be dev, staging, or prod."
   }
+}
+
+variable "event_processor_service_container_port" {
+  description = "Container port exposed by event-processor-service"
+  type        = number
+  default     = 3003
+}
+
+variable "event_processor_service_cpu" {
+  description = "Fargate CPU units for event-processor-service"
+  type        = number
+  default     = 256
+}
+
+variable "event_processor_service_desired_count" {
+  description = "Desired task count for event-processor-service"
+  type        = number
+  default     = 1
+}
+
+variable "event_processor_service_ecr_repository_url" {
+  description = "ECR repository URL for event-processor-service"
+  type        = string
+}
+
+variable "event_processor_service_image_tag" {
+  description = "Container image tag for event-processor-service"
+  type        = string
+  default     = "latest"
+}
+
+variable "event_processor_service_memory" {
+  description = "Fargate memory (MiB) for event-processor-service"
+  type        = number
+  default     = 512
+}
+
+variable "event_processor_service_name" {
+  description = "Override for event-processor-service ECS resource names"
+  type        = string
+  default     = null
+}
+
+variable "eventbridge_bus_name" {
+  description = "Custom EventBridge bus name for processed parking events"
+  type        = string
+  default     = "polaris-events"
 }
 
 variable "health_check_path" {

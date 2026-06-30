@@ -20,7 +20,7 @@ Módulos planificados:
 13. `lambda` ✅
 14. `eventbridge` ✅
 15. `sqs` ✅
-16. `iot-core`
+16. `iot-core` ✅
 17. `appsync`
 18. `secrets-manager` ✅
 19. `kafka-topic-creator` ✅ (Fase 2.12 — Lambda infra MSK topics)

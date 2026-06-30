@@ -22,6 +22,6 @@ resource "aws_apigatewayv2_integration" "alb_authenticated" {
   timeout_milliseconds   = 30000
 
   request_parameters = {
-    "overwrite:header.X-User-Id" = "$context.authorizer.jwt.claims.preferred_username"
+    "append:header.x-user-id" = "$context.authorizer.jwt.claims.preferred_username"
   }
 }

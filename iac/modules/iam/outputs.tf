@@ -18,6 +18,21 @@ output "ecs_reservation_service_task_role_name" {
   value       = aws_iam_role.ecs_reservation_service_task.name
 }
 
+output "ecs_event_processor_task_role_arn" {
+  description = "IAM task role ARN for event-processor-service ECS tasks"
+  value       = aws_iam_role.ecs_event_processor_task.arn
+}
+
+output "ecs_event_processor_task_role_name" {
+  description = "IAM task role name for event-processor-service ECS tasks"
+  value       = aws_iam_role.ecs_event_processor_task.name
+}
+
+output "eventbridge_publish_policy_arn" {
+  description = "IAM policy ARN for publishing events to the custom EventBridge bus"
+  value       = aws_iam_policy.eventbridge_publish.arn
+}
+
 output "ecs_task_execution_role_arn" {
   description = "IAM execution role ARN for ECS Fargate tasks"
   value       = aws_iam_role.ecs_task_execution.arn
@@ -97,6 +112,7 @@ output "policy_arns" {
     kafka_topic_creator_execution = aws_iam_policy.kafka_topic_creator_execution.arn
     rfid_validator_data           = aws_iam_policy.rfid_validator_data.arn
     rfid_validator_execution      = aws_iam_policy.rfid_validator_execution.arn
+    eventbridge_publish           = aws_iam_policy.eventbridge_publish.arn
     msk_client                    = aws_iam_policy.msk_client.arn
     msk_topic_admin               = aws_iam_policy.msk_topic_admin.arn
     secrets_read                  = aws_iam_policy.secrets_read.arn
@@ -119,6 +135,7 @@ output "role_arns" {
   value = {
     audit_logger                 = aws_iam_role.audit_logger.arn
     ecs_api_service_task         = aws_iam_role.ecs_api_service_task.arn
+    ecs_event_processor_task     = aws_iam_role.ecs_event_processor_task.arn
     ecs_reservation_service_task = aws_iam_role.ecs_reservation_service_task.arn
     ecs_task_execution           = aws_iam_role.ecs_task_execution.arn
     kafka_msk_smoke              = aws_iam_role.kafka_msk_smoke.arn

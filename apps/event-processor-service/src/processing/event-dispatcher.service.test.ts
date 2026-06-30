@@ -1,12 +1,36 @@
+import { Test, type TestingModule } from '@nestjs/testing'
 import { describe, expect, it } from 'vitest'
 
 import { KAFKA_TOPICS } from '@polaris/shared-types'
+
+import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
+import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
+import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
 
 import { EventDispatcherService } from './event-dispatcher.service.js'
 
 describe('EventDispatcherService', () => {
   it('tracks processed messages by topic', async () => {
-    const dispatcher = new EventDispatcherService()
+    const vehicleEntryHandler = {
+      handle: async () => undefined
+    }
+    const vehicleExitHandler = {
+      handle: async () => undefined
+    }
+    const sensorOccupancyHandler = {
+      handle: async () => undefined
+    }
+
+    const moduleRef: TestingModule = await Test.createTestingModule({
+      providers: [
+        EventDispatcherService,
+        { provide: VehicleEntryHandler, useValue: vehicleEntryHandler },
+        { provide: VehicleExitHandler, useValue: vehicleExitHandler },
+        { provide: SensorOccupancyHandler, useValue: sensorOccupancyHandler }
+      ]
+    }).compile()
+
+    const dispatcher = moduleRef.get(EventDispatcherService)
 
     await dispatcher.dispatch(
       {

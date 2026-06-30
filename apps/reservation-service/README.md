@@ -23,8 +23,12 @@ curl http://localhost:3002/health
 
 ### Reservas (4.2 + 4.5)
 
-API Gateway inyecta `X-User-Id` desde `preferred_username` del **idToken**
-Cognito. Ver `iac/modules/api-gateway/README.md` para E2E. Local:
+Vía API Gateway: enviar **idToken** en `Authorization: Bearer`. El servicio lee
+`preferred_username` del JWT (API GW ya lo validó). El header `X-User-Id` sigue
+disponible para pruebas locales o ALB directo. Ver
+`iac/modules/api-gateway/README.md` para E2E.
+
+Local:
 
 ```bash
 curl -X POST http://localhost:3002/parking/reserve \

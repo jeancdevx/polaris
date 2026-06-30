@@ -18,9 +18,22 @@ provoca `503 Service Unavailable` en la integración VPC Link.
 | `POST /parking/reserve`        | Sí       | reservation-service |
 | `DELETE /parking/reserve/{id}` | Sí       | reservation-service |
 
-Rutas protegidas: authorizer Cognito JWT. API GW inyecta `X-User-Id` desde el
-claim `preferred_username` del idToken (p. ej. `usr-12345`). Los claims con `:`
-(como `custom:*`) no son válidos en parameter mapping de HTTP API.
+Rutas protegidas: authorizer Cognito JWT. El **idToken** debe incluir
+`preferred_username` (p. ej. `usr-12345`). Los claims con `:` (como `custom:*`)
+no son válidos en parameter mapping de HTTP API.
+
+**Identidad en reservation-service:** el mapping `append:header.x-user-id` no es
+fiable con VPC Link → ALB. El servicio lee `preferred_username` del Bearer token
+(API GW ya validó el JWT). El header `X-User-Id` sigue funcionando para pruebas
+directas contra el ALB.
+
+### Troubleshooting `X-User-Id header is required`
+
+1. Usar **idToken**, no accessToken (`jq -r .idToken`).
+2. Verificar `preferred_username` en el payload del JWT.
+3. Redeploy `reservation-service` tras cambios de identidad.
+4. Prueba manual `-H "X-User-Id: usr-12345"` confirma routing; error RDS indica
+   falta de migraciones/seed.
 
 ## Archivos
 

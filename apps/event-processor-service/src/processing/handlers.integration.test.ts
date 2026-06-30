@@ -143,6 +143,7 @@ describe('event processor handlers integration', () => {
 
     process.env.DATABASE_URL = postgres.getConnectionUri()
     process.env.REDIS_URL = redis.getConnectionUrl()
+    process.env.EVENTBRIDGE_ENABLED = 'false'
 
     await runMigrations()
     await runSeed()

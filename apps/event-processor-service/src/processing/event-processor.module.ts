@@ -7,6 +7,7 @@ import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
 import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
 import { DatabaseService } from './infrastructure/database.service.js'
+import { EventBridgePublisherService } from './infrastructure/eventbridge-publisher.service.js'
 import { RedisService } from './infrastructure/redis.service.js'
 import { KafkaConsumerService } from './kafka-consumer.service.js'
 import { ParkingRedisStore } from './parking/parking-redis.store.js'
@@ -17,6 +18,7 @@ import { ParkingRepository } from './parking/parking.repository.js'
   providers: [
     DatabaseService,
     RedisService,
+    EventBridgePublisherService,
     ParkingRepository,
     ParkingRedisStore,
     VehicleEntryHandler,

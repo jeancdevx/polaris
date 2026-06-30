@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { isBusinessRuleViolationError } from '@polaris/domain'
 import type { VehicleExitEvent } from '@polaris/kafka'
+import { KAFKA_TOPICS } from '@polaris/shared-types'
 
+import { EventBridgePublisherService } from '../infrastructure/eventbridge-publisher.service.js'
 import { ParkingRedisStore } from '../parking/parking-redis.store.js'
 import { ParkingRepository } from '../parking/parking.repository.js'
 
@@ -11,7 +13,8 @@ export class VehicleExitHandler {
 
   constructor(
     private readonly parkingRepository: ParkingRepository,
-    private readonly parkingRedisStore: ParkingRedisStore
+    private readonly parkingRedisStore: ParkingRedisStore,
+    private readonly eventBridgePublisher: EventBridgePublisherService
   ) {}
 
   async handle(event: VehicleExitEvent): Promise<void> {
@@ -26,6 +29,19 @@ export class VehicleExitHandler {
         })
 
       await this.parkingRedisStore.syncSpotTransition(spot, previousStatus)
+
+      await this.eventBridgePublisher.publishProcessedParkingEvent({
+        detailType: KAFKA_TOPICS.VEHICLE_EXIT,
+        eventName: event.eventName,
+        aggregateId: event.aggregateId,
+        occurredAt: event.occurredAt,
+        parkingSpotId: event.parkingSpotId,
+        previousStatus,
+        currentStatus: spot.status,
+        userId: event.userId,
+        reservationId: event.reservationId,
+        vehiclePlate: event.vehiclePlate
+      })
 
       this.logger.log(
         `Vehicle exit processed for ${event.parkingSpotId} (${previousStatus} -> ${spot.status})`

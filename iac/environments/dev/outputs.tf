@@ -240,6 +240,43 @@ output "sqs_queue_urls" {
   value       = module.sqs.queue_urls
 }
 
+output "iot_data_endpoint" {
+  description = "AWS IoT Core ATS data endpoint for MQTT clients"
+  value       = module.iot_core.data_endpoint
+}
+
+output "iot_device_policy_name" {
+  description = "IoT policy name for Polaris ESP32 devices"
+  value       = module.iot_core.device_policy_name
+}
+
+output "iot_rfid_rule_names" {
+  description = "IoT topic rule names that invoke rfid-validator"
+  value       = module.iot_core.rfid_rule_names
+}
+
+output "iot_simulator_device_id" {
+  description = "Logical device ID for the Terraform-managed IoT simulator"
+  value       = module.iot_core.simulator_device_id
+}
+
+output "iot_simulator_thing_name" {
+  description = "AWS IoT thing name for the device simulator"
+  value       = module.iot_core.simulator_thing_name
+}
+
+output "iot_simulator_certificate_pem" {
+  description = "PEM-encoded certificate for the IoT device simulator"
+  value       = module.iot_core.simulator_certificate_pem
+  sensitive   = true
+}
+
+output "iot_simulator_private_key" {
+  description = "PEM-encoded private key for the IoT device simulator"
+  value       = module.iot_core.simulator_private_key
+  sensitive   = true
+}
+
 output "msk_client_role_arn" {
   description = "IAM role ARN for MSK IAM SASL clients"
   value       = module.iam.msk_client_role_arn

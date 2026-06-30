@@ -47,9 +47,11 @@ Tras `terraform apply`:
 
 ```bash
 pnpm rfid-validator:smoke:dev
+pnpm iot:smoke:dev
 ```
 
-IoT Rule trigger se añade en Fase 5.6/6.3.
+IoT rules `parking/rfid/entry/+` y `parking/rfid/exit/+` → esta Lambda (módulo
+`iot-core`, Fase 6.3).
 
 ## Outputs
 

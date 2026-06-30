@@ -83,6 +83,36 @@ output "sensor_data_processor_role_name" {
   value       = aws_iam_role.sensor_data_processor.name
 }
 
+output "notification_sender_role_arn" {
+  description = "IAM role ARN for the notification-sender Lambda function"
+  value       = aws_iam_role.notification_sender.arn
+}
+
+output "notification_sender_role_name" {
+  description = "IAM role name for the notification-sender Lambda function"
+  value       = aws_iam_role.notification_sender.name
+}
+
+output "reservation_cleanup_role_arn" {
+  description = "IAM role ARN for the reservation-cleanup Lambda function"
+  value       = aws_iam_role.reservation_cleanup.arn
+}
+
+output "reservation_cleanup_role_name" {
+  description = "IAM role name for the reservation-cleanup Lambda function"
+  value       = aws_iam_role.reservation_cleanup.name
+}
+
+output "health_checker_role_arn" {
+  description = "IAM role ARN for the health-checker Lambda function"
+  value       = aws_iam_role.health_checker.arn
+}
+
+output "health_checker_role_name" {
+  description = "IAM role name for the health-checker Lambda function"
+  value       = aws_iam_role.health_checker.name
+}
+
 output "audit_logger_role_arn" {
   description = "IAM role ARN for the audit-logger Lambda function"
   value       = aws_iam_role.audit_logger.arn
@@ -122,6 +152,11 @@ output "policy_arns" {
     kafka_topic_creator_execution   = aws_iam_policy.kafka_topic_creator_execution.arn
     rfid_validator_data             = aws_iam_policy.rfid_validator_data.arn
     rfid_validator_execution        = aws_iam_policy.rfid_validator_execution.arn
+    health_checker_alerts           = aws_iam_policy.health_checker_alerts.arn
+    health_checker_execution        = aws_iam_policy.health_checker_execution.arn
+    notification_sender_execution   = aws_iam_policy.notification_sender_execution.arn
+    notification_sender_notify      = aws_iam_policy.notification_sender_notify.arn
+    reservation_cleanup_execution   = aws_iam_policy.reservation_cleanup_execution.arn
     sensor_data_processor_data      = aws_iam_policy.sensor_data_processor_data.arn
     sensor_data_processor_execution = aws_iam_policy.sensor_data_processor_execution.arn
     eventbridge_publish             = aws_iam_policy.eventbridge_publish.arn
@@ -146,6 +181,9 @@ output "role_arns" {
   description = "Map of IAM role names to ARNs"
   value = {
     audit_logger                 = aws_iam_role.audit_logger.arn
+    health_checker               = aws_iam_role.health_checker.arn
+    notification_sender          = aws_iam_role.notification_sender.arn
+    reservation_cleanup          = aws_iam_role.reservation_cleanup.arn
     ecs_api_service_task         = aws_iam_role.ecs_api_service_task.arn
     ecs_event_processor_task     = aws_iam_role.ecs_event_processor_task.arn
     ecs_reservation_service_task = aws_iam_role.ecs_reservation_service_task.arn

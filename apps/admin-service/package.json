@@ -10,6 +10,8 @@
     "start": "node dist/main.js",
     "test": "vitest run",
     "test:integration:users": "vitest run --config vitest.integration.config.ts src/users/users.integration.test.ts",
+    "test:integration:audit": "vitest run --config vitest.integration.config.ts src/audit/audit.integration.test.ts",
+    "test:integration:metrics": "vitest run --config vitest.integration.config.ts src/metrics/metrics.integration.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -24,6 +26,7 @@
     "@polaris/domain": "workspace:*",
     "@polaris/shared-types": "workspace:*",
     "@polaris/shared-utils": "workspace:*",
+    "redis": "6.0.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2"
   },
@@ -33,6 +36,7 @@
     "@nestjs/testing": "11.1.27",
     "@polaris/tsconfig": "workspace:*",
     "@testcontainers/postgresql": "12.0.3",
+    "@testcontainers/redis": "12.0.3",
     "@types/node": "26.0.0",
     "testcontainers": "12.0.3",
     "typescript": "6.0.3",

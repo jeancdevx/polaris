@@ -24,6 +24,7 @@
     "test:integration:kafka-consumer": "pnpm --filter event-processor-service test:integration:kafka",
     "test:integration:handlers": "pnpm --filter event-processor-service test:integration:handlers",
     "test:integration:eventbridge": "pnpm --filter event-processor-service test:integration:eventbridge",
+    "test:integration:users": "pnpm --filter admin-service test:integration:users",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "db:migrate": "pnpm --filter @polaris/database migration:run",

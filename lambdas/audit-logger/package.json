@@ -1,0 +1,28 @@
+{
+  "name": "@polaris/audit-logger",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rolldown -c rolldown.config.ts && printf '%s\\n' '{\"name\":\"@polaris/audit-logger\",\"type\":\"module\"}' > dist/package.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "3.1075.0",
+    "@aws-sdk/client-s3": "3.1075.0",
+    "@polaris/lambda-core": "workspace:*",
+    "@polaris/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@polaris/build-config": "workspace:*",
+    "@polaris/tsconfig": "workspace:*",
+    "@types/aws-lambda": "8.10.161",
+    "rolldown": "1.1.2",
+    "testcontainers": "12.0.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

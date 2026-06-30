@@ -176,7 +176,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | 5.3 | Publicar a EventBridge tras procesar eventos | ✅ Regla dispara target · `pnpm test:integration:eventbridge` |
 | 5.4 | `lambdas/rfid-validator` — Rolldown + Node 24 + `@polaris/lambda-core` | ✅ Deploy dev · `pnpm rfid-validator:smoke:dev` |
 | 5.5 | `lambdas/audit-logger` | ✅ Logs + S3 · `pnpm audit-logger:smoke:dev` |
-| 5.6 | IaC: `lambda`, `eventbridge`, `sqs` | Triggers activos |
+| 5.6 | IaC: `lambda`, `eventbridge`, `sqs` | ✅ Triggers activos · `pnpm eventbridge:smoke:dev` |
 | 5.7 | IaC: desplegar event-processor en ECS | Consumer group estable |
 
 ---

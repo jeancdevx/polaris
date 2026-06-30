@@ -54,23 +54,25 @@ pnpm test:integration:handlers
 pnpm test:integration:eventbridge
 ```
 
-| DoD | Comando                                                               |
-| --- | --------------------------------------------------------------------- |
-| 5.1 | `test:integration:kafka-consumer` — 8 topics                          |
-| 5.2 | `test:integration:handlers` — entry/exit/occupancy → RDS + Redis      |
-| 5.3 | `test:integration:eventbridge` — PutEvents + regla → SQS (LocalStack) |
+| DoD | Comando                                                                |
+| --- | ---------------------------------------------------------------------- |
+| 5.1 | `test:integration:kafka-consumer` — 8 topics                           |
+| 5.2 | `test:integration:handlers` — entry/exit/occupancy → RDS + Redis       |
+| 5.3 | `test:integration:eventbridge` — PutEvents + regla → SQS (LocalStack)  |
+| 5.6 | `eventbridge:smoke:dev` — reglas AWS → audit-logger (CloudWatch audit) |
 
 ## MSK (AWS)
 
-El task role necesita policy `msk_client` (Connect, ReadData, DescribeTopic).
-IaC ECS en Fase 5.7 — no desplegar infra hasta entonces.
+El task role `ecs_event_processor_task` incluye `msk_client`,
+`eventbridge_publish` y `secrets_read`. IaC ECS en Fase 5.7 — no desplegar
+servicio hasta entonces.
 
 ## Roadmap
 
-| Fase | Entrega                      |
-| ---- | ---------------------------- |
-| 5.1  | Scaffold + consumer 8 topics |
-| 5.2  | Handlers vehicle/sensor      |
-| 5.3  | EventBridge                  |
-| 5.6  | IaC eventbridge + Lambda     |
-| 5.7  | ECS + ECR                    |
+| Fase | Entrega                                 |
+| ---- | --------------------------------------- |
+| 5.1  | Scaffold + consumer 8 topics            |
+| 5.2  | Handlers vehicle/sensor                 |
+| 5.3  | EventBridge                             |
+| 5.6  | IaC eventbridge + sqs + Lambda triggers |
+| 5.7  | ECS + ECR                               |

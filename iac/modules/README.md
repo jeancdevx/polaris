@@ -17,9 +17,9 @@ Módulos planificados:
 10. `ecs` ✅ (Fase 3.5 — api-service)
 11. `ecr` ✅ (Fase 3.5 — api-service)
 12. `api-gateway` ✅ (Fase 3.6 — api-service público)
-13. `lambda`
-14. `eventbridge`
-15. `sqs`
+13. `lambda` ✅
+14. `eventbridge` ✅
+15. `sqs` ✅
 16. `iot-core`
 17. `appsync`
 18. `secrets-manager` ✅

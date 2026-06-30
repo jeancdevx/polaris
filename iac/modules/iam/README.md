@@ -6,17 +6,19 @@ propio.
 
 ## Archivos
 
-| Archivo                        | Responsabilidad                                 |
-| ------------------------------ | ----------------------------------------------- |
-| `msk-policies.tf`              | Policies MSK client y topic admin               |
-| `secrets-policies.tf`          | Policies lectura y rotación de secrets          |
-| `rds-enhanced-monitoring.tf`   | Role para Aurora enhanced monitoring            |
-| `msk-client-role.tf`           | Role ECS/Lambda + MSK + secrets read            |
-| `kafka-topic-creator-role.tf`  | Role Lambda para crear topics MSK (Fase 2.12)   |
-| `kafka-msk-smoke-role.tf`      | Role Lambda smoke test MSK IAM (Fase 2.13)      |
-| `ecs-execution-role.tf`        | Role execution ECS Fargate (ECR, logs, secrets) |
-| `ecs-api-service-task-role.tf` | Task role api-service (Cognito auth API)        |
-| `secrets-rotation-role.tf`     | Role Lambda para rotación RDS (Fase 2.10)       |
+| Archivo                            | Responsabilidad                                 |
+| ---------------------------------- | ----------------------------------------------- |
+| `msk-policies.tf`                  | Policies MSK client y topic admin               |
+| `secrets-policies.tf`              | Policies lectura y rotación de secrets          |
+| `rds-enhanced-monitoring.tf`       | Role para Aurora enhanced monitoring            |
+| `msk-client-role.tf`               | Role ECS/Lambda + MSK + secrets read            |
+| `kafka-topic-creator-role.tf`      | Role Lambda para crear topics MSK (Fase 2.12)   |
+| `kafka-msk-smoke-role.tf`          | Role Lambda smoke test MSK IAM (Fase 2.13)      |
+| `ecs-execution-role.tf`            | Role execution ECS Fargate (ECR, logs, secrets) |
+| `ecs-api-service-task-role.tf`     | Task role api-service (Cognito auth API)        |
+| `ecs-event-processor-task-role.tf` | Task role event-processor (MSK + EventBridge)   |
+| `eventbridge-publish-policy.tf`    | PutEvents al bus `polaris-events`               |
+| `secrets-rotation-role.tf`         | Role Lambda para rotación RDS (Fase 2.10)       |
 
 ## Fase 2
 

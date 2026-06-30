@@ -195,6 +195,36 @@ output "audit_logger_role_arn" {
   value       = module.iam.audit_logger_role_arn
 }
 
+output "eventbridge_bus_arn" {
+  description = "ARN of the custom EventBridge bus"
+  value       = module.eventbridge.bus_arn
+}
+
+output "eventbridge_bus_name" {
+  description = "Name of the custom EventBridge bus"
+  value       = module.eventbridge.bus_name
+}
+
+output "eventbridge_audit_logger_rule_names" {
+  description = "EventBridge rule names that invoke audit-logger"
+  value       = module.eventbridge.audit_logger_rule_names
+}
+
+output "ecs_event_processor_task_role_arn" {
+  description = "IAM task role ARN for event-processor-service ECS tasks"
+  value       = module.iam.ecs_event_processor_task_role_arn
+}
+
+output "sqs_queue_names" {
+  description = "SQS queue names by logical key"
+  value       = module.sqs.queue_names
+}
+
+output "sqs_queue_urls" {
+  description = "SQS queue URLs by logical key"
+  value       = module.sqs.queue_urls
+}
+
 output "msk_client_role_arn" {
   description = "IAM role ARN for MSK IAM SASL clients"
   value       = module.iam.msk_client_role_arn

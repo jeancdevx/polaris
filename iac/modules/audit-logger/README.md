@@ -34,12 +34,14 @@ module "audit_logger" {
 }
 ```
 
-EventBridge rules → Fase 5.6.
+EventBridge rules → módulo `eventbridge` (Fase 5.6): `vehicle.entry`,
+`vehicle.exit` y `sensor.occupancy` invocan esta Lambda automáticamente.
 
 ## Smoke test
 
 ```bash
 pnpm audit-logger:smoke:dev
+pnpm eventbridge:smoke:dev
 ```
 
 ## Outputs

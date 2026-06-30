@@ -35,6 +35,7 @@
     "kafka:smoke:msk:dev": "bash scripts/kafka-msk-smoke-dev.sh",
     "rfid-validator:smoke:dev": "bash scripts/rfid-validator-smoke-dev.sh",
     "audit-logger:smoke:dev": "bash scripts/audit-logger-smoke-dev.sh",
+    "eventbridge:smoke:dev": "bash scripts/eventbridge-smoke-dev.sh",
     "docker:build:api-service": "docker build -f apps/api-service/Dockerfile -t polaris-api-service:local .",
     "docker:push:api-service:dev": "bash scripts/push-api-service-ecr-dev.sh",
     "docker:build:reservation-service": "docker build -f apps/reservation-service/Dockerfile -t polaris-reservation-service:local .",

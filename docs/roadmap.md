@@ -185,7 +185,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 
 | # | Tarea | DoD |
 |---|-------|-----|
-| 6.1 | Scaffold `apps/admin-service` | CRUD usuarios admin |
+| 6.1 | Scaffold `apps/admin-service` | ✅ CRUD usuarios admin · `pnpm test:integration:users` |
 | 6.2 | `GET /admin/audit`, `GET /admin/metrics` | Paginación + filtros |
 | 6.3 | IaC: `iot-core` — topics, rules, policies, certificados | Dispositivo simulado publica MQTT |
 | 6.4 | `lambdas/sensor-data-processor` | IoT → DynamoDB + Kafka |

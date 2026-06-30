@@ -1,0 +1,41 @@
+{
+  "name": "admin-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "lint": "oxlint src",
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "test:integration:users": "vitest run --config vitest.integration.config.ts src/users/users.integration.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "3.1075.0",
+    "@aws-sdk/client-dynamodb": "3.1075.0",
+    "@aws-sdk/lib-dynamodb": "3.1075.0",
+    "@nestjs/common": "11.1.27",
+    "@nestjs/config": "4.0.4",
+    "@nestjs/core": "11.1.27",
+    "@nestjs/platform-fastify": "11.1.27",
+    "@polaris/database": "workspace:*",
+    "@polaris/domain": "workspace:*",
+    "@polaris/shared-types": "workspace:*",
+    "@polaris/shared-utils": "workspace:*",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "11.0.23",
+    "@nestjs/schematics": "11.1.0",
+    "@nestjs/testing": "11.1.27",
+    "@polaris/tsconfig": "workspace:*",
+    "@testcontainers/postgresql": "12.0.3",
+    "@types/node": "26.0.0",
+    "testcontainers": "12.0.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

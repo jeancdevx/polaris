@@ -86,6 +86,9 @@ importers:
       '@polaris/shared-utils':
         specifier: workspace:*
         version: link:../../packages/shared-utils
+      redis:
+        specifier: 6.0.0
+        version: 6.0.0
       reflect-metadata:
         specifier: 0.2.2
         version: 0.2.2
@@ -106,6 +109,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@testcontainers/postgresql':
+        specifier: 12.0.3
+        version: 12.0.3
+      '@testcontainers/redis':
         specifier: 12.0.3
         version: 12.0.3
       '@types/node':

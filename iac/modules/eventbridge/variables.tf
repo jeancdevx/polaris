@@ -8,6 +8,83 @@ variable "audit_logger_function_name" {
   type        = string
 }
 
+variable "health_checker_function_arn" {
+  description = "ARN of the health-checker Lambda invoked by the schedule rule"
+  type        = string
+}
+
+variable "health_checker_function_name" {
+  description = "Name of the health-checker Lambda invoked by the schedule rule"
+  type        = string
+}
+
+variable "health_checker_schedule_expression" {
+  description = "EventBridge schedule for health-checker"
+  type        = string
+  default     = "rate(1 minute)"
+}
+
+variable "notification_sender_dlq_arn" {
+  description = "SQS DLQ ARN for failed notification-sender invocations"
+  type        = string
+  default     = ""
+}
+
+variable "notification_sender_function_arn" {
+  description = "ARN of the notification-sender Lambda invoked by notification rules"
+  type        = string
+}
+
+variable "notification_sender_function_name" {
+  description = "Name of the notification-sender Lambda invoked by notification rules"
+  type        = string
+}
+
+variable "notification_sender_rules" {
+  description = "EventBridge rules that route reservation events to notification-sender"
+  type = map(object({
+    detail_type = string
+    description = string
+    sources     = list(string)
+  }))
+
+  default = {
+    reservation_created = {
+      detail_type = "reservation.created"
+      description = "Route reservation.created events to notification-sender"
+      sources = [
+        "polaris.reservation-service",
+        "polaris.smoke"
+      ]
+    }
+    reservation_cancelled = {
+      detail_type = "reservation.cancelled"
+      description = "Route reservation.cancelled events to notification-sender"
+      sources = [
+        "polaris.reservation-service",
+        "polaris.reservation-cleanup",
+        "polaris.smoke"
+      ]
+    }
+  }
+}
+
+variable "reservation_cleanup_function_arn" {
+  description = "ARN of the reservation-cleanup Lambda invoked by the schedule rule"
+  type        = string
+}
+
+variable "reservation_cleanup_function_name" {
+  description = "Name of the reservation-cleanup Lambda invoked by the schedule rule"
+  type        = string
+}
+
+variable "reservation_cleanup_schedule_expression" {
+  description = "EventBridge schedule for reservation-cleanup"
+  type        = string
+  default     = "rate(5 minutes)"
+}
+
 variable "audit_logger_rules" {
   description = "EventBridge rules that route event-processor events to audit-logger"
   type = map(object({

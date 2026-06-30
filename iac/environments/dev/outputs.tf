@@ -165,6 +165,21 @@ output "kafka_topic_creator_role_arn" {
   value       = module.iam.kafka_topic_creator_role_arn
 }
 
+output "rfid_validator_function_arn" {
+  description = "ARN of the rfid-validator Lambda function"
+  value       = module.rfid_validator.function_arn
+}
+
+output "rfid_validator_function_name" {
+  description = "Name of the rfid-validator Lambda function"
+  value       = module.rfid_validator.function_name
+}
+
+output "rfid_validator_role_arn" {
+  description = "IAM role ARN for rfid-validator Lambda"
+  value       = module.iam.rfid_validator_role_arn
+}
+
 output "msk_client_role_arn" {
   description = "IAM role ARN for MSK IAM SASL clients"
   value       = module.iam.msk_client_role_arn

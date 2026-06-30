@@ -3,16 +3,17 @@
 Consumidor Kafka de Polaris (Fase 5). NestJS 11 + Fastify + ESM, puerto
 **3003**.
 
-Procesa los 8 topics definidos en `@polaris/shared-types` → `KAFKA_TOPICS`. Los
-handlers de negocio (Redis/RDS/EventBridge) llegan en Fase 5.2+.
+Procesa los 8 topics definidos en `@polaris/shared-types` → `KAFKA_TOPICS`.
+Handlers de negocio (Fase 5.2): `vehicle.entry`, `vehicle.exit`,
+`sensor.occupancy` → actualizan RDS (TypeORM) y Redis.
 
 ## Desarrollo local
 
-Prerequisito: Kafka local (`infra/local/docker-compose.yml`).
+Prerequisitos: Postgres, Redis y Kafka (`infra/local/docker-compose.yml`).
 
 ```bash
 pnpm install
-docker compose -f infra/local/docker-compose.yml up -d kafka-1 kafka-2 kafka-3 kafka-init
+docker compose -f infra/local/docker-compose.yml up -d postgres redis kafka-1 kafka-2 kafka-3 kafka-init
 
 pnpm dev --filter event-processor-service
 ```
@@ -21,6 +22,8 @@ Variables (ver `infra/local/.env.local`):
 
 | Variable                  | Default                   | Uso                                 |
 | ------------------------- | ------------------------- | ----------------------------------- |
+| `DATABASE_URL`            | —                         | Aurora / Postgres local             |
+| `REDIS_URL`               | `redis://localhost:6379`  | ElastiCache / Redis local           |
 | `KAFKA_BROKERS`           | —                         | Brokers local o MSK                 |
 | `KAFKA_AUTH_MODE`         | `plain`                   | `iam` en AWS (MSK SASL)             |
 | `KAFKA_CLIENT_ID`         | `event-processor-service` | Cliente KafkaJS                     |
@@ -38,9 +41,13 @@ curl http://localhost:3003/health
 ```bash
 pnpm test --filter event-processor-service
 pnpm test:integration:kafka-consumer
+pnpm test:integration:handlers
 ```
 
-DoD 5.1: integración publica y consume los **8 topics**.
+| DoD | Comando                                                          |
+| --- | ---------------------------------------------------------------- |
+| 5.1 | `test:integration:kafka-consumer` — 8 topics                     |
+| 5.2 | `test:integration:handlers` — entry/exit/occupancy → RDS + Redis |
 
 ## MSK (AWS)
 

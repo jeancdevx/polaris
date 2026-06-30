@@ -220,6 +220,56 @@ output "eventbridge_bus_name" {
   value       = module.eventbridge.bus_name
 }
 
+output "notification_sender_function_arn" {
+  description = "ARN of the notification-sender Lambda function"
+  value       = module.notification_sender.function_arn
+}
+
+output "notification_sender_function_name" {
+  description = "Name of the notification-sender Lambda function"
+  value       = module.notification_sender.function_name
+}
+
+output "reservation_cleanup_function_arn" {
+  description = "ARN of the reservation-cleanup Lambda function"
+  value       = module.reservation_cleanup.function_arn
+}
+
+output "reservation_cleanup_function_name" {
+  description = "Name of the reservation-cleanup Lambda function"
+  value       = module.reservation_cleanup.function_name
+}
+
+output "health_checker_function_arn" {
+  description = "ARN of the health-checker Lambda function"
+  value       = module.health_checker.function_arn
+}
+
+output "health_checker_function_name" {
+  description = "Name of the health-checker Lambda function"
+  value       = module.health_checker.function_name
+}
+
+output "sns_alerts_topic_arn" {
+  description = "ARN of the operational alerts SNS topic"
+  value       = module.sns.alerts_topic_arn
+}
+
+output "eventbridge_notification_sender_rule_names" {
+  description = "EventBridge rule names that invoke notification-sender"
+  value       = module.eventbridge.notification_sender_rule_names
+}
+
+output "eventbridge_reservation_cleanup_schedule_rule_name" {
+  description = "EventBridge schedule rule for reservation-cleanup"
+  value       = module.eventbridge.reservation_cleanup_schedule_rule_name
+}
+
+output "eventbridge_health_checker_schedule_rule_name" {
+  description = "EventBridge schedule rule for health-checker"
+  value       = module.eventbridge.health_checker_schedule_rule_name
+}
+
 output "eventbridge_audit_logger_rule_names" {
   description = "EventBridge rule names that invoke audit-logger"
   value       = module.eventbridge.audit_logger_rule_names

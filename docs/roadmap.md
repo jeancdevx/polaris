@@ -171,7 +171,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 
 | # | Tarea | DoD |
 |---|-------|-----|
-| 5.1 | Scaffold `apps/event-processor-service` — consumidor KafkaJS + IAM | Consume 8 topics |
+| 5.1 | Scaffold `apps/event-processor-service` — consumidor KafkaJS + IAM | ✅ `pnpm dev --filter event-processor-service` · `pnpm test:integration:kafka-consumer` |
 | 5.2 | Handlers: `vehicle.entry`, `vehicle.exit`, `sensor.occupancy` | Redis + RDS actualizados |
 | 5.3 | Publicar a EventBridge tras procesar eventos | Regla dispara Lambda |
 | 5.4 | `lambdas/rfid-validator` — Rolldown + Node 24 + `@polaris/lambda-core` | Deploy dev |

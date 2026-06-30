@@ -60,12 +60,21 @@ pnpm test:integration:eventbridge
 | 5.2 | `test:integration:handlers` — entry/exit/occupancy → RDS + Redis       |
 | 5.3 | `test:integration:eventbridge` — PutEvents + regla → SQS (LocalStack)  |
 | 5.6 | `eventbridge:smoke:dev` — reglas AWS → audit-logger (CloudWatch audit) |
+| 5.7 | `event-processor:smoke:dev` — ECS estable + consumer group MSK         |
 
 ## MSK (AWS)
 
 El task role `ecs_event_processor_task` incluye `msk_client`,
-`eventbridge_publish` y `secrets_read`. IaC ECS en Fase 5.7 — no desplegar
-servicio hasta entonces.
+`eventbridge_publish` y `secrets_read`. Despliegue ECS en dev:
+
+```bash
+pnpm docker:push:event-processor-service:dev
+cd iac/environments/dev && terraform apply
+pnpm event-processor:smoke:dev
+```
+
+Servicio interno (sin ALB): `{project}-{env}-event-processor-service`, puerto
+**3003**. Consumer group: `event-processor-service`.
 
 ## Roadmap
 
@@ -75,4 +84,4 @@ servicio hasta entonces.
 | 5.2  | Handlers vehicle/sensor                 |
 | 5.3  | EventBridge                             |
 | 5.6  | IaC eventbridge + sqs + Lambda triggers |
-| 5.7  | ECS + ECR                               |
+| 5.7  | ECS + ECR + smoke consumer group        |

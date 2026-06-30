@@ -24,14 +24,15 @@ AWS IoT Core para dispositivos ESP32 — alineado con `docs/arquitectura.md` §1
 | `parking/commands/display/+`   | Comandos LCD               |
 | `parking/commands/led/+`       | Estado LED remoto          |
 
-## Rules activas (6.3)
+## Rules activas (6.3–6.4)
 
-| Regla        | SQL topic              | Target         |
-| ------------ | ---------------------- | -------------- |
-| `rfid_entry` | `parking/rfid/entry/+` | rfid-validator |
-| `rfid_exit`  | `parking/rfid/exit/+`  | rfid-validator |
+| Regla              | SQL topic                     | Target                |
+| ------------------ | ----------------------------- | --------------------- |
+| `rfid_entry`       | `parking/rfid/entry/+`        | rfid-validator        |
+| `rfid_exit`        | `parking/rfid/exit/+`         | rfid-validator        |
+| `sensor_occupancy` | `parking/sensors/occupancy/+` | sensor-data-processor |
 
-`sensor-data-processor` y reglas Kafka se añaden en Fase 6.4.
+Reglas Kafka (`sensor/proximity`) se añaden en fases posteriores.
 
 ## Uso
 

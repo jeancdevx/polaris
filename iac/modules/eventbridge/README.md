@@ -5,45 +5,27 @@ Bus custom y reglas de orquestación hacia Lambdas. Alineado con
 
 ## Recursos
 
-| Recurso               | Archivo                 |
-| --------------------- | ----------------------- |
-| Bus `polaris-events`  | `bus.tf`                |
-| Reglas → audit-logger | `rules-audit-logger.tf` |
+| Recurso                      | Archivo                        |
+| ---------------------------- | ------------------------------ |
+| Bus `polaris-events`         | `bus.tf`                       |
+| Reglas → audit-logger        | `rules-audit-logger.tf`        |
+| Reglas → notification-sender | `rules-notification-sender.tf` |
+| Schedules cleanup/health     | `rules-scheduled.tf`           |
 
-Reglas activas (Fase 5.6):
+Reglas activas (Fase 5.6–6.5):
 
-| detail-type        | Target       |
-| ------------------ | ------------ |
-| `vehicle.entry`    | audit-logger |
-| `vehicle.exit`     | audit-logger |
-| `sensor.occupancy` | audit-logger |
-
-Patrón: `source = polaris.event-processor` + `detail-type` del handler.
-
-## Uso
-
-```hcl
-module "eventbridge" {
-  source = "../../modules/eventbridge"
-
-  project_name               = "polaris"
-  environment                = "dev"
-  audit_logger_function_arn  = module.audit_logger.function_arn
-  audit_logger_function_name = module.audit_logger.function_name
-
-  depends_on = [module.audit_logger]
-}
-```
-
-## Outputs
-
-- `bus_name`, `bus_arn`
-- `audit_logger_rule_names`, `audit_logger_rule_arns`
+| Trigger                       | Target              |
+| ----------------------------- | ------------------- |
+| `vehicle.entry` (bus)         | audit-logger        |
+| `vehicle.exit` (bus)          | audit-logger        |
+| `sensor.occupancy` (bus)      | audit-logger        |
+| `reservation.created` (bus)   | notification-sender |
+| `reservation.cancelled` (bus) | notification-sender |
+| `rate(5 minutes)` (schedule)  | reservation-cleanup |
+| `rate(1 minute)` (schedule)   | health-checker      |
 
 ## Smoke dev
 
-Tras `terraform apply`, publicar un evento de prueba:
-
 ```bash
-pnpm eventbridge:smoke:dev
+pnpm scheduled-lambdas:smoke:dev
 ```

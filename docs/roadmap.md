@@ -163,7 +163,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | 4.2 | `POST /parking/reserve`, `DELETE /parking/reserve/{id}` | ✅ Lock Redis, persist RDS · `pnpm test:integration:reservation` |
 | 4.3 | Publicar `reservation.created` / `reservation.cancelled` a **MSK** | ✅ `pnpm test:integration:kafka` |
 | 4.4 | IaC: desplegar reservation-service en ECS | ✅ 2 tasks dev · `pnpm docker:push:reservation-service:dev` + `terraform apply` |
-| 4.5 | API Gateway: rutas de reserva | E2E via API GW |
+| 4.5 | API Gateway: rutas de reserva | ✅ JWT Cognito · E2E `POST/DELETE /parking/reserve` vía API GW |
 
 ---
 
@@ -244,7 +244,7 @@ Fase 0  ✅ Fundación monorepo
 Fase 1  ✅  Dominio + DB + Kafka local
 Fase 2     IaC: VPC, SG, IAM, RDS, Redis, MSK, Cognito, DynamoDB, S3
 Fase 3  ▶  api-service + ECS + API Gateway (slice #1) — 3.1 ✅
-Fase 4  ▶  reservation-service + Kafka producers — 4.1 ✅
+Fase 4  ▶  reservation-service + Kafka producers — 4.1 ✅ … 4.5 ✅
 Fase 5     event-processor + Lambdas + EventBridge
 Fase 6     admin-service + IoT Core
 Fase 7     AppSync + frontends

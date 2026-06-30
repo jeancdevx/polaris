@@ -16,7 +16,7 @@ module "ecs" {
   ecs_api_service_task_role_arn         = module.iam.ecs_api_service_task_role_arn
   ecs_reservation_service_task_role_arn = module.iam.ecs_reservation_service_task_role_arn
 
-  ecr_repository_url                     = module.ecr.repository_url
+  ecr_repository_url                     = module.ecr_api_service.repository_url
   api_service_image_tag                  = var.api_service_image_tag
   api_service_desired_count              = var.api_service_desired_count
   api_service_cpu                        = var.api_service_cpu

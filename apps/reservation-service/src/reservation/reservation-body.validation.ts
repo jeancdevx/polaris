@@ -43,12 +43,88 @@ export const parseCreateReserveBody = (body: unknown): CreateReserveBody => {
   }
 }
 
+const decodeJwtPayload = (token: string): Record<string, unknown> => {
+  const segments = token.split('.')
+  if (segments.length !== 3) {
+    throw new BadRequestException('Authorization Bearer token is malformed')
+  }
+
+  const payloadSegment = segments[1]
+  if (!payloadSegment) {
+    throw new BadRequestException('Authorization Bearer token is malformed')
+  }
+
+  try {
+    const payload = Buffer.from(payloadSegment, 'base64url').toString('utf8')
+    const parsed: unknown = JSON.parse(payload)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new BadRequestException('Authorization Bearer token is malformed')
+    }
+
+    return parsed as Record<string, unknown>
+  } catch {
+    throw new BadRequestException('Authorization Bearer token is malformed')
+  }
+}
+
+const parseBearerToken = (
+  authorization: string | undefined
+): string | undefined => {
+  if (!authorization?.trim()) {
+    return undefined
+  }
+
+  const [scheme, token] = authorization.trim().split(/\s+/, 2)
+  if (scheme?.toLowerCase() !== 'bearer' || !token) {
+    return undefined
+  }
+
+  return token
+}
+
+export const parseUserIdFromJwt = (
+  authorization: string | undefined
+): string | undefined => {
+  const token = parseBearerToken(authorization)
+  if (!token) {
+    return undefined
+  }
+
+  const payload = decodeJwtPayload(token)
+  const preferredUsername = payload.preferred_username
+  if (
+    typeof preferredUsername !== 'string' ||
+    preferredUsername.trim().length === 0
+  ) {
+    return undefined
+  }
+
+  return preferredUsername.trim()
+}
+
 export const parseUserIdHeader = (userId: string | undefined): string => {
   if (!userId?.trim()) {
     throw new BadRequestException('X-User-Id header is required')
   }
 
   return userId.trim()
+}
+
+/** Prefer X-User-Id (ALB direct / API GW mapping); fall back to Cognito idToken claim. */
+export const parseUserIdentity = (
+  userIdHeader: string | undefined,
+  authorization: string | undefined
+): string => {
+  if (userIdHeader?.trim()) {
+    return userIdHeader.trim()
+  }
+
+  const fromJwt = parseUserIdFromJwt(authorization)
+  if (fromJwt) {
+    return fromJwt
+  }
+
+  throw new BadRequestException('X-User-Id header is required')
 }
 
 export const parseReservationIdParam = (reservationId: string): string => {

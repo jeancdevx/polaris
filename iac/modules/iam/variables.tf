@@ -4,6 +4,12 @@ variable "cognito_user_pool_arn" {
   default     = ""
 }
 
+variable "enable_ecs_api_service_cognito_policy" {
+  description = "Attach Cognito auth permissions to the api-service ECS task role. Use this flag for count/for_each; do not derive from cognito_user_pool_arn (unknown until apply)."
+  type        = bool
+  default     = false
+}
+
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string

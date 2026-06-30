@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "assume_ecs_task" {
 }
 
 data "aws_iam_policy_document" "ecs_api_service_cognito" {
-  count = var.cognito_user_pool_arn != "" ? 1 : 0
+  count = var.enable_ecs_api_service_cognito_policy ? 1 : 0
 
   statement {
     effect = "Allow"
@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "ecs_api_service_cognito" {
 }
 
 resource "aws_iam_policy" "ecs_api_service_cognito" {
-  count = var.cognito_user_pool_arn != "" ? 1 : 0
+  count = var.enable_ecs_api_service_cognito_policy ? 1 : 0
 
   name_prefix = "${local.name_prefix}-ecs-api-cognito-"
   description = "Cognito auth API access for api-service ECS tasks"
@@ -46,7 +46,7 @@ resource "aws_iam_role" "ecs_api_service_task" {
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_api_service_cognito" {
-  count = var.cognito_user_pool_arn != "" ? 1 : 0
+  count = var.enable_ecs_api_service_cognito_policy ? 1 : 0
 
   role       = aws_iam_role.ecs_api_service_task.name
   policy_arn = aws_iam_policy.ecs_api_service_cognito[0].arn

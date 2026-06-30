@@ -9,6 +9,16 @@ variable "api_name" {
   default     = null
 }
 
+variable "cognito_app_client_id" {
+  description = "Cognito app client ID (JWT audience for protected routes)"
+  type        = string
+}
+
+variable "cognito_issuer_url" {
+  description = "Cognito OIDC issuer URL for the JWT authorizer"
+  type        = string
+}
+
 variable "cors_allow_origins" {
   description = "Allowed origins for CORS. Empty disables the CORS configuration."
   type        = list(string)

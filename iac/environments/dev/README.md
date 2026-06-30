@@ -48,43 +48,76 @@ Plantillas de referencia: `dev.tfvars.example`, `staging.tfvars.example`,
 
 ## Módulos desplegados
 
-| Fase | Módulo                | Estado |
-| ---- | --------------------- | ------ |
-| 2.1  | `vpc`                 | ✅     |
-| 2.2  | `security-groups`     | ✅     |
-| 2.3  | `iam`                 | ✅     |
-| 2.4  | `rds`                 | ✅     |
-| 2.5  | `redis`               | ✅     |
-| 2.6  | `kafka`               | ✅     |
-| 2.7  | `cognito`             | ✅     |
-| 2.8  | `dynamodb`            | ✅     |
-| 2.9  | `s3`                  | ✅     |
-| 2.10 | `secrets-manager`     | ✅     |
-| 2.12 | `kafka-topic-creator` | ✅     |
-| 2.13 | `kafka-msk-smoke`     | ✅     |
-| 3.5  | `ecr`                 | ✅     |
-| 3.5  | `ecs` (api-service)   | ✅     |
-| 3.6  | `api-gateway`         | ✅     |
-| 4.4  | `ecr` (reservation)   | ✅     |
-| 4.4  | `ecs` (reservation)   | ✅     |
+| Fase | Módulo                      | Estado |
+| ---- | --------------------------- | ------ |
+| 2.1  | `vpc`                       | ✅     |
+| 2.2  | `security-groups`           | ✅     |
+| 2.3  | `iam`                       | ✅     |
+| 2.4  | `rds`                       | ✅     |
+| 2.5  | `redis`                     | ✅     |
+| 2.6  | `kafka`                     | ✅     |
+| 2.7  | `cognito`                   | ✅     |
+| 2.8  | `dynamodb`                  | ✅     |
+| 2.9  | `s3`                        | ✅     |
+| 2.10 | `secrets-manager`           | ✅     |
+| 2.12 | `kafka-topic-creator`       | ✅     |
+| 2.13 | `kafka-msk-smoke`           | ✅     |
+| 3.5  | `ecr` + `ecs` (api-service) | ✅     |
+| 3.6  | `api-gateway`               | ✅     |
+| 4.5  | `api-gateway` reservas      | ✅     |
+| 4.4  | `ecs` (reservation)         | ✅     |
 
-## ECS reservation-service (4.4)
+Los repos ECR viven en un solo archivo: `ecr.tf` (`ecr_api_service`,
+`ecr_reservation_service`).
 
-1. Importar ECR si ya existe:
+## Recrear infra desde cero
+
+Tras `terraform destroy` + `terraform apply`:
+
+1. **Imágenes Docker** — Terraform no hace push; ejecutar:
+   `pnpm docker:push:api-service:dev` y
+   `pnpm docker:push:reservation-service:dev`
+2. **Secrets ECS** — si falla _scheduled for deletion_, ver sección abajo.
+3. **Datos** — `pnpm db:migrate`, `pnpm db:seed`, `pnpm db:sync-redis` contra
+   Aurora/Redis dev.
+4. **Cognito** — recrear usuario de prueba (CLI en sección E2E).
+
+### Secrets Manager: scheduled for deletion
+
+Si `terraform apply` falla al crear `polaris-dev-*-service-env`:
 
 ```bash
+# Opción A: restaurar y aplicar de nuevo
+aws secretsmanager restore-secret --secret-id polaris-dev-api-service-env --region us-east-2
+aws secretsmanager restore-secret --secret-id polaris-dev-reservation-service-env --region us-east-2
+
+# Opción B: borrado inmediato (dev)
+aws secretsmanager delete-secret --secret-id polaris-dev-api-service-env --force-delete-without-recovery --region us-east-2
+aws secretsmanager delete-secret --secret-id polaris-dev-reservation-service-env --force-delete-without-recovery --region us-east-2
+```
+
+En dev el módulo ECS usa `recovery_window_in_days = 0` para evitar este bloqueo
+en futuros destroy/apply.
+
+## ECR (import opcional)
+
+Si los repos ya existen (p. ej. creados por los scripts de push antes del
+apply):
+
+```bash
+cd iac/environments/dev
+terraform import 'module.ecr_api_service.aws_ecr_repository.service' polaris-dev-api-service
 terraform import 'module.ecr_reservation_service.aws_ecr_repository.service' polaris-dev-reservation-service
 ```
 
-2. Build y push:
+Build y push:
 
 ```bash
+pnpm docker:push:api-service:dev
 pnpm docker:push:reservation-service:dev
 ```
 
-3. Aplicar (mismo `terraform apply` que el resto del entorno).
-
-4. Verificar 2 tasks:
+## ECS reservation-service (4.4)
 
 ```bash
 aws ecs describe-services \
@@ -113,15 +146,9 @@ aws ecs update-service --cluster polaris-dev-cluster \
 
 ## ECS api-service (3.5)
 
-1. Importar ECR si ya existe (push manual en 3.4):
+1. Asegurar imagen en ECR (`pnpm docker:push:api-service:dev`).
 
-```bash
-terraform import 'module.ecr.aws_ecr_repository.service' polaris-dev-api-service
-```
-
-2. Asegurar imagen en ECR (`pnpm docker:push:api-service:dev`).
-
-3. Aplicar:
+2. Aplicar:
 
 ```bash
 cd iac/environments/dev
@@ -129,7 +156,7 @@ terraform plan -var-file=dev.tfvars
 terraform apply -var-file=dev.tfvars
 ```
 
-4. Health check (vía API Gateway — el ALB es interno):
+3. Health check (vía API Gateway — el ALB es interno):
 
 ```bash
 API=$(terraform output -raw api_gateway_endpoint)
@@ -137,7 +164,7 @@ curl -s "${API}health"
 curl -s "${API}parking/availability"
 ```
 
-## API Gateway (3.6)
+## API Gateway (3.6 + 4.5)
 
 Tras `terraform apply`:
 
@@ -145,6 +172,31 @@ Tras `terraform apply`:
 API=$(terraform output -raw api_gateway_endpoint)
 curl -s "${API}health"
 curl -s "${API}parking/availability"
+```
+
+### Reservas E2E (4.5)
+
+Requiere `preferred_username` en Cognito (mapea a `usr-*` del seed). Usar
+**idToken**:
+
+```bash
+POOL=$(terraform output -raw cognito_user_pool_id)
+
+aws cognito-idp admin-update-user-attributes \
+  --user-pool-id "$POOL" \
+  --username "juan@example.com" \
+  --user-attributes Name=preferred_username,Value=usr-12345 \
+  --region us-east-2
+
+TOKEN=$(curl -s -X POST "${API}auth/signin" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"juan@example.com","password":"YOUR_PASSWORD"}' \
+  | jq -r .idToken)
+
+curl -s -X POST "${API}parking/reserve" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"parkingSpotId":"spot-07","reservationDate":"2025-06-19T14:00:00.000Z"}'
 ```
 
 Entrada pública recomendada: `api_gateway_endpoint`. Opcionalmente restringir el

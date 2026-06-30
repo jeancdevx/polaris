@@ -10,5 +10,8 @@ module "api_gateway" {
 
   alb_listener_arn = module.ecs.alb_listener_arn
 
+  cognito_app_client_id = module.cognito.app_client_id
+  cognito_issuer_url    = module.cognito.issuer_url
+
   tags = var.tags
 }

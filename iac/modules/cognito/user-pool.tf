@@ -38,6 +38,19 @@ resource "aws_cognito_user_pool" "main" {
     allow_admin_create_user_only = var.admin_create_user_only
   }
 
+  schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "preferred_username"
+    required                 = false
+
+    string_attribute_constraints {
+      min_length = 8
+      max_length = 32
+    }
+  }
+
   deletion_protection = local.deletion_protection ? "ACTIVE" : "INACTIVE"
 
   tags = merge(local.common_tags, {

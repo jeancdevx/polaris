@@ -58,6 +58,16 @@ output "rfid_validator_role_name" {
   value       = aws_iam_role.rfid_validator.name
 }
 
+output "audit_logger_role_arn" {
+  description = "IAM role ARN for the audit-logger Lambda function"
+  value       = aws_iam_role.audit_logger.arn
+}
+
+output "audit_logger_role_name" {
+  description = "IAM role name for the audit-logger Lambda function"
+  value       = aws_iam_role.audit_logger.name
+}
+
 output "msk_client_policy_arn" {
   description = "IAM policy ARN for MSK IAM SASL client access"
   value       = aws_iam_policy.msk_client.arn
@@ -81,6 +91,8 @@ output "msk_topic_admin_policy_arn" {
 output "policy_arns" {
   description = "Map of IAM policy names to ARNs"
   value = {
+    audit_logger_archive          = aws_iam_policy.audit_logger_archive.arn
+    audit_logger_execution        = aws_iam_policy.audit_logger_execution.arn
     kafka_msk_smoke_execution     = aws_iam_policy.kafka_msk_smoke_execution.arn
     kafka_topic_creator_execution = aws_iam_policy.kafka_topic_creator_execution.arn
     rfid_validator_data           = aws_iam_policy.rfid_validator_data.arn
@@ -105,6 +117,7 @@ output "rds_enhanced_monitoring_role_name" {
 output "role_arns" {
   description = "Map of IAM role names to ARNs"
   value = {
+    audit_logger                 = aws_iam_role.audit_logger.arn
     ecs_api_service_task         = aws_iam_role.ecs_api_service_task.arn
     ecs_reservation_service_task = aws_iam_role.ecs_reservation_service_task.arn
     ecs_task_execution           = aws_iam_role.ecs_task_execution.arn

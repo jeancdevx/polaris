@@ -61,7 +61,11 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
     const kafka = createKafka({ clientId, logLevel: 0 })
     this.consumer = await createConsumer(groupId, kafka)
 
-    this.consumer.on(this.consumer.events.GROUP_JOIN, () => {
+    this.consumer.on(this.consumer.events.GROUP_JOIN, event => {
+      this.logger.log(
+        `Joined consumer group ${event.payload.groupId} as member ${event.payload.memberId}`,
+        KafkaConsumerService.name
+      )
       this.readyResolve?.()
       this.readyResolve = undefined
     })

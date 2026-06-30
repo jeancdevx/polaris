@@ -10,6 +10,12 @@ variable "enable_ecs_api_service_cognito_policy" {
   default     = false
 }
 
+variable "eventbridge_bus_name" {
+  description = "Custom EventBridge bus name for PutEvents IAM permissions"
+  type        = string
+  default     = "polaris-events"
+}
+
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string

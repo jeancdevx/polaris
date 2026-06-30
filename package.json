@@ -22,6 +22,7 @@
     "test:integration:reservation": "pnpm --filter reservation-service test:integration:reservation",
     "test:integration:kafka": "pnpm --filter reservation-service test:integration:kafka",
     "test:integration:kafka-consumer": "pnpm --filter event-processor-service test:integration:kafka",
+    "test:integration:handlers": "pnpm --filter event-processor-service test:integration:handlers",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "db:migrate": "pnpm --filter @polaris/database migration:run",

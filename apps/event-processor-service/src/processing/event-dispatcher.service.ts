@@ -1,17 +1,48 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 
-import type { KafkaMessageContext, ParsedKafkaEvent } from '@polaris/kafka'
+import type {
+  KafkaMessageContext,
+  OccupancyChangedEvent,
+  ParsedKafkaEvent,
+  VehicleEntryEvent,
+  VehicleExitEvent
+} from '@polaris/kafka'
 import { KAFKA_TOPICS, type KafkaTopic } from '@polaris/shared-types'
 
-/** Topic handlers (Redis/RDS/EventBridge) se implementan en Fase 5.2+. */
+import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
+import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
+import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
+
 @Injectable()
 export class EventDispatcherService {
+  private readonly logger = new Logger(EventDispatcherService.name)
   private readonly processedByTopic = new Map<KafkaTopic, number>()
 
+  constructor(
+    private readonly vehicleEntryHandler: VehicleEntryHandler,
+    private readonly vehicleExitHandler: VehicleExitHandler,
+    private readonly sensorOccupancyHandler: SensorOccupancyHandler
+  ) {}
+
   async dispatch(
-    _event: ParsedKafkaEvent,
+    event: ParsedKafkaEvent,
     context: KafkaMessageContext
   ): Promise<void> {
+    switch (context.topic) {
+      case KAFKA_TOPICS.VEHICLE_ENTRY:
+        await this.vehicleEntryHandler.handle(event as VehicleEntryEvent)
+        break
+      case KAFKA_TOPICS.VEHICLE_EXIT:
+        await this.vehicleExitHandler.handle(event as VehicleExitEvent)
+        break
+      case KAFKA_TOPICS.SENSOR_OCCUPANCY:
+        await this.sensorOccupancyHandler.handle(event as OccupancyChangedEvent)
+        break
+      default:
+        this.logger.debug(`No handler for topic ${context.topic} (phase 5.2+)`)
+        break
+    }
+
     const current = this.processedByTopic.get(context.topic) ?? 0
     this.processedByTopic.set(context.topic, current + 1)
   }

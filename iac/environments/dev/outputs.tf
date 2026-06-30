@@ -250,6 +250,26 @@ output "iot_device_policy_name" {
   value       = module.iot_core.device_policy_name
 }
 
+output "sensor_data_processor_function_arn" {
+  description = "ARN of the sensor-data-processor Lambda function"
+  value       = module.sensor_data_processor.function_arn
+}
+
+output "sensor_data_processor_function_name" {
+  description = "Name of the sensor-data-processor Lambda function"
+  value       = module.sensor_data_processor.function_name
+}
+
+output "sensor_data_processor_role_arn" {
+  description = "IAM role ARN for sensor-data-processor Lambda"
+  value       = module.iam.sensor_data_processor_role_arn
+}
+
+output "iot_sensor_occupancy_rule_names" {
+  description = "IoT topic rule names that invoke sensor-data-processor"
+  value       = module.iot_core.sensor_occupancy_rule_names
+}
+
 output "iot_rfid_rule_names" {
   description = "IoT topic rule names that invoke rfid-validator"
   value       = module.iot_core.rfid_rule_names

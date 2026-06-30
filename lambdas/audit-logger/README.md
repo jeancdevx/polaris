@@ -29,9 +29,11 @@ pnpm --filter @polaris/audit-logger test:integration
 pnpm --filter @polaris/audit-logger build
 cd iac/environments/dev && terraform apply
 pnpm audit-logger:smoke:dev
+pnpm eventbridge:smoke:dev
 ```
 
 Variables Lambda: `AUDIT_CLOUDWATCH_LOG_GROUP`, `AUDIT_S3_BUCKET`,
 `AUDIT_S3_PREFIX`.
 
-Reglas EventBridge → Fase 5.6.
+Reglas EventBridge en `iac/modules/eventbridge` (Fase 5.6): `vehicle.entry`,
+`vehicle.exit`, `sensor.occupancy` → esta Lambda.

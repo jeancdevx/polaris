@@ -13,6 +13,7 @@ import {
   type ReservationRow
 } from '@polaris/database'
 
+import { DatabaseModule } from '../infrastructure/database.module.js'
 import { CognitoAdminService } from './cognito-admin.service.js'
 import { RfidValidationStore } from './rfid-validation.store.js'
 import { usersConfig } from './users.config.js'
@@ -40,6 +41,7 @@ describe('users integration', () => {
       imports: [
         ConfigModule.forRoot({ isGlobal: true }),
         ConfigModule.forFeature(usersConfig),
+        DatabaseModule,
         UsersModule
       ]
     })

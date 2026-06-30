@@ -188,7 +188,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | 6.1 | Scaffold `apps/admin-service` | ✅ CRUD usuarios admin · `pnpm test:integration:users` |
 | 6.2 | `GET /admin/audit`, `GET /admin/metrics` | ✅ Paginación + filtros · `pnpm test:integration:audit` · `pnpm test:integration:metrics` |
 | 6.3 | IaC: `iot-core` — topics, rules, policies, certificados | ✅ Dispositivo simulado publica MQTT · `pnpm iot:smoke:dev` |
-| 6.4 | `lambdas/sensor-data-processor` | IoT → DynamoDB + Kafka |
+| 6.4 | `lambdas/sensor-data-processor` | ✅ IoT → DynamoDB + Kafka · `pnpm sensor-data-processor:smoke:dev` |
 | 6.5 | `lambdas/notification-sender`, `reservation-cleanup`, `health-checker` | Schedules EventBridge |
 | 6.6 | API Gateway privado — rutas admin + internal | Acceso solo desde VPC |
 

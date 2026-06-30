@@ -33,6 +33,7 @@
     "db:sync-redis": "pnpm --filter @polaris/database seed:redis",
     "kafka:smoke": "pnpm --filter @polaris/kafka smoke",
     "kafka:smoke:msk:dev": "bash scripts/kafka-msk-smoke-dev.sh",
+    "rfid-validator:smoke:dev": "bash scripts/rfid-validator-smoke-dev.sh",
     "docker:build:api-service": "docker build -f apps/api-service/Dockerfile -t polaris-api-service:local .",
     "docker:push:api-service:dev": "bash scripts/push-api-service-ecr-dev.sh",
     "docker:build:reservation-service": "docker build -f apps/reservation-service/Dockerfile -t polaris-reservation-service:local .",

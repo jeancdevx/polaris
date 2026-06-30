@@ -30,7 +30,7 @@ output "api_service_alb_dns_name" {
 
 output "api_service_ecr_repository_url" {
   description = "ECR repository URL for api-service"
-  value       = module.ecr.repository_url
+  value       = module.ecr_api_service.repository_url
 }
 
 output "reservation_service_ecr_repository_url" {

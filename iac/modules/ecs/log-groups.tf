@@ -17,3 +17,13 @@ resource "aws_cloudwatch_log_group" "reservation_service" {
     Service = "reservation-service"
   })
 }
+
+resource "aws_cloudwatch_log_group" "event_processor_service" {
+  name              = "/ecs/${local.event_processor_service_name}"
+  retention_in_days = var.log_retention_days
+
+  tags = merge(local.common_tags, {
+    Name    = local.event_processor_service_name
+    Service = "event-processor-service"
+  })
+}

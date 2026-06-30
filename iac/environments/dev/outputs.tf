@@ -38,6 +38,21 @@ output "reservation_service_ecr_repository_url" {
   value       = module.ecr_reservation_service.repository_url
 }
 
+output "event_processor_service_ecr_repository_url" {
+  description = "ECR repository URL for event-processor-service"
+  value       = module.ecr_event_processor_service.repository_url
+}
+
+output "event_processor_service_ecs_service_name" {
+  description = "ECS service name for event-processor-service"
+  value       = module.ecs.event_processor_service_name
+}
+
+output "event_processor_service_log_group_name" {
+  description = "CloudWatch log group for event-processor-service ECS tasks"
+  value       = module.ecs.event_processor_service_log_group_name
+}
+
 output "reservation_service_ecs_service_name" {
   description = "ECS service name for reservation-service"
   value       = "${var.project_name}-${var.environment}-reservation-service"

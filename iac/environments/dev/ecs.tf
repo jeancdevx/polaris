@@ -15,18 +15,25 @@ module "ecs" {
   ecs_task_execution_role_arn           = module.iam.ecs_task_execution_role_arn
   ecs_api_service_task_role_arn         = module.iam.ecs_api_service_task_role_arn
   ecs_reservation_service_task_role_arn = module.iam.ecs_reservation_service_task_role_arn
+  ecs_event_processor_task_role_arn     = module.iam.ecs_event_processor_task_role_arn
 
-  ecr_repository_url                     = module.ecr_api_service.repository_url
-  api_service_image_tag                  = var.api_service_image_tag
-  api_service_desired_count              = var.api_service_desired_count
-  api_service_cpu                        = var.api_service_cpu
-  api_service_memory                     = var.api_service_memory
-  reservation_service_ecr_repository_url = module.ecr_reservation_service.repository_url
-  reservation_service_image_tag          = var.reservation_service_image_tag
-  reservation_service_desired_count      = var.reservation_service_desired_count
-  reservation_service_cpu                = var.reservation_service_cpu
-  reservation_service_memory             = var.reservation_service_memory
-  enable_deletion_protection             = var.ecs_enable_deletion_protection
+  ecr_repository_url                         = module.ecr_api_service.repository_url
+  api_service_image_tag                      = var.api_service_image_tag
+  api_service_desired_count                  = var.api_service_desired_count
+  api_service_cpu                            = var.api_service_cpu
+  api_service_memory                         = var.api_service_memory
+  reservation_service_ecr_repository_url     = module.ecr_reservation_service.repository_url
+  reservation_service_image_tag              = var.reservation_service_image_tag
+  reservation_service_desired_count          = var.reservation_service_desired_count
+  reservation_service_cpu                    = var.reservation_service_cpu
+  reservation_service_memory                 = var.reservation_service_memory
+  event_processor_service_ecr_repository_url = module.ecr_event_processor_service.repository_url
+  event_processor_service_image_tag          = var.event_processor_service_image_tag
+  event_processor_service_desired_count      = var.event_processor_service_desired_count
+  event_processor_service_cpu                = var.event_processor_service_cpu
+  event_processor_service_memory             = var.event_processor_service_memory
+  eventbridge_bus_name                       = module.eventbridge.bus_name
+  enable_deletion_protection                 = var.ecs_enable_deletion_protection
 
   rds_master_user_secret_arn       = module.rds.master_user_secret_arn
   rds_cluster_endpoint             = module.rds.cluster_endpoint

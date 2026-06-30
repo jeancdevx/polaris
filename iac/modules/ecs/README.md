@@ -15,7 +15,7 @@ Cluster Fargate, ALB interno y despliegue de servicios ECS.
 | `secrets.tf`       | Secrets Manager por servicio               |
 | `log-groups.tf`    | CloudWatch Logs por servicio               |
 | `tasks.tf`         | Task definitions                           |
-| `services.tf`      | ECS services                               |
+| `services.tf`      | ECS services (ALB + workers internos)      |
 | `moved.tf`         | State migration para reglas ALB            |
 
 Los **data sources** viven en `data.tf`. La composición de secretos
@@ -34,10 +34,11 @@ Las reglas explícitas se definen en `local.alb_listener_rules` (`locals.tf`).
 
 ## Secrets
 
-| Secret                             | Keys                                         |
-| ---------------------------------- | -------------------------------------------- |
-| `{prefix}-api-service-env`         | `DATABASE_URL`, `REDIS_URL`                  |
-| `{prefix}-reservation-service-env` | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS` |
+| Secret                                 | Keys                                         |
+| -------------------------------------- | -------------------------------------------- |
+| `{prefix}-api-service-env`             | `DATABASE_URL`, `REDIS_URL`                  |
+| `{prefix}-reservation-service-env`     | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS` |
+| `{prefix}-event-processor-service-env` | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS` |
 
 En **dev**, `recovery_window_in_days = 0` permite recrear el secret tras
 `terraform destroy` sin esperar la ventana de borrado de AWS.
@@ -64,17 +65,22 @@ aws secretsmanager delete-secret \
 ```bash
 pnpm docker:push:api-service:dev
 pnpm docker:push:reservation-service:dev
+pnpm docker:push:event-processor-service:dev
 
 cd iac/environments/dev
 terraform apply -var-file=dev.tfvars
 
 API=$(terraform output -raw api_gateway_endpoint)
 curl -s "${API}health"
+
+pnpm event-processor:smoke:dev
 ```
 
 ## Outputs
 
 - `alb_listener_arn` — integración API Gateway VPC Link
 - `cluster_name`, `cluster_arn`
-- `api_service_env_secret_arn`, `reservation_service_env_secret_arn` (sensitive)
+- `api_service_env_secret_arn`, `reservation_service_env_secret_arn`,
+  `event_processor_service_env_secret_arn` (sensitive)
+- `event_processor_service_name`, `event_processor_service_log_group_name`
 - `*_target_group_arn`, `*_task_definition_arn`, `*_log_group_name`

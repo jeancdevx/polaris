@@ -8,6 +8,11 @@ locals {
     "${local.name_prefix}-reservation-service"
   )
 
+  event_processor_service_name = coalesce(
+    var.event_processor_service_name,
+    "${local.name_prefix}-event-processor-service"
+  )
+
   common_tags = merge(
     var.tags,
     {
@@ -35,6 +40,12 @@ locals {
   }
 
   reservation_service_env = {
+    DATABASE_URL  = local.database_url
+    REDIS_URL     = var.redis_url
+    KAFKA_BROKERS = var.kafka_bootstrap_brokers_sasl_iam
+  }
+
+  event_processor_service_env = {
     DATABASE_URL  = local.database_url
     REDIS_URL     = var.redis_url
     KAFKA_BROKERS = var.kafka_bootstrap_brokers_sasl_iam

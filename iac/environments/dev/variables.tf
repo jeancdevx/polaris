@@ -414,6 +414,30 @@ variable "reservation_service_memory" {
   default     = 512
 }
 
+variable "event_processor_service_cpu" {
+  description = "Fargate CPU units for event-processor-service"
+  type        = number
+  default     = 256
+}
+
+variable "event_processor_service_desired_count" {
+  description = "Desired ECS task count for event-processor-service"
+  type        = number
+  default     = 1
+}
+
+variable "event_processor_service_image_tag" {
+  description = "ECR image tag deployed for event-processor-service"
+  type        = string
+  default     = "latest"
+}
+
+variable "event_processor_service_memory" {
+  description = "Fargate memory (MiB) for event-processor-service"
+  type        = number
+  default     = 512
+}
+
 variable "s3_force_destroy" {
   description = "Allow S3 bucket deletion when objects remain. Null enables in dev only."
   type        = bool

@@ -16,7 +16,8 @@ locals {
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${var.project_name}/${var.environment}/rds-*",
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-rds-*",
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-api-service-env-*",
-    "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-reservation-service-env-*"
+    "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-reservation-service-env-*",
+    "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-event-processor-service-env-*"
   ]
 
   kms_decrypt_resource_arns = length(var.kms_key_arns) > 0 ? var.kms_key_arns : ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]

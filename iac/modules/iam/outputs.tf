@@ -48,6 +48,16 @@ output "kafka_topic_creator_role_name" {
   value       = aws_iam_role.kafka_topic_creator.name
 }
 
+output "rfid_validator_role_arn" {
+  description = "IAM role ARN for the rfid-validator Lambda function"
+  value       = aws_iam_role.rfid_validator.arn
+}
+
+output "rfid_validator_role_name" {
+  description = "IAM role name for the rfid-validator Lambda function"
+  value       = aws_iam_role.rfid_validator.name
+}
+
 output "msk_client_policy_arn" {
   description = "IAM policy ARN for MSK IAM SASL client access"
   value       = aws_iam_policy.msk_client.arn
@@ -73,6 +83,8 @@ output "policy_arns" {
   value = {
     kafka_msk_smoke_execution     = aws_iam_policy.kafka_msk_smoke_execution.arn
     kafka_topic_creator_execution = aws_iam_policy.kafka_topic_creator_execution.arn
+    rfid_validator_data           = aws_iam_policy.rfid_validator_data.arn
+    rfid_validator_execution      = aws_iam_policy.rfid_validator_execution.arn
     msk_client                    = aws_iam_policy.msk_client.arn
     msk_topic_admin               = aws_iam_policy.msk_topic_admin.arn
     secrets_read                  = aws_iam_policy.secrets_read.arn
@@ -98,6 +110,7 @@ output "role_arns" {
     ecs_task_execution           = aws_iam_role.ecs_task_execution.arn
     kafka_msk_smoke              = aws_iam_role.kafka_msk_smoke.arn
     kafka_topic_creator          = aws_iam_role.kafka_topic_creator.arn
+    rfid_validator               = aws_iam_role.rfid_validator.arn
     msk_client                   = aws_iam_role.msk_client.arn
     rds_enhanced_monitoring      = aws_iam_role.rds_enhanced_monitoring.arn
     secrets_rotation             = aws_iam_role.secrets_rotation.arn

@@ -503,6 +503,52 @@ importers:
         specifier: 4.1.9
         version: 4.1.9(@types/node@26.0.0)(@vitest/coverage-v8@4.1.9)(@vitest/ui@4.1.9)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
 
+  lambdas/sensor-data-processor:
+    dependencies:
+      '@aws-sdk/client-dynamodb':
+        specifier: 3.1075.0
+        version: 3.1075.0
+      '@aws-sdk/lib-dynamodb':
+        specifier: 3.1075.0
+        version: 3.1075.0(@aws-sdk/client-dynamodb@3.1075.0)
+      '@polaris/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@polaris/kafka':
+        specifier: workspace:*
+        version: link:../../packages/kafka
+      '@polaris/lambda-core':
+        specifier: workspace:*
+        version: link:../../packages/lambda-core
+      '@polaris/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+    devDependencies:
+      '@polaris/build-config':
+        specifier: workspace:*
+        version: link:../../packages/build-config
+      '@polaris/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@testcontainers/kafka':
+        specifier: 12.0.3
+        version: 12.0.3
+      '@types/aws-lambda':
+        specifier: 8.10.161
+        version: 8.10.161
+      rolldown:
+        specifier: 1.1.2
+        version: 1.1.2
+      testcontainers:
+        specifier: 12.0.3
+        version: 12.0.3
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.9
+        version: 4.1.9(@types/node@26.0.0)(@vitest/coverage-v8@4.1.9)(@vitest/ui@4.1.9)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
+
   packages/build-config:
     devDependencies:
       '@polaris/tsconfig':

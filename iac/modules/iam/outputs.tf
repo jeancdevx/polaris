@@ -73,6 +73,16 @@ output "rfid_validator_role_name" {
   value       = aws_iam_role.rfid_validator.name
 }
 
+output "sensor_data_processor_role_arn" {
+  description = "IAM role ARN for sensor-data-processor Lambda"
+  value       = aws_iam_role.sensor_data_processor.arn
+}
+
+output "sensor_data_processor_role_name" {
+  description = "IAM role name for sensor-data-processor Lambda"
+  value       = aws_iam_role.sensor_data_processor.name
+}
+
 output "audit_logger_role_arn" {
   description = "IAM role ARN for the audit-logger Lambda function"
   value       = aws_iam_role.audit_logger.arn
@@ -106,17 +116,19 @@ output "msk_topic_admin_policy_arn" {
 output "policy_arns" {
   description = "Map of IAM policy names to ARNs"
   value = {
-    audit_logger_archive          = aws_iam_policy.audit_logger_archive.arn
-    audit_logger_execution        = aws_iam_policy.audit_logger_execution.arn
-    kafka_msk_smoke_execution     = aws_iam_policy.kafka_msk_smoke_execution.arn
-    kafka_topic_creator_execution = aws_iam_policy.kafka_topic_creator_execution.arn
-    rfid_validator_data           = aws_iam_policy.rfid_validator_data.arn
-    rfid_validator_execution      = aws_iam_policy.rfid_validator_execution.arn
-    eventbridge_publish           = aws_iam_policy.eventbridge_publish.arn
-    msk_client                    = aws_iam_policy.msk_client.arn
-    msk_topic_admin               = aws_iam_policy.msk_topic_admin.arn
-    secrets_read                  = aws_iam_policy.secrets_read.arn
-    secrets_rotation              = aws_iam_policy.secrets_rotation.arn
+    audit_logger_archive            = aws_iam_policy.audit_logger_archive.arn
+    audit_logger_execution          = aws_iam_policy.audit_logger_execution.arn
+    kafka_msk_smoke_execution       = aws_iam_policy.kafka_msk_smoke_execution.arn
+    kafka_topic_creator_execution   = aws_iam_policy.kafka_topic_creator_execution.arn
+    rfid_validator_data             = aws_iam_policy.rfid_validator_data.arn
+    rfid_validator_execution        = aws_iam_policy.rfid_validator_execution.arn
+    sensor_data_processor_data      = aws_iam_policy.sensor_data_processor_data.arn
+    sensor_data_processor_execution = aws_iam_policy.sensor_data_processor_execution.arn
+    eventbridge_publish             = aws_iam_policy.eventbridge_publish.arn
+    msk_client                      = aws_iam_policy.msk_client.arn
+    msk_topic_admin                 = aws_iam_policy.msk_topic_admin.arn
+    secrets_read                    = aws_iam_policy.secrets_read.arn
+    secrets_rotation                = aws_iam_policy.secrets_rotation.arn
   }
 }
 
@@ -141,6 +153,7 @@ output "role_arns" {
     kafka_msk_smoke              = aws_iam_role.kafka_msk_smoke.arn
     kafka_topic_creator          = aws_iam_role.kafka_topic_creator.arn
     rfid_validator               = aws_iam_role.rfid_validator.arn
+    sensor_data_processor        = aws_iam_role.sensor_data_processor.arn
     msk_client                   = aws_iam_role.msk_client.arn
     rds_enhanced_monitoring      = aws_iam_role.rds_enhanced_monitoring.arn
     secrets_rotation             = aws_iam_role.secrets_rotation.arn

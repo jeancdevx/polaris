@@ -8,6 +8,14 @@ output "device_policy_name" {
   value       = aws_iot_policy.device.name
 }
 
+output "sensor_occupancy_rule_names" {
+  description = "IoT topic rule names that invoke sensor-data-processor"
+  value = {
+    for key, rule in aws_iot_topic_rule.sensor_data_processor :
+    key => rule.name
+  }
+}
+
 output "rfid_rule_names" {
   description = "IoT topic rule names keyed by rule key"
   value = {

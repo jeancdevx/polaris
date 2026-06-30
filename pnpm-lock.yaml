@@ -115,6 +115,67 @@ importers:
         specifier: 4.1.9
         version: 4.1.9(@types/node@26.0.0)(@vitest/coverage-v8@4.1.9)(@vitest/ui@4.1.9)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
 
+  apps/event-processor-service:
+    dependencies:
+      '@nestjs/common':
+        specifier: 11.1.27
+        version: 11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: 4.0.4
+        version: 4.0.4(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: 11.1.27
+        version: 11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/platform-fastify':
+        specifier: 11.1.27
+        version: 11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@polaris/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@polaris/kafka':
+        specifier: workspace:*
+        version: link:../../packages/kafka
+      '@polaris/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      '@polaris/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
+      reflect-metadata:
+        specifier: 0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: 7.8.2
+        version: 7.8.2
+    devDependencies:
+      '@nestjs/cli':
+        specifier: 11.0.23
+        version: 11.0.23(@types/node@26.0.0)(esbuild@0.28.1)(prettier@3.8.4)
+      '@nestjs/schematics':
+        specifier: 11.1.0
+        version: 11.1.0(chokidar@4.0.3)(prettier@3.8.4)(typescript@6.0.3)
+      '@nestjs/testing':
+        specifier: 11.1.27
+        version: 11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.27(@nestjs/common@11.1.27(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@polaris/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@testcontainers/kafka':
+        specifier: 12.0.3
+        version: 12.0.3
+      '@types/node':
+        specifier: 26.0.0
+        version: 26.0.0
+      testcontainers:
+        specifier: 12.0.3
+        version: 12.0.3
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.9
+        version: 4.1.9(@types/node@26.0.0)(@vitest/coverage-v8@4.1.9)(@vitest/ui@4.1.9)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
+
   apps/reservation-service:
     dependencies:
       '@nestjs/common':

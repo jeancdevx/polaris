@@ -8,7 +8,7 @@ import type {
 } from '@polaris/database'
 import type { UserType } from '@polaris/shared-types'
 
-import { DatabaseService } from './database.service.js'
+import { DatabaseService } from '../infrastructure/database.service.js'
 
 export type InsertAdminUserInput = Readonly<{
   userId: string

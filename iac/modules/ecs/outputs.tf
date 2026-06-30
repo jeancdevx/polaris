@@ -60,6 +60,27 @@ output "reservation_service_task_definition_arn" {
   value       = aws_ecs_task_definition.reservation_service.arn
 }
 
+output "event_processor_service_env_secret_arn" {
+  description = "Secrets Manager ARN with DATABASE_URL, REDIS_URL and KAFKA_BROKERS for event-processor-service"
+  value       = aws_secretsmanager_secret.event_processor_service_env.arn
+  sensitive   = true
+}
+
+output "event_processor_service_log_group_name" {
+  description = "CloudWatch log group for event-processor-service ECS tasks"
+  value       = aws_cloudwatch_log_group.event_processor_service.name
+}
+
+output "event_processor_service_name" {
+  description = "ECS service name for event-processor-service"
+  value       = aws_ecs_service.event_processor_service.name
+}
+
+output "event_processor_service_task_definition_arn" {
+  description = "Task definition ARN for event-processor-service"
+  value       = aws_ecs_task_definition.event_processor_service.arn
+}
+
 output "cluster_arn" {
   description = "ECS cluster ARN"
   value       = aws_ecs_cluster.main.arn

@@ -1,3 +1,13 @@
+variable "appsync_occupancy_publisher_function_arn" {
+  description = "ARN of the appsync-occupancy-publisher Lambda invoked by sensor.occupancy rule"
+  type        = string
+}
+
+variable "appsync_occupancy_publisher_function_name" {
+  description = "Name of the appsync-occupancy-publisher Lambda invoked by sensor.occupancy rule"
+  type        = string
+}
+
 variable "audit_logger_function_arn" {
   description = "ARN of the audit-logger Lambda invoked by parking event rules"
   type        = string

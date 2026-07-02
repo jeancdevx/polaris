@@ -4,6 +4,18 @@ variable "cognito_user_pool_arn" {
   default     = ""
 }
 
+variable "enable_ecs_admin_service_cognito_policy" {
+  description = "Attach Cognito admin permissions to the admin-service ECS task role"
+  type        = bool
+  default     = false
+}
+
+variable "enable_ecs_admin_service_dynamodb_policy" {
+  description = "Attach DynamoDB RFIDValidations permissions to the admin-service ECS task role"
+  type        = bool
+  default     = false
+}
+
 variable "enable_ecs_api_service_cognito_policy" {
   description = "Attach Cognito auth permissions to the api-service ECS task role. Use this flag for count/for_each; do not derive from cognito_user_pool_arn (unknown until apply)."
   type        = bool

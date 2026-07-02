@@ -55,6 +55,7 @@ locals {
   interface_endpoint_services = {
     ecr_api        = "ecr.api"
     ecr_dkr        = "ecr.dkr"
+    execute_api    = "execute-api"
     kms            = "kms"
     logs           = "logs"
     secretsmanager = "secretsmanager"

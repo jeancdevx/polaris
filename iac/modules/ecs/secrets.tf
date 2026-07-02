@@ -13,6 +13,21 @@ resource "aws_secretsmanager_secret_version" "api_service_env" {
   secret_string = jsonencode(local.api_service_env)
 }
 
+resource "aws_secretsmanager_secret" "admin_service_env" {
+  name                    = "${local.name_prefix}-admin-service-env"
+  recovery_window_in_days = local.secret_recovery_window_days
+
+  tags = merge(local.common_tags, {
+    Name    = "${local.name_prefix}-admin-service-env"
+    Service = "admin-service"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "admin_service_env" {
+  secret_id     = aws_secretsmanager_secret.admin_service_env.id
+  secret_string = jsonencode(local.admin_service_env)
+}
+
 resource "aws_secretsmanager_secret" "reservation_service_env" {
   name                    = "${local.name_prefix}-reservation-service-env"
   recovery_window_in_days = local.secret_recovery_window_days

@@ -190,7 +190,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 | 6.3 | IaC: `iot-core` — topics, rules, policies, certificados | ✅ Dispositivo simulado publica MQTT · `pnpm iot:smoke:dev` |
 | 6.4 | `lambdas/sensor-data-processor` | ✅ IoT → DynamoDB + Kafka · `pnpm sensor-data-processor:smoke:dev` |
 | 6.5 | `lambdas/notification-sender`, `reservation-cleanup`, `health-checker` | ✅ Schedules EventBridge · `pnpm scheduled-lambdas:smoke:dev` |
-| 6.6 | API Gateway privado — rutas admin + internal | Acceso solo desde VPC |
+| 6.6 | API Gateway privado — rutas admin + internal | ✅ HTTP API v2 + VPC Link → ALB + `admin-service` ECS · VPC tuning Lambdas · `pnpm api-gateway-private:smoke:dev` |
 
 ---
 

@@ -18,6 +18,27 @@ output "alb_zone_id" {
   value       = aws_lb.main.zone_id
 }
 
+output "admin_service_env_secret_arn" {
+  description = "Secrets Manager ARN with DATABASE_URL, REDIS_URL and RFID_VALIDATIONS_TABLE_NAME for admin-service"
+  value       = aws_secretsmanager_secret.admin_service_env.arn
+  sensitive   = true
+}
+
+output "admin_service_log_group_name" {
+  description = "CloudWatch log group for admin-service ECS tasks"
+  value       = aws_cloudwatch_log_group.admin_service.name
+}
+
+output "admin_service_target_group_arn" {
+  description = "Target group ARN for admin-service"
+  value       = aws_lb_target_group.admin_service.arn
+}
+
+output "admin_service_task_definition_arn" {
+  description = "Task definition ARN for admin-service"
+  value       = aws_ecs_task_definition.admin_service.arn
+}
+
 output "api_service_env_secret_arn" {
   description = "Secrets Manager ARN with DATABASE_URL and REDIS_URL for api-service"
   value       = aws_secretsmanager_secret.api_service_env.arn

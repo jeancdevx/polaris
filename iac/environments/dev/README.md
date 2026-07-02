@@ -213,6 +213,21 @@ aws ecs update-service --cluster polaris-dev-cluster \
   --service polaris-dev-api-service --force-new-deployment --region us-east-2
 ```
 
+## API Gateway privado (6.6)
+
+Solo invocable desde la VPC vía endpoint `execute-api`. Reutiliza el VPC Link v2
+del API público → ALB interno.
+
+```bash
+pnpm docker:push:admin-service:dev
+pnpm --filter @polaris/api-gateway-private-smoke build
+terraform apply -var-file=dev.tfvars
+pnpm api-gateway-private:smoke:dev
+```
+
+Output útil: `api_gateway_private_endpoint` (hostname
+`{api-id}-{vpce-id}.execute-api...`).
+
 ## Smoke test MSK (2.13)
 
 Tras `terraform apply`:

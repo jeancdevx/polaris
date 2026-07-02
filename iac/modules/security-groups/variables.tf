@@ -7,7 +7,7 @@ variable "alb_ingress_cidr_blocks" {
 variable "ecs_container_ports" {
   description = "Container ports exposed by ECS services behind the load balancer"
   type        = list(number)
-  default     = [3001, 3002]
+  default     = [3001, 3002, 3004]
 
   validation {
     condition     = length(var.ecs_container_ports) > 0

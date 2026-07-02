@@ -29,16 +29,27 @@ en archivos por servicio.
 | default   | \*       | \*                   | api-service         |
 | 10        | `POST`   | `/parking/reserve`   | reservation-service |
 | 11        | `DELETE` | `/parking/reserve/*` | reservation-service |
+| 20        | `*`      | `/admin`, `/admin/*` | admin-service       |
 
 Las reglas explícitas se definen en `local.alb_listener_rules` (`locals.tf`).
 
+## Servicios ECS
+
+| Servicio                  | Puerto | ALB | Secrets keys                                      |
+| ------------------------- | ------ | --- | ------------------------------------------------- |
+| `api-service`             | 3001   | Sí  | `DATABASE_URL`, `REDIS_URL`                       |
+| `reservation-service`     | 3002   | Sí  | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`      |
+| `admin-service`           | 3004   | Sí  | `DATABASE_URL`, `REDIS_URL`, `RFID_VALIDATIONS_*` |
+| `event-processor-service` | 3003   | No  | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`      |
+
 ## Secrets
 
-| Secret                                 | Keys                                         |
-| -------------------------------------- | -------------------------------------------- |
-| `{prefix}-api-service-env`             | `DATABASE_URL`, `REDIS_URL`                  |
-| `{prefix}-reservation-service-env`     | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS` |
-| `{prefix}-event-processor-service-env` | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS` |
+| Secret                                 | Keys                                                       |
+| -------------------------------------- | ---------------------------------------------------------- |
+| `{prefix}-api-service-env`             | `DATABASE_URL`, `REDIS_URL`                                |
+| `{prefix}-reservation-service-env`     | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`               |
+| `{prefix}-event-processor-service-env` | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`               |
+| `{prefix}-admin-service-env`           | `DATABASE_URL`, `REDIS_URL`, `RFID_VALIDATIONS_TABLE_NAME` |
 
 En **dev**, `recovery_window_in_days = 0` permite recrear el secret tras
 `terraform destroy` sin esperar la ventana de borrado de AWS.
@@ -66,6 +77,7 @@ aws secretsmanager delete-secret \
 pnpm docker:push:api-service:dev
 pnpm docker:push:reservation-service:dev
 pnpm docker:push:event-processor-service:dev
+pnpm docker:push:admin-service:dev
 
 cd iac/environments/dev
 terraform apply -var-file=dev.tfvars
@@ -74,6 +86,7 @@ API=$(terraform output -raw api_gateway_endpoint)
 curl -s "${API}health"
 
 pnpm event-processor:smoke:dev
+pnpm api-gateway-private:smoke:dev
 ```
 
 ## Outputs

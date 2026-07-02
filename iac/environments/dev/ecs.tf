@@ -14,6 +14,7 @@ module "ecs" {
 
   ecs_task_execution_role_arn           = module.iam.ecs_task_execution_role_arn
   ecs_api_service_task_role_arn         = module.iam.ecs_api_service_task_role_arn
+  ecs_admin_service_task_role_arn       = module.iam.ecs_admin_service_task_role_arn
   ecs_reservation_service_task_role_arn = module.iam.ecs_reservation_service_task_role_arn
   ecs_event_processor_task_role_arn     = module.iam.ecs_event_processor_task_role_arn
 
@@ -22,6 +23,12 @@ module "ecs" {
   api_service_desired_count                  = var.api_service_desired_count
   api_service_cpu                            = var.api_service_cpu
   api_service_memory                         = var.api_service_memory
+  admin_service_ecr_repository_url           = module.ecr_admin_service.repository_url
+  admin_service_image_tag                    = var.admin_service_image_tag
+  admin_service_desired_count                = var.admin_service_desired_count
+  admin_service_cpu                          = var.admin_service_cpu
+  admin_service_memory                       = var.admin_service_memory
+  rfid_validations_table_name                = module.dynamodb.table_names.RFIDValidations
   reservation_service_ecr_repository_url     = module.ecr_reservation_service.repository_url
   reservation_service_image_tag              = var.reservation_service_image_tag
   reservation_service_desired_count          = var.reservation_service_desired_count

@@ -26,7 +26,7 @@ VPC 10.0.0.0/16
 - **Data tier:** sin ruta a internet; solo tráfico local VPC.
 - **Endpoints gateway:** S3, DynamoDB.
 - **Endpoints interface (private subnets):** ECR API/DKR, CloudWatch Logs, STS,
-  Secrets Manager, KMS.
+  Secrets Manager, KMS, **execute-api** (API Gateway privado).
 
 ## Uso
 
@@ -47,3 +47,4 @@ module "vpc" {
 - `public_subnet_ids`, `private_subnet_ids`, `data_subnet_ids`
 - `nat_gateway_ids`, `route_table_ids`
 - `vpc_endpoint_security_group_id`
+- `execute_api_vpc_endpoint_id`

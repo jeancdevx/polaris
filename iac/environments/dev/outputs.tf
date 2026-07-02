@@ -18,6 +18,41 @@ output "rds_rotation_id" {
   value       = module.secrets_manager.rds_rotation_id
 }
 
+output "api_gateway_private_smoke_function_arn" {
+  description = "ARN of the api-gateway-private-smoke Lambda function"
+  value       = module.api_gateway_private_smoke.function_arn
+}
+
+output "api_gateway_private_smoke_function_name" {
+  description = "Name of the api-gateway-private-smoke Lambda function"
+  value       = module.api_gateway_private_smoke.function_name
+}
+
+output "api_gateway_private_endpoint" {
+  description = "Private REST API invoke URL (VPC endpoint only)"
+  value       = module.api_gateway_private.api_endpoint
+}
+
+output "admin_service_ecs_service_name" {
+  description = "ECS service name for admin-service"
+  value       = "${var.project_name}-${var.environment}-admin-service"
+}
+
+output "admin_service_ecr_repository_url" {
+  description = "ECR repository URL for admin-service"
+  value       = module.ecr_admin_service.repository_url
+}
+
+output "ecs_admin_service_task_role_arn" {
+  description = "IAM task role ARN for admin-service ECS tasks"
+  value       = module.iam.ecs_admin_service_task_role_arn
+}
+
+output "execute_api_vpc_endpoint_id" {
+  description = "Interface VPC endpoint ID for API Gateway execute-api"
+  value       = module.vpc.execute_api_vpc_endpoint_id
+}
+
 output "api_gateway_endpoint" {
   description = "Public HTTP API invoke URL for api-service"
   value       = module.api_gateway.api_endpoint

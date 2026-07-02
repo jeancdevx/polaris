@@ -24,6 +24,8 @@ alb_logs_prefix = "api-service"
 
 api_service_desired_count = 1
 
+admin_service_desired_count = 1
+
 reservation_service_desired_count = 2
 
 rds_capacity_mode           = "serverless"

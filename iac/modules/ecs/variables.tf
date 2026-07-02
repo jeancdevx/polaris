@@ -1,3 +1,44 @@
+variable "admin_service_container_port" {
+  description = "Container port exposed by admin-service"
+  type        = number
+  default     = 3004
+}
+
+variable "admin_service_cpu" {
+  description = "Fargate CPU units for admin-service"
+  type        = number
+  default     = 256
+}
+
+variable "admin_service_desired_count" {
+  description = "Desired task count for admin-service"
+  type        = number
+  default     = 1
+}
+
+variable "admin_service_ecr_repository_url" {
+  description = "ECR repository URL for admin-service"
+  type        = string
+}
+
+variable "admin_service_image_tag" {
+  description = "Container image tag for admin-service"
+  type        = string
+  default     = "latest"
+}
+
+variable "admin_service_memory" {
+  description = "Fargate memory (MiB) for admin-service"
+  type        = number
+  default     = 512
+}
+
+variable "admin_service_name" {
+  description = "Override for admin-service ECS resource names"
+  type        = string
+  default     = null
+}
+
 variable "alb_internal" {
   description = "Deploy an internal ALB in private subnets (required for API Gateway VPC Link)"
   type        = bool
@@ -79,6 +120,11 @@ variable "container_port" {
 
 variable "ecr_repository_url" {
   description = "ECR repository URL for api-service"
+  type        = string
+}
+
+variable "ecs_admin_service_task_role_arn" {
+  description = "IAM task role ARN for admin-service"
   type        = string
 }
 
@@ -229,6 +275,11 @@ variable "redis_url" {
   description = "Redis connection URL for api-service"
   type        = string
   sensitive   = true
+}
+
+variable "rfid_validations_table_name" {
+  description = "DynamoDB RFIDValidations table name for admin-service"
+  type        = string
 }
 
 variable "reservation_service_container_port" {

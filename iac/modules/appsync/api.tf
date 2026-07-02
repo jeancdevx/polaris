@@ -19,6 +19,10 @@ resource "aws_appsync_graphql_api" "main" {
     user_pool_id   = var.cognito_user_pool_id
   }
 
+  additional_authentication_provider {
+    authentication_type = "AWS_IAM"
+  }
+
   dynamic "additional_authentication_provider" {
     for_each = var.create_api_key ? [1] : []
 

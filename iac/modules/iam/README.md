@@ -18,6 +18,7 @@ propio.
 | `ecs-api-service-task-role.tf`      | Task role api-service (Cognito auth API)        |
 | `ecs-admin-service-task-role.tf`    | Task role admin-service (Cognito admin + DDB)   |
 | `ecs-event-processor-task-role.tf`  | Task role event-processor (MSK + EventBridge)   |
+| `appsync-availability-role.tf`      | Role Lambda resolver AppSync availability (7.1) |
 | `api-gateway-private-smoke-role.tf` | Role Lambda smoke API Gateway privado (6.6)     |
 | `eventbridge-publish-policy.tf`     | PutEvents al bus `polaris-events`               |
 | `secrets-rotation-role.tf`          | Role Lambda para rotación RDS (Fase 2.10)       |

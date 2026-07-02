@@ -57,6 +57,11 @@ output "vpc_cidr_block" {
   value       = aws_vpc.main.cidr_block
 }
 
+output "execute_api_vpc_endpoint_id" {
+  description = "Interface VPC endpoint ID for API Gateway execute-api"
+  value       = var.enable_vpc_endpoints ? aws_vpc_endpoint.interface["execute_api"].id : null
+}
+
 output "vpc_endpoint_security_group_id" {
   description = "Security group ID attached to interface VPC endpoints"
   value       = var.enable_vpc_endpoints ? aws_security_group.endpoint[0].id : null

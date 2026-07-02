@@ -85,3 +85,11 @@ pnpm test:integration:metrics
 | 6.1  | Scaffold + CRUD usuarios admin |
 | 6.2  | Audit + metrics                |
 | 6.6  | API Gateway privado + ECS      |
+
+## Despliegue ECS (dev)
+
+```bash
+pnpm docker:push:admin-service:dev
+cd iac/environments/dev && terraform apply -var-file=dev.tfvars
+pnpm api-gateway-private:smoke:dev
+```

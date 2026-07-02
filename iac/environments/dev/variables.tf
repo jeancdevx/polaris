@@ -10,6 +10,30 @@ variable "alb_ingress_cidr_blocks" {
   default     = []
 }
 
+variable "admin_service_cpu" {
+  description = "Fargate CPU units for admin-service"
+  type        = number
+  default     = 256
+}
+
+variable "admin_service_desired_count" {
+  description = "Desired ECS task count for admin-service"
+  type        = number
+  default     = 1
+}
+
+variable "admin_service_image_tag" {
+  description = "ECR image tag deployed for admin-service"
+  type        = string
+  default     = "latest"
+}
+
+variable "admin_service_memory" {
+  description = "Fargate memory (MiB) for admin-service"
+  type        = number
+  default     = 512
+}
+
 variable "api_service_cpu" {
   description = "Fargate CPU units for api-service"
   type        = number

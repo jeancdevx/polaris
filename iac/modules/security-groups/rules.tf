@@ -177,6 +177,16 @@ resource "aws_security_group_rule" "lambda_egress_https_vpc" {
   description       = "HTTPS to interface VPC endpoints (STS, Logs, Secrets Manager)"
 }
 
+resource "aws_security_group_rule" "lambda_egress_https_internet" {
+  type              = "egress"
+  security_group_id = aws_security_group.lambda.id
+  protocol          = "tcp"
+  from_port         = 443
+  to_port           = 443
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "HTTPS to AWS public APIs via NAT (fallback)"
+}
+
 resource "aws_security_group_rule" "lambda_egress_msk" {
   type                     = "egress"
   security_group_id        = aws_security_group.lambda.id

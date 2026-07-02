@@ -22,7 +22,7 @@ IDs de salida sin referencias cruzadas inversas.
 | Origen      | Destino | Puerto                                                         |
 | ----------- | ------- | -------------------------------------------------------------- |
 | VPC link SG | ALB     | 80 (entrada pública vía API GW)                                |
-| ALB SG      | ECS     | 3001, 3002 (egress ALB → targets)                              |
+| ALB SG      | ECS     | 3001, 3002, 3004 (egress ALB → targets)                        |
 | VPC CIDR    | ALB     | 80 (opcional, solo si `alb_ingress_cidr_blocks` no está vacío) |
 | ECS SG      | RDS     | 5432                                                           |
 | Lambda SG   | RDS     | 5432                                                           |
@@ -34,16 +34,16 @@ IDs de salida sin referencias cruzadas inversas.
 
 **Egress ECS:** reglas explícitas en `rules.tf`:
 
-| ECS SG →    | Puerto   | Uso                               |
-| ----------- | -------- | --------------------------------- |
-| VPC CIDR    | 443      | Interface VPC endpoints           |
-| Internet    | 443      | Cognito y APIs AWS públicas (NAT) |
-| RDS SG      | 5432     | Aurora PostgreSQL                 |
-| Redis SG    | 6379     | ElastiCache Redis                 |
-| MSK SG      | 9098     | Cliente Kafka (fases posteriores) |
-| ALB SG      | ECS      | 3001, 3002 (egress ALB → targets) |
-| VPC link SG | ALB      | 80 (egress)                       |
-| ALB SG      | VPC link | 80 (ingress)                      |
+| ECS SG →    | Puerto   | Uso                                     |
+| ----------- | -------- | --------------------------------------- |
+| VPC CIDR    | 443      | Interface VPC endpoints                 |
+| Internet    | 443      | Cognito y APIs AWS públicas (NAT)       |
+| RDS SG      | 5432     | Aurora PostgreSQL                       |
+| Redis SG    | 6379     | ElastiCache Redis                       |
+| MSK SG      | 9098     | Cliente Kafka (fases posteriores)       |
+| ALB SG      | ECS      | 3001, 3002, 3004 (egress ALB → targets) |
+| VPC link SG | ALB      | 80 (egress)                             |
+| ALB SG      | VPC link | 80 (ingress)                            |
 
 ALB interno: sin listener HTTPS; no hay regla :443. Entrada estándar = VPC Link
 SG. Reglas explícitas en `rules.tf`:
@@ -51,6 +51,7 @@ SG. Reglas explícitas en `rules.tf`:
 | Lambda SG → | Puerto | Uso                                          |
 | ----------- | ------ | -------------------------------------------- |
 | VPC CIDR    | 443    | Interface endpoints (STS para MSK IAM, Logs) |
+| Internet    | 443    | APIs AWS públicas vía NAT (fallback)         |
 | MSK SG      | 9098   | Cliente Kafka                                |
 | RDS SG      | 5432   | Lambdas con Aurora                           |
 | Redis SG    | 6379   | Lambdas con cache                            |

@@ -1,3 +1,13 @@
+output "ecs_admin_service_task_role_arn" {
+  description = "IAM task role ARN for admin-service ECS tasks"
+  value       = aws_iam_role.ecs_admin_service_task.arn
+}
+
+output "ecs_admin_service_task_role_name" {
+  description = "IAM task role name for admin-service ECS tasks"
+  value       = aws_iam_role.ecs_admin_service_task.name
+}
+
 output "ecs_api_service_task_role_arn" {
   description = "IAM task role ARN for api-service ECS tasks"
   value       = aws_iam_role.ecs_api_service_task.arn
@@ -41,6 +51,11 @@ output "ecs_task_execution_role_arn" {
 output "ecs_task_execution_role_name" {
   description = "IAM execution role name for ECS Fargate tasks"
   value       = aws_iam_role.ecs_task_execution.name
+}
+
+output "api_gateway_private_smoke_role_arn" {
+  description = "IAM role ARN for the api-gateway-private-smoke Lambda function"
+  value       = aws_iam_role.api_gateway_private_smoke.arn
 }
 
 output "kafka_msk_smoke_role_arn" {

@@ -109,5 +109,4 @@ if aws logs filter-log-events \
 fi
 
 echo "IoT pipeline smoke passed (MQTT -> rule -> Lambda)."
-echo "Full DynamoDB/Kafka path pending VPC connectivity tuning in dev."
 echo "Sensor data processor smoke test passed."

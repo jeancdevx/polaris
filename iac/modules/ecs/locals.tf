@@ -3,6 +3,11 @@ locals {
 
   api_service_name = coalesce(var.api_service_name, "${local.name_prefix}-api-service")
 
+  admin_service_name = coalesce(
+    var.admin_service_name,
+    "${local.name_prefix}-admin-service"
+  )
+
   reservation_service_name = coalesce(
     var.reservation_service_name,
     "${local.name_prefix}-reservation-service"
@@ -39,6 +44,12 @@ locals {
     REDIS_URL    = var.redis_url
   }
 
+  admin_service_env = {
+    DATABASE_URL                = local.database_url
+    REDIS_URL                   = var.redis_url
+    RFID_VALIDATIONS_TABLE_NAME = var.rfid_validations_table_name
+  }
+
   reservation_service_env = {
     DATABASE_URL  = local.database_url
     REDIS_URL     = var.redis_url
@@ -52,6 +63,12 @@ locals {
   }
 
   # Default listener action forwards to api-service; explicit rules for reservation-service.
+  alb_listener_rule_target_groups = {
+    api_service         = aws_lb_target_group.api_service.arn
+    reservation_service = aws_lb_target_group.reservation_service.arn
+    admin_service       = aws_lb_target_group.admin_service.arn
+  }
+
   alb_listener_rules = {
     reservation_reserve_post = {
       priority      = 10
@@ -64,6 +81,12 @@ locals {
       service       = "reservation_service"
       path_patterns = ["/parking/reserve/*"]
       http_methods  = ["DELETE"]
+    }
+    admin_routes = {
+      priority      = 20
+      service       = "admin_service"
+      path_patterns = ["/admin", "/admin/*"]
+      http_methods  = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     }
   }
 

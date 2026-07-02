@@ -232,15 +232,19 @@ pnpm api-gateway-private:smoke:dev
 
 ````
 
-## AppSync (7.1)
+## AppSync (7.1–7.2)
 
-GraphQL con auth Cognito (+ API key para smoke). Resolver Lambda lee Redis/RDS.
+GraphQL con auth Cognito (+ API key para smoke). `Query.availability` vía Lambda
+Redis/RDS. `onOccupancyChanged` subscription alimentada por EventBridge →
+`appsync-occupancy-publisher`.
 
 ```bash
 pnpm --filter @polaris/appsync-availability build
+pnpm --filter @polaris/appsync-occupancy-publisher build
 terraform apply -var-file=dev.tfvars
 pnpm appsync:smoke:dev
-````
+pnpm appsync:subscription:smoke:dev
+```
 
 ## Smoke test MSK (2.13)
 
@@ -250,3 +254,4 @@ Tras `terraform apply`:
 pnpm --filter @polaris/kafka-msk-smoke build
 pnpm kafka:smoke:msk:dev
 ```
+````

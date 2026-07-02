@@ -8,6 +8,16 @@ resource "aws_cloudwatch_log_group" "api_service" {
   })
 }
 
+resource "aws_cloudwatch_log_group" "admin_service" {
+  name              = "/ecs/${local.admin_service_name}"
+  retention_in_days = var.log_retention_days
+
+  tags = merge(local.common_tags, {
+    Name    = local.admin_service_name
+    Service = "admin-service"
+  })
+}
+
 resource "aws_cloudwatch_log_group" "reservation_service" {
   name              = "/ecs/${local.reservation_service_name}"
   retention_in_days = var.log_retention_days

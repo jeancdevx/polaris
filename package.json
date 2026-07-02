@@ -48,6 +48,7 @@
     "scheduled-lambdas:smoke:dev": "bash scripts/scheduled-lambdas-smoke-dev.sh",
     "api-gateway-private:smoke:dev": "bash scripts/api-gateway-private-smoke-dev.sh",
     "appsync:smoke:dev": "bash scripts/appsync-smoke-dev.sh",
+    "appsync:subscription:smoke:dev": "bash scripts/appsync-subscription-smoke-dev.sh",
     "docker:build:api-service": "docker build -f apps/api-service/Dockerfile -t polaris-api-service:local .",
     "docker:push:api-service:dev": "bash scripts/push-api-service-ecr-dev.sh",
     "docker:build:reservation-service": "docker build -f apps/reservation-service/Dockerfile -t polaris-reservation-service:local .",

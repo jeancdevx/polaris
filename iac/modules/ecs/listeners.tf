@@ -30,9 +30,25 @@ resource "aws_lb_listener_rule" "service" {
     }
   }
 
-  condition {
-    http_request_method {
-      values = each.value.http_methods
+  dynamic "condition" {
+    for_each = length(each.value.http_methods) > 0 ? [1] : []
+
+    content {
+      http_request_method {
+        values = each.value.http_methods
+      }
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = length(each.value.path_patterns) <= 5
+      error_message = "ALB listener rules support at most 5 path pattern values per rule (${each.key})."
+    }
+
+    precondition {
+      condition     = length(each.value.http_methods) <= 5
+      error_message = "ALB listener rules support at most 5 HTTP method values per rule (${each.key})."
     }
   }
 

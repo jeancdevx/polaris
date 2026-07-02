@@ -17,6 +17,9 @@ module "eventbridge" {
   health_checker_function_arn  = module.health_checker.function_arn
   health_checker_function_name = module.health_checker.function_name
 
+  appsync_occupancy_publisher_function_arn  = module.appsync_occupancy_publisher.function_arn
+  appsync_occupancy_publisher_function_name = module.appsync_occupancy_publisher.function_name
+
   tags = var.tags
 
   depends_on = [
@@ -25,5 +28,6 @@ module "eventbridge" {
     module.reservation_cleanup,
     module.health_checker,
     module.sqs,
+    module.appsync_occupancy_publisher,
   ]
 }

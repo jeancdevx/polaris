@@ -1,5 +1,7 @@
 schema {
   query: Query
+  mutation: Mutation
+  subscription: Subscription
 }
 
 enum ParkingSpotStatus {
@@ -28,6 +30,37 @@ type ParkingStatus {
   updatedAt: AWSDateTime!
 }
 
+type OccupancyChanged {
+  spotId: String!
+  zone: String!
+  status: ParkingSpotStatus!
+  previousStatus: ParkingSpotStatus
+  deviceId: String
+  sensorType: String
+  occurredAt: AWSDateTime!
+}
+
+input OccupancyChangedInput {
+  spotId: String!
+  zone: String!
+  status: ParkingSpotStatus!
+  previousStatus: ParkingSpotStatus
+  deviceId: String
+  sensorType: String
+  occurredAt: AWSDateTime!
+}
+
 type Query {
   availability: ParkingStatus!
+}
+
+type Mutation {
+  publishOccupancyChanged(input: OccupancyChangedInput!): OccupancyChanged @aws_iam
+}
+
+type Subscription {
+  onOccupancyChanged(zone: String): OccupancyChanged
+    @aws_subscribe(mutations: ["publishOccupancyChanged"])
+    @aws_api_key
+    @aws_cognito_user_pools
 }

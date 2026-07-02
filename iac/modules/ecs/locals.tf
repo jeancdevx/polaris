@@ -86,7 +86,7 @@ locals {
       priority      = 20
       service       = "admin_service"
       path_patterns = ["/admin", "/admin/*"]
-      http_methods  = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+      http_methods  = []
     }
   }
 

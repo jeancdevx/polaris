@@ -408,6 +408,46 @@ importers:
         specifier: 4.1.9
         version: 4.1.9(@types/node@26.0.0)(@vitest/coverage-v8@4.1.9)(@vitest/ui@4.1.9)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
 
+  lambdas/appsync-occupancy-publisher:
+    dependencies:
+      '@aws-crypto/sha256-js':
+        specifier: 5.2.0
+        version: 5.2.0
+      '@aws-sdk/credential-provider-node':
+        specifier: 3.972.58
+        version: 3.972.58
+      '@polaris/lambda-core':
+        specifier: workspace:*
+        version: link:../../packages/lambda-core
+      '@polaris/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      '@smithy/protocol-http':
+        specifier: 5.5.2
+        version: 5.5.2
+      '@smithy/signature-v4':
+        specifier: 5.5.2
+        version: 5.5.2
+    devDependencies:
+      '@polaris/build-config':
+        specifier: workspace:*
+        version: link:../../packages/build-config
+      '@polaris/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@types/aws-lambda':
+        specifier: 8.10.161
+        version: 8.10.161
+      rolldown:
+        specifier: 1.1.2
+        version: 1.1.2
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.9
+        version: 4.1.9(@types/node@26.0.0)(@vitest/coverage-v8@4.1.9)(@vitest/ui@4.1.9)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
+
   lambdas/audit-logger:
     dependencies:
       '@aws-sdk/client-cloudwatch-logs':
@@ -2212,6 +2252,10 @@ packages:
 
   '@smithy/node-http-handler@4.8.2':
     resolution: {integrity: sha512-wfl1uwrAqMH9/pi4kqBo5LBcFwrJLxuDLqL7p7qNcJIFcyZDUc6pzhYk4CYv+DP7fIUpQCZumwNnkhPKS52osQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@smithy/protocol-http@5.5.2':
+    resolution: {integrity: sha512-ZCQGk/UNS+YF5D+Jmhr8+PQX2PJKe4QzR6zuOR5sUinxO/ZiKNA7nyrbeO/Ds2hXLts3fZAtgLPKLJgvjCX9uQ==}
     engines: {node: '>=18.0.0'}
 
   '@smithy/service-error-classification@2.1.5':
@@ -5828,6 +5872,11 @@ snapshots:
     dependencies:
       '@smithy/core': 3.26.0
       '@smithy/types': 4.15.0
+      tslib: 2.8.1
+
+  '@smithy/protocol-http@5.5.2':
+    dependencies:
+      '@smithy/core': 3.26.0
       tslib: 2.8.1
 
   '@smithy/service-error-classification@2.1.5':

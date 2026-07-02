@@ -19,6 +19,11 @@ output "graphql_endpoint" {
   value       = aws_appsync_graphql_api.main.uris["GRAPHQL"]
 }
 
+output "realtime_endpoint" {
+  description = "WebSocket endpoint URL for AppSync subscriptions"
+  value       = aws_appsync_graphql_api.main.uris["REALTIME"]
+}
+
 output "log_group_name" {
   description = "CloudWatch log group for AppSync field logs"
   value       = aws_cloudwatch_log_group.main.name

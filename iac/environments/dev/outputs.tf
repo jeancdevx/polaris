@@ -54,6 +54,21 @@ output "appsync_graphql_api_id" {
   value       = module.appsync.api_id
 }
 
+output "appsync_realtime_endpoint" {
+  description = "AppSync WebSocket endpoint for subscriptions"
+  value       = module.appsync.realtime_endpoint
+}
+
+output "appsync_occupancy_publisher_function_arn" {
+  description = "ARN of the appsync-occupancy-publisher Lambda function"
+  value       = module.appsync_occupancy_publisher.function_arn
+}
+
+output "appsync_occupancy_publisher_function_name" {
+  description = "Name of the appsync-occupancy-publisher Lambda function"
+  value       = module.appsync_occupancy_publisher.function_name
+}
+
 output "api_gateway_private_endpoint" {
   description = "Private REST API invoke URL (VPC endpoint only)"
   value       = module.api_gateway_private.api_endpoint

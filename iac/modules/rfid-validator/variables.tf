@@ -105,5 +105,5 @@ variable "tags" {
 variable "timeout_seconds" {
   description = "Lambda timeout in seconds"
   type        = number
-  default     = 30
+  default     = 60
 }

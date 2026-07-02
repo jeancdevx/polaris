@@ -28,6 +28,32 @@ output "api_gateway_private_smoke_function_name" {
   value       = module.api_gateway_private_smoke.function_name
 }
 
+output "appsync_api_key" {
+  description = "AppSync API key for smoke tests"
+  value       = module.appsync.api_key
+  sensitive   = true
+}
+
+output "appsync_availability_function_arn" {
+  description = "ARN of the appsync-availability Lambda function"
+  value       = module.appsync_availability.function_arn
+}
+
+output "appsync_availability_function_name" {
+  description = "Name of the appsync-availability Lambda function"
+  value       = module.appsync_availability.function_name
+}
+
+output "appsync_graphql_endpoint" {
+  description = "AppSync GraphQL HTTPS endpoint"
+  value       = module.appsync.graphql_endpoint
+}
+
+output "appsync_graphql_api_id" {
+  description = "AppSync GraphQL API identifier"
+  value       = module.appsync.api_id
+}
+
 output "api_gateway_private_endpoint" {
   description = "Private REST API invoke URL (VPC endpoint only)"
   value       = module.api_gateway_private.api_endpoint

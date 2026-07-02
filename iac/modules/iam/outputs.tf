@@ -53,6 +53,11 @@ output "ecs_task_execution_role_name" {
   value       = aws_iam_role.ecs_task_execution.name
 }
 
+output "appsync_availability_role_arn" {
+  description = "IAM role ARN for the appsync-availability Lambda function"
+  value       = aws_iam_role.appsync_availability.arn
+}
+
 output "api_gateway_private_smoke_role_arn" {
   description = "IAM role ARN for the api-gateway-private-smoke Lambda function"
   value       = aws_iam_role.api_gateway_private_smoke.arn

@@ -198,7 +198,7 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 
 | # | Tarea | DoD |
 |---|-------|-----|
-| 7.1 | IaC: `appsync` — schema GraphQL + resolvers | Query availability |
+| 7.1 | IaC: `appsync` — schema GraphQL + resolvers | ✅ `Query.availability` · `pnpm appsync:smoke:dev` |
 | 7.2 | Subscriptions tiempo real | `onOccupancyChanged` funciona |
 | 7.3 | `apps/web-admin` — Next.js + AppSync | Dashboard ocupación |
 | 7.4 | `apps/mobile` — Expo + AppSync | Reserva desde móvil |

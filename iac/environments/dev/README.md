@@ -228,6 +228,20 @@ pnpm api-gateway-private:smoke:dev
 Output útil: `api_gateway_private_endpoint` (hostname
 `{api-id}-{vpce-id}.execute-api...`).
 
+pnpm api-gateway-private:smoke:dev
+
+````
+
+## AppSync (7.1)
+
+GraphQL con auth Cognito (+ API key para smoke). Resolver Lambda lee Redis/RDS.
+
+```bash
+pnpm --filter @polaris/appsync-availability build
+terraform apply -var-file=dev.tfvars
+pnpm appsync:smoke:dev
+````
+
 ## Smoke test MSK (2.13)
 
 Tras `terraform apply`:

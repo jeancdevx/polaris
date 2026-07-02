@@ -58,6 +58,16 @@ output "appsync_availability_role_arn" {
   value       = aws_iam_role.appsync_availability.arn
 }
 
+output "appsync_occupancy_publisher_role_arn" {
+  description = "IAM role ARN for the appsync-occupancy-publisher Lambda function"
+  value       = aws_iam_role.appsync_occupancy_publisher.arn
+}
+
+output "appsync_occupancy_publisher_role_name" {
+  description = "IAM role name for the appsync-occupancy-publisher Lambda function"
+  value       = aws_iam_role.appsync_occupancy_publisher.name
+}
+
 output "api_gateway_private_smoke_role_arn" {
   description = "IAM role ARN for the api-gateway-private-smoke Lambda function"
   value       = aws_iam_role.api_gateway_private_smoke.arn

@@ -1,0 +1,33 @@
+schema {
+  query: Query
+}
+
+enum ParkingSpotStatus {
+  free
+  occupied
+  reserved
+}
+
+type ParkingSpot {
+  spotId: String!
+  zone: String!
+  status: ParkingSpotStatus!
+  userId: String
+  vehiclePlate: String
+  reservationId: String
+  occupiedSince: Int
+}
+
+type ParkingStatus {
+  totalSpots: Int!
+  totalAvailable: Int!
+  totalOccupied: Int!
+  totalReserved: Int!
+  totalVisitors: Int!
+  spots: [ParkingSpot!]!
+  updatedAt: AWSDateTime!
+}
+
+type Query {
+  availability: ParkingStatus!
+}

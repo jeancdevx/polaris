@@ -21,7 +21,7 @@ resource "aws_lb_listener_rule" "service" {
 
   action {
     type             = "forward"
-    target_group_arn = each.value.service == "reservation_service" ? aws_lb_target_group.reservation_service.arn : aws_lb_target_group.api_service.arn
+    target_group_arn = local.alb_listener_rule_target_groups[each.value.service]
   }
 
   condition {
@@ -38,6 +38,6 @@ resource "aws_lb_listener_rule" "service" {
 
   tags = merge(local.common_tags, {
     Name    = "${local.name_prefix}-${replace(each.key, "_", "-")}-rule"
-    Service = "reservation-service"
+    Service = replace(each.value.service, "_", "-")
   })
 }

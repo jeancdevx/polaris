@@ -179,6 +179,26 @@ output "atlantis_alb_dns_name" {
   value       = var.enable_atlantis ? module.atlantis[0].alb_dns_name : ""
 }
 
+output "db_bootstrap_ecr_repository_url" {
+  description = "ECR repository URL for db-bootstrap"
+  value       = module.ecr_db_bootstrap.repository_url
+}
+
+output "db_bootstrap_log_group_name" {
+  description = "CloudWatch log group for db-bootstrap ECS tasks"
+  value       = module.ecs.db_bootstrap_log_group_name
+}
+
+output "db_bootstrap_task_definition_family" {
+  description = "ECS task definition family for db-bootstrap"
+  value       = module.ecs.db_bootstrap_task_definition_family
+}
+
+output "ecs_security_group_id" {
+  description = "ECS Fargate security group ID"
+  value       = module.security_groups.ecs_security_group_id
+}
+
 output "github_deploy_role_arn" {
   description = "IAM role ARN for GitHub Actions deployments (AWS_DEPLOY_ROLE_ARN secret)"
   value       = module.github_oidc.deploy_role_arn

@@ -19,6 +19,12 @@ variable "cognito_issuer_url" {
   type        = string
 }
 
+variable "cors_allow_origins" {
+  description = "Allowed origins for CORS. Empty disables the CORS configuration."
+  type        = list(string)
+  default     = []
+}
+
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string

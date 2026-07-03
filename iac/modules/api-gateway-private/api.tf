@@ -5,6 +5,17 @@ resource "aws_apigatewayv2_api" "private" {
 
   disable_execute_api_endpoint = var.disable_execute_api_endpoint
 
+  dynamic "cors_configuration" {
+    for_each = length(var.cors_allow_origins) > 0 ? [1] : []
+
+    content {
+      allow_origins = var.cors_allow_origins
+      allow_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      allow_headers = ["Authorization", "Content-Type", "X-User-Id"]
+      max_age       = 300
+    }
+  }
+
   tags = merge(local.common_tags, {
     Name = local.api_name
   })

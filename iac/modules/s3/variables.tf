@@ -38,6 +38,12 @@ variable "project_name" {
   default     = "polaris"
 }
 
+variable "manage_assets_bucket_policy" {
+  description = "When false, assets bucket policy is managed elsewhere (e.g. edge module)"
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Additional tags applied to S3 buckets"
   type        = map(string)

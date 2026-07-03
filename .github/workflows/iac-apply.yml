@@ -43,6 +43,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: ./.github/actions/setup
+
+      - name: Build Lambda artifacts for Terraform
+        run: pnpm turbo run build --filter='./lambdas/*'
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:

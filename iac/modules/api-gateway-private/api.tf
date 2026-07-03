@@ -1,9 +1,9 @@
 resource "aws_apigatewayv2_api" "private" {
   name          = local.api_name
   protocol_type = "HTTP"
-  description   = "Private HTTP API for Polaris admin and internal routes (VPC endpoint only)"
+  description   = "Admin HTTP API for Polaris (admin + internal routes; separate from the public mobile API)"
 
-  disable_execute_api_endpoint = true
+  disable_execute_api_endpoint = var.disable_execute_api_endpoint
 
   tags = merge(local.common_tags, {
     Name = local.api_name

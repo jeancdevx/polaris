@@ -23,6 +23,11 @@ output "assets_bucket_arn" {
   value       = aws_s3_bucket.assets.arn
 }
 
+output "assets_bucket_https_policy_json" {
+  description = "IAM policy JSON fragment (HTTPS-only) for the assets bucket"
+  value       = data.aws_iam_policy_document.assets.json
+}
+
 output "assets_bucket_name" {
   description = "Static assets bucket name"
   value       = aws_s3_bucket.assets.id

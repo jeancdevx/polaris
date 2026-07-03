@@ -4,7 +4,7 @@ variable "alb_listener_arn" {
 }
 
 variable "api_name" {
-  description = "Override for the private HTTP API name"
+  description = "Override for the admin HTTP API name"
   type        = string
   default     = null
 }
@@ -29,9 +29,10 @@ variable "environment" {
   }
 }
 
-variable "execute_api_vpc_endpoint_id" {
-  description = "Interface VPC endpoint ID for com.amazonaws.<region>.execute-api"
-  type        = string
+variable "disable_execute_api_endpoint" {
+  description = "Disable the default execute-api URL. Set true in staging/prod when edge CloudFront is the only public entrypoint."
+  type        = bool
+  default     = false
 }
 
 variable "project_name" {

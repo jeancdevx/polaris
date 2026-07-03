@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
+
 import { isBusinessRuleViolationError } from '@polaris/domain'
 import type { VehicleExitEvent } from '@polaris/kafka'
 import { KAFKA_TOPICS } from '@polaris/shared-types'

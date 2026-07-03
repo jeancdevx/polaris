@@ -1,0 +1,33 @@
+shared-workspace: &shared-workspace
+  - 'package.json'
+  - 'pnpm-lock.yaml'
+  - 'pnpm-workspace.yaml'
+  - 'turbo.json'
+  - 'packages/build-config/**'
+  - 'packages/tsconfig/**'
+  - 'packages/shared-types/**'
+  - 'packages/shared-utils/**'
+  - 'packages/database/**'
+  - 'packages/domain/**'
+
+kafka-package: &kafka-package
+  - 'packages/kafka/**'
+
+api-service:
+  - *shared-workspace
+  - 'apps/api-service/**'
+
+reservation-service:
+  - *shared-workspace
+  - *kafka-package
+  - 'apps/reservation-service/**'
+
+event-processor-service:
+  - *shared-workspace
+  - *kafka-package
+  - 'packages/eventbridge/**'
+  - 'apps/event-processor-service/**'
+
+admin-service:
+  - *shared-workspace
+  - 'apps/admin-service/**'

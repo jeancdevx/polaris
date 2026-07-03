@@ -1,4 +1,4 @@
-import { fonts, palette } from '@/theme/tokens'
+import { fonts, palette, radii } from '@/theme/tokens'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import {
@@ -53,10 +53,10 @@ export default function LoginScreen() {
         style={styles.container}
       >
         <View style={styles.hero}>
-          <Text style={styles.eyebrow}>POLARIS · IOT PARKING</Text>
-          <Text style={styles.title}>Tu plaza,{'\n'}en tiempo real</Text>
+          <Text style={styles.eyebrow}>Polaris · Estacionamiento IoT</Text>
+          <Text style={styles.title}>Tu plaza, en tiempo real</Text>
           <Text style={styles.subtitle}>
-            Visualiza el estacionamiento en 3D, reserva tu plaza y entra con tu
+            Explora el estacionamiento en 3D, reserva tu plaza y entra con tu
             tarjeta RFID.
           </Text>
         </View>
@@ -65,7 +65,7 @@ export default function LoginScreen() {
           <Text style={styles.cardTitle}>Iniciar sesión</Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>CORREO</Text>
+            <Text style={styles.label}>Correo</Text>
             <TextInput
               autoCapitalize='none'
               autoComplete='email'
@@ -79,7 +79,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>CONTRASEÑA</Text>
+            <Text style={styles.label}>Contraseña</Text>
             <TextInput
               autoComplete='password'
               placeholder='••••••••'
@@ -102,7 +102,7 @@ export default function LoginScreen() {
             onPress={handleSubmit}
           >
             {loading ? (
-              <ActivityIndicator color={palette.bg} />
+              <ActivityIndicator color={palette.primaryForeground} />
             ) : (
               <Text style={styles.buttonText}>Entrar</Text>
             )}
@@ -120,29 +120,30 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: palette.bg
+    backgroundColor: palette.background,
+    flex: 1
   },
   container: {
     flex: 1,
+    gap: 28,
     justifyContent: 'center',
-    padding: 24,
-    gap: 28
+    padding: 24
   },
   hero: {
-    gap: 12
+    gap: 10
   },
   eyebrow: {
-    color: palette.accent,
-    fontFamily: fonts.mono,
+    color: palette.muted,
+    fontFamily: fonts.sansMedium,
     fontSize: 12,
-    letterSpacing: 3
+    letterSpacing: 1,
+    textTransform: 'uppercase'
   },
   title: {
-    color: palette.ink,
+    color: palette.foreground,
     fontFamily: fonts.sansSemiBold,
-    fontSize: 40,
-    lineHeight: 44
+    fontSize: 32,
+    lineHeight: 36
   },
   subtitle: {
     color: palette.muted,
@@ -151,59 +152,58 @@ const styles = StyleSheet.create({
     lineHeight: 22
   },
   card: {
-    backgroundColor: palette.panel,
+    backgroundColor: palette.card,
     borderColor: palette.border,
-    borderRadius: 24,
+    borderRadius: radii.lg,
     borderWidth: 1,
-    gap: 16,
-    padding: 24
+    gap: 14,
+    padding: 20
   },
   cardTitle: {
-    color: palette.ink,
+    color: palette.foreground,
     fontFamily: fonts.sansSemiBold,
-    fontSize: 20
+    fontSize: 18
   },
   field: {
-    gap: 8
+    gap: 6
   },
   label: {
     color: palette.muted,
-    fontFamily: fonts.mono,
-    fontSize: 11,
-    letterSpacing: 2
+    fontFamily: fonts.sansMedium,
+    fontSize: 13
   },
   input: {
-    backgroundColor: palette.bg,
+    backgroundColor: palette.background,
     borderColor: palette.border,
-    borderRadius: 14,
+    borderRadius: radii.md,
     borderWidth: 1,
-    color: palette.ink,
+    color: palette.foreground,
     fontFamily: fonts.sans,
     fontSize: 15,
-    paddingHorizontal: 16,
-    paddingVertical: 12
+    paddingHorizontal: 14,
+    paddingVertical: 11
   },
   error: {
-    backgroundColor: 'rgba(248, 113, 113, 0.12)',
-    borderColor: 'rgba(248, 113, 113, 0.35)',
-    borderRadius: 12,
+    backgroundColor: palette.destructiveMuted,
+    borderColor: '#fecaca',
+    borderRadius: radii.md,
     borderWidth: 1,
-    color: '#fecaca',
+    color: palette.destructive,
     fontFamily: fonts.sans,
     fontSize: 13,
-    padding: 12
+    padding: 10
   },
   button: {
     alignItems: 'center',
-    backgroundColor: palette.accent,
-    borderRadius: 999,
-    paddingVertical: 15
+    backgroundColor: palette.primary,
+    borderRadius: radii.md,
+    paddingVertical: 13
   },
   buttonPressed: {
-    opacity: 0.75
+    opacity: 0.8
   },
   buttonText: {
-    color: palette.bg,
+    color: palette.primaryForeground,
     fontFamily: fonts.sansSemiBold,
     fontSize: 15
   },

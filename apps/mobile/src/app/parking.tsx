@@ -2,10 +2,11 @@ import { ParkingScene } from '@/components/scene/parking-scene'
 import { LiveBadge } from '@/components/ui/live-badge'
 import { SpotActionSheet } from '@/components/ui/spot-action-sheet'
 import { StatChip } from '@/components/ui/stat-chip'
-import { fonts, palette } from '@/theme/tokens'
+import { fonts, palette, radii } from '@/theme/tokens'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import {
@@ -53,7 +54,6 @@ export default function ParkingScreen() {
     }
   }, [])
 
-  // Flujo 23: carga inicial + polling suave; la subscription evita el polling agresivo.
   useEffect(() => {
     void loadAvailability()
     const interval = setInterval(
@@ -63,7 +63,6 @@ export default function ParkingScreen() {
     return () => clearInterval(interval)
   }, [loadAvailability])
 
-  // Subscription AppSync onOccupancyChanged (auth Cognito).
   useEffect(() => {
     if (!tokens) {
       return
@@ -79,6 +78,10 @@ export default function ParkingScreen() {
       }
 
       const env = readMobileEnv()
+
+      if (!env.appsyncRealtimeEndpoint || !env.appsyncGraphqlEndpoint) {
+        return
+      }
 
       subscriptionRef.current = subscribeToOccupancy({
         graphqlEndpoint: env.appsyncGraphqlEndpoint,
@@ -131,7 +134,6 @@ export default function ParkingScreen() {
     setSelectedSpotId(current => (current === spotId ? null : spotId))
   }, [])
 
-  // Flujo 13: POST /parking/reserve { parkingSpotId, reservationDate } + JWT.
   const handleReserve = useCallback(async () => {
     if (!selectedSpot) {
       return
@@ -159,7 +161,7 @@ export default function ParkingScreen() {
 
       const env = readMobileEnv()
       await createReservation(
-        env.apiUrl,
+        env.reservationApiUrl,
         fresh.idToken,
         selectedSpot.spotId,
         new Date().toISOString()
@@ -176,7 +178,6 @@ export default function ParkingScreen() {
     }
   }, [selectedSpot, mySpot, getFreshTokens, loadAvailability, router])
 
-  // Flujo 14: DELETE /parking/reserve/{id} + JWT.
   const handleCancelReservation = useCallback(async () => {
     if (!selectedSpot?.reservationId) {
       setActionError('No se encontró el identificador de la reserva.')
@@ -196,7 +197,7 @@ export default function ParkingScreen() {
 
       const env = readMobileEnv()
       await cancelReservation(
-        env.apiUrl,
+        env.reservationApiUrl,
         fresh.idToken,
         selectedSpot.reservationId
       )
@@ -220,8 +221,8 @@ export default function ParkingScreen() {
   }, [signOut, router])
 
   return (
-    <View style={styles.root}>
-      <View style={StyleSheet.absoluteFill}>
+    <GestureHandlerRootView style={styles.root}>
+      <View style={styles.canvasHost}>
         <ParkingScene
           myUserId={userId}
           selectedSpotId={selectedSpotId}
@@ -230,11 +231,11 @@ export default function ParkingScreen() {
         />
       </View>
 
-      <SafeAreaView pointerEvents='box-none' style={styles.overlay}>
-        <View pointerEvents='box-none' style={styles.top}>
+      <SafeAreaView edges={['top']} pointerEvents='box-none' style={styles.top}>
+        <View style={styles.headerCard}>
           <View style={styles.headerRow}>
             <View>
-              <Text style={styles.eyebrow}>POLARIS</Text>
+              <Text style={styles.eyebrow}>Polaris</Text>
               <Text style={styles.title}>Estacionamiento</Text>
             </View>
             <View style={styles.headerActions}>
@@ -248,17 +249,17 @@ export default function ParkingScreen() {
           {status ? (
             <View style={styles.stats}>
               <StatChip
-                color={palette.free}
+                color={palette.spotFree}
                 label='Libres'
                 value={status.totalAvailable}
               />
               <StatChip
-                color={palette.occupied}
+                color={palette.spotOccupied}
                 label='Ocupadas'
                 value={status.totalOccupied}
               />
               <StatChip
-                color={palette.reserved}
+                color={palette.spotReserved}
                 label='Reservadas'
                 value={status.totalReserved}
               />
@@ -266,6 +267,7 @@ export default function ParkingScreen() {
           ) : null}
 
           {loadError ? <Text style={styles.loadError}>{loadError}</Text> : null}
+
           {mySpot && !selectedSpot ? (
             <Pressable
               style={styles.myReservation}
@@ -280,40 +282,52 @@ export default function ParkingScreen() {
           ) : null}
         </View>
 
-        <View pointerEvents='box-none' style={styles.bottom}>
-          {selectedSpot ? (
-            <SpotActionSheet
-              busy={actionBusy}
-              error={actionError}
-              mine={Boolean(userId && selectedSpot.userId === userId)}
-              spot={selectedSpot}
-              onCancelReservation={handleCancelReservation}
-              onClose={() => setSelectedSpotId(null)}
-              onReserve={handleReserve}
-            />
-          ) : (
-            <Text style={styles.helper}>
-              Toca una plaza libre para reservarla
-            </Text>
-          )}
-        </View>
+        <Text pointerEvents='none' style={styles.hint}>
+          Arrastra para girar · dos dedos para mover · toca una plaza
+        </Text>
       </SafeAreaView>
-    </View>
+
+      <SafeAreaView
+        edges={['bottom']}
+        pointerEvents='box-none'
+        style={styles.bottom}
+      >
+        {selectedSpot ? (
+          <SpotActionSheet
+            busy={actionBusy}
+            error={actionError}
+            mine={Boolean(userId && selectedSpot.userId === userId)}
+            spot={selectedSpot}
+            onCancelReservation={handleCancelReservation}
+            onClose={() => setSelectedSpotId(null)}
+            onReserve={handleReserve}
+          />
+        ) : null}
+      </SafeAreaView>
+    </GestureHandlerRootView>
   )
 }
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: palette.bg,
+    backgroundColor: palette.background,
     flex: 1
   },
-  overlay: {
-    flex: 1,
-    justifyContent: 'space-between',
-    padding: 16
+  canvasHost: {
+    ...StyleSheet.absoluteFill
   },
   top: {
-    gap: 12
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 8
+  },
+  headerCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderColor: palette.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    gap: 10,
+    padding: 14
   },
   headerRow: {
     alignItems: 'flex-start',
@@ -321,19 +335,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between'
   },
   eyebrow: {
-    color: palette.accent,
-    fontFamily: fonts.mono,
+    color: palette.muted,
+    fontFamily: fonts.sansMedium,
     fontSize: 11,
-    letterSpacing: 3
+    letterSpacing: 1,
+    textTransform: 'uppercase'
   },
   title: {
-    color: palette.ink,
+    color: palette.foreground,
     fontFamily: fonts.sansSemiBold,
-    fontSize: 26
+    fontSize: 22
   },
   headerActions: {
     alignItems: 'flex-end',
-    gap: 10
+    gap: 8
   },
   signOut: {
     color: palette.muted,
@@ -343,38 +358,45 @@ const styles = StyleSheet.create({
   },
   stats: {
     flexDirection: 'row',
-    gap: 10
+    gap: 8
   },
   loadError: {
-    backgroundColor: 'rgba(248, 113, 113, 0.12)',
-    borderColor: 'rgba(248, 113, 113, 0.35)',
-    borderRadius: 12,
+    backgroundColor: palette.destructiveMuted,
+    borderColor: '#fecaca',
+    borderRadius: radii.md,
     borderWidth: 1,
-    color: '#fecaca',
+    color: palette.destructive,
     fontFamily: fonts.sans,
     fontSize: 13,
-    padding: 12
+    padding: 10
   },
   myReservation: {
-    backgroundColor: 'rgba(45, 212, 191, 0.1)',
-    borderColor: 'rgba(45, 212, 191, 0.35)',
-    borderRadius: 14,
+    backgroundColor: '#eff6ff',
+    borderColor: '#bfdbfe',
+    borderRadius: radii.md,
     borderWidth: 1,
-    padding: 12
+    padding: 10
   },
   myReservationText: {
-    color: '#99f6e4',
+    color: palette.spotMine,
     fontFamily: fonts.sans,
     fontSize: 13
   },
-  bottom: {
-    gap: 10
-  },
-  helper: {
+  hint: {
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderColor: palette.border,
+    borderRadius: radii.full,
+    borderWidth: 1,
     color: palette.muted,
-    fontFamily: fonts.mono,
-    fontSize: 12,
-    letterSpacing: 1,
-    textAlign: 'center'
+    fontFamily: fonts.sans,
+    fontSize: 11,
+    overflow: 'hidden',
+    paddingHorizontal: 12,
+    paddingVertical: 6
+  },
+  bottom: {
+    paddingHorizontal: 16,
+    paddingBottom: 8
   }
 })

@@ -194,6 +194,22 @@ importers:
         specifier: 4.1.9
         version: 4.1.9(@types/node@26.0.0)(@vitest/coverage-v8@4.1.9)(@vitest/ui@4.1.9)(vite@8.1.0(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
 
+  apps/db-bootstrap:
+    dependencies:
+      '@polaris/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+    devDependencies:
+      '@polaris/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@types/node':
+        specifier: 26.0.0
+        version: 26.0.0
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
   apps/event-processor-service:
     dependencies:
       '@nestjs/common':
@@ -913,6 +929,9 @@ importers:
 
   packages/database:
     dependencies:
+      '@aws-sdk/client-cognito-identity-provider':
+        specifier: 3.1075.0
+        version: 3.1075.0
       '@polaris/domain':
         specifier: workspace:*
         version: link:../domain

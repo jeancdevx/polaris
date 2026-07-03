@@ -18,27 +18,41 @@ locals {
     "${local.name_segment}atlantis.${var.base_domain}"
   )
 
+  admin_api_fqdn = coalesce(
+    var.admin_api_domain_name,
+    "${local.name_segment}admin-api.${var.base_domain}"
+  )
+
   graphql_fqdn = coalesce(
     var.graphql_domain_name,
     "${local.name_segment}graphql.${var.base_domain}"
   )
 
+  auth_fqdn = coalesce(
+    var.auth_domain_name,
+    "${local.name_segment}auth.${var.base_domain}"
+  )
+
   cloudfront_aliases = compact([
     local.api_fqdn,
     local.admin_fqdn,
+    var.enable_admin_api_edge ? local.admin_api_fqdn : "",
     var.atlantis_alb_dns_name != "" ? local.atlantis_fqdn : "",
-    var.enable_graphql_cloudfront ? local.graphql_fqdn : ""
   ])
 
   acm_sans = distinct(compact([
     "*.${var.base_domain}",
     local.api_fqdn,
     local.admin_fqdn,
+    local.admin_api_fqdn,
     local.atlantis_fqdn,
-    local.graphql_fqdn
+    var.appsync_api_id != "" ? local.graphql_fqdn : "",
+    var.cognito_user_pool_id != "" ? local.auth_fqdn : "",
   ]))
 
   api_stage_arn = "arn:aws:apigateway:${var.aws_region}::/apis/${var.api_gateway_id}/stages/${var.api_gateway_stage_name}"
+
+  admin_api_stage_arn = "arn:aws:apigateway:${var.aws_region}::/apis/${var.admin_api_gateway_id}/stages/${var.admin_api_gateway_stage_name}"
 
   common_tags = merge(
     var.tags,

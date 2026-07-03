@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
-  count = var.rds_cluster_identifier != "" ? 1 : 0
+  count = var.enable_rds_alarms ? 1 : 0
 
   alarm_name          = "${local.name_prefix}-rds-cpu-high"
   alarm_description   = "Aurora CPU > ${var.rds_cpu_threshold}%"

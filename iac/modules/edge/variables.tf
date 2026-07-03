@@ -36,8 +36,19 @@ variable "tags" {
 }
 
 variable "api_gateway_id" {
-  description = "Public HTTP API Gateway ID"
+  description = "Public HTTP API Gateway ID (mobile and public routes)"
   type        = string
+}
+
+variable "admin_api_gateway_id" {
+  description = "Admin HTTP API Gateway ID (separate API for /admin and /internal routes)"
+  type        = string
+}
+
+variable "admin_api_gateway_stage_name" {
+  description = "Admin HTTP API Gateway stage name"
+  type        = string
+  default     = "$default"
 }
 
 variable "api_gateway_stage_name" {
@@ -64,8 +75,20 @@ variable "atlantis_domain_name" {
   default     = null
 }
 
+variable "admin_api_domain_name" {
+  description = "Override FQDN for admin HTTP API via CloudFront (default: admin-api.galaxymorph.com or staging-admin-api.galaxymorph.com)"
+  type        = string
+  default     = null
+}
+
 variable "graphql_domain_name" {
-  description = "Override FQDN for AppSync GraphQL via CloudFront (optional)"
+  description = "Override FQDN for AppSync GraphQL custom domain (optional)"
+  type        = string
+  default     = null
+}
+
+variable "auth_domain_name" {
+  description = "Override FQDN for Cognito hosted UI custom domain (default: auth.galaxymorph.com or staging-auth.galaxymorph.com)"
   type        = string
   default     = null
 }
@@ -92,16 +115,22 @@ variable "atlantis_alb_dns_name" {
   default     = ""
 }
 
-variable "appsync_graphql_endpoint" {
-  description = "AppSync GraphQL HTTPS endpoint for optional CloudFront origin"
+variable "appsync_api_id" {
+  description = "AppSync GraphQL API ID for custom domain on graphql.* (empty skips AppSync domain)"
   type        = string
   default     = ""
 }
 
-variable "enable_graphql_cloudfront" {
-  description = "Expose AppSync GraphQL through CloudFront on graphql.* subdomain"
+variable "cognito_user_pool_id" {
+  description = "Cognito user pool ID for custom auth.* hosted UI domain (empty skips Cognito custom domain)"
+  type        = string
+  default     = ""
+}
+
+variable "enable_admin_api_edge" {
+  description = "Expose admin API via admin-api.* CloudFront → admin HTTP API Gateway (module api-gateway-private)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "origin_verify_header_name" {

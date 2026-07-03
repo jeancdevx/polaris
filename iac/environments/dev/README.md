@@ -246,6 +246,15 @@ pnpm appsync:smoke:dev
 pnpm appsync:subscription:smoke:dev
 ```
 
+## Web admin (7.3)
+
+Next.js + AppSync (Cognito grupo `admin`):
+
+```bash
+pnpm web-admin:env:dev
+pnpm web-admin:dev
+```
+
 ## Smoke test MSK (2.13)
 
 Tras `terraform apply`:

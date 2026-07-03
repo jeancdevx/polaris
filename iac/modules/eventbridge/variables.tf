@@ -64,6 +64,7 @@ variable "notification_sender_rules" {
       description = "Route reservation.created events to notification-sender"
       sources = [
         "polaris.reservation-service",
+        "polaris.event-processor",
         "polaris.smoke"
       ]
     }
@@ -73,6 +74,7 @@ variable "notification_sender_rules" {
       sources = [
         "polaris.reservation-service",
         "polaris.reservation-cleanup",
+        "polaris.event-processor",
         "polaris.smoke"
       ]
     }

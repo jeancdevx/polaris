@@ -111,3 +111,18 @@ output "cluster_name" {
   description = "ECS cluster name"
   value       = aws_ecs_cluster.main.name
 }
+
+output "db_bootstrap_log_group_name" {
+  description = "CloudWatch log group for db-bootstrap ECS tasks"
+  value       = aws_cloudwatch_log_group.db_bootstrap.name
+}
+
+output "db_bootstrap_task_definition_arn" {
+  description = "Task definition ARN for db-bootstrap one-shot tasks"
+  value       = aws_ecs_task_definition.db_bootstrap.arn
+}
+
+output "db_bootstrap_task_definition_family" {
+  description = "Task definition family for db-bootstrap one-shot tasks"
+  value       = aws_ecs_task_definition.db_bootstrap.family
+}

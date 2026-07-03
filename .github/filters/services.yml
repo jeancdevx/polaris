@@ -31,3 +31,7 @@ event-processor-service:
 admin-service:
   - *shared-workspace
   - 'apps/admin-service/**'
+
+db-bootstrap:
+  - *shared-workspace
+  - 'apps/db-bootstrap/**'

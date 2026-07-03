@@ -16,6 +16,30 @@ projects:
     workflow: dev
     apply_requirements: [undiverged]
 
+  - name: staging
+    dir: iac/environments/staging
+    autoplan:
+      enabled: true
+      when_modified:
+        - '**/*.tf'
+        - '**/*.tfvars'
+        - '**/.terraform.lock.hcl'
+        - '../../../atlantis.yaml'
+    workflow: staging
+    apply_requirements: [undiverged]
+
+  - name: prod
+    dir: iac/environments/prod
+    autoplan:
+      enabled: true
+      when_modified:
+        - '**/*.tf'
+        - '**/*.tfvars'
+        - '**/.terraform.lock.hcl'
+        - '../../../atlantis.yaml'
+    workflow: prod
+    apply_requirements: [undiverged]
+
 workflows:
   dev:
     plan:
@@ -34,3 +58,39 @@ workflows:
         - run: |
             terraform plan -input=false -no-color -out="$PLANFILE" \
               -var-file=dev.ci.tfvars
+
+  staging:
+    plan:
+      steps:
+        - env:
+            name: TF_IN_AUTOMATION
+            value: 'true'
+        - run: |
+            rm -rf .terraform
+            terraform init -input=false \
+              -backend-config="bucket=${TF_STATE_BUCKET}" \
+              -backend-config="key=env/staging/terraform.tfstate" \
+              -backend-config="region=${AWS_DEFAULT_REGION}" \
+              -backend-config="encrypt=true" \
+              -backend-config="use_lockfile=true"
+        - run: |
+            terraform plan -input=false -no-color -out="$PLANFILE" \
+              -var-file=staging.ci.tfvars
+
+  prod:
+    plan:
+      steps:
+        - env:
+            name: TF_IN_AUTOMATION
+            value: 'true'
+        - run: |
+            rm -rf .terraform
+            terraform init -input=false \
+              -backend-config="bucket=${TF_STATE_BUCKET}" \
+              -backend-config="key=env/prod/terraform.tfstate" \
+              -backend-config="region=${AWS_DEFAULT_REGION}" \
+              -backend-config="encrypt=true" \
+              -backend-config="use_lockfile=true"
+        - run: |
+            terraform plan -input=false -no-color -out="$PLANFILE" \
+              -var-file=prod.ci.tfvars

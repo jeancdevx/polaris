@@ -9,12 +9,12 @@ output "alb_arn_suffix" {
 }
 
 output "alb_target_group_arn_suffixes" {
-  description = "ALB target group ARN suffixes for CloudWatch alarms"
-  value = [
-    aws_lb_target_group.api_service.arn_suffix,
-    aws_lb_target_group.admin_service.arn_suffix,
-    aws_lb_target_group.reservation_service.arn_suffix,
-  ]
+  description = "ALB target group ARN suffixes for CloudWatch alarms (map keys are stable at plan time)"
+  value = {
+    api_service         = aws_lb_target_group.api_service.arn_suffix
+    admin_service       = aws_lb_target_group.admin_service.arn_suffix
+    reservation_service = aws_lb_target_group.reservation_service.arn_suffix
+  }
 }
 
 output "api_service_name" {

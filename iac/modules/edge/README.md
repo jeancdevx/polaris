@@ -20,16 +20,25 @@ Perímetro público para staging y prod: CloudFront + WAF + Route 53 + ACM.
 | Pública | `api-gateway`         | `api.*`       | mobile, parking, reservas  |
 | Admin   | `api-gateway-private` | `admin-api.*` | `/admin/*`, `/internal/*`¹ |
 
-¹ `/internal` bloqueado por WAF regional en el dominio público; en dev sigue
-accesible por `execute-api` o desde la VPC.
+¹ `/internal` no está expuesto en CloudFront; en dev sigue accesible por
+`execute-api` o desde la VPC.
 
 ## Seguridad API
 
 ```
 Cliente → CloudFront (WAF global) → API GW custom domain
-         ↳ header X-Origin-Verify (Secrets Manager)
-WAF regional en cada API GW: bloquea todo excepto peticiones con ese header
+         ↳ header X-Origin-Verify (Secrets Manager; defensa en profundidad)
 ```
+
+HTTP API v2 **no admite** asociación de WAF regional al stage. La protección
+pública es CloudFront WAF + `disable_execute_api_endpoint = true` en
+staging/prod (sin URL `execute-api` pública).
+
+## Cognito custom domain
+
+Cognito exige que el dominio padre (`galaxymorph.com`) resuelva DNS (registro
+A). El módulo crea alias A/AAAA del apex → CloudFront web-admin cuando
+`enable_cognito_custom_domain = true`.
 
 ## Variables principales
 
@@ -46,7 +55,8 @@ WAF regional en cada API GW: bloquea todo excepto peticiones con ese header
 
 ## Wiring en staging/prod
 
-1. `module.api_gateway_private` con `disable_execute_api_endpoint = true`
+1. `module.api_gateway` y `module.api_gateway_private` con
+   `disable_execute_api_endpoint = true`
 2. `module.s3` con `manage_assets_bucket_policy = false` cuando edge gestiona
    OAC
 3. `provider aws.us_east_1` en `providers.tf`
@@ -56,20 +66,18 @@ WAF regional en cada API GW: bloquea todo excepto peticiones con ese header
 
 ## Recursos
 
-| Archivo                       | Contenido                                  |
-| ----------------------------- | ------------------------------------------ |
-| `acm.tf`                      | Certificados regional + us-east-1          |
-| `origin-secret.tf`            | Secreto `X-Origin-Verify`                  |
-| `waf-cloudfront.tf`           | WAF global                                 |
-| `waf-api.tf`                  | WAF regional API pública                   |
-| `waf-admin-api.tf`            | WAF regional API admin (+ block /internal) |
-| `api-gateway-domain.tf`       | Dominio custom API pública                 |
-| `admin-api-gateway-domain.tf` | Dominio custom API admin                   |
-| `public-api-distribution.tf`  | CloudFront API pública                     |
-| `admin-api-distribution.tf`   | CloudFront API admin                       |
-| `web-distribution.tf`         | CloudFront web-admin S3                    |
-| `atlantis-distribution.tf`    | CloudFront Atlantis                        |
-| `appsync-domain.tf`           | AppSync custom domain                      |
-| `cognito-auth-domain.tf`      | Cognito custom domain                      |
-| `route53-records.tf`          | Alias A/AAAA                               |
-| `s3-assets-policy.tf`         | OAC web-admin                              |
+| Archivo                       | Contenido                         |
+| ----------------------------- | --------------------------------- |
+| `acm.tf`                      | Certificados regional + us-east-1 |
+| `origin-secret.tf`            | Secreto `X-Origin-Verify`         |
+| `waf-cloudfront.tf`           | WAF global (CloudFront)           |
+| `api-gateway-domain.tf`       | Dominio custom API pública        |
+| `admin-api-gateway-domain.tf` | Dominio custom API admin          |
+| `public-api-distribution.tf`  | CloudFront API pública            |
+| `admin-api-distribution.tf`   | CloudFront API admin              |
+| `web-distribution.tf`         | CloudFront web-admin S3           |
+| `atlantis-distribution.tf`    | CloudFront Atlantis               |
+| `appsync-domain.tf`           | AppSync custom domain             |
+| `cognito-auth-domain.tf`      | Cognito custom domain             |
+| `route53-records.tf`          | Alias A/AAAA                      |
+| `s3-assets-policy.tf`         | OAC web-admin                     |

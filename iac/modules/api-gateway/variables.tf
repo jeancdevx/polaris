@@ -25,6 +25,12 @@ variable "cors_allow_origins" {
   default     = []
 }
 
+variable "disable_execute_api_endpoint" {
+  description = "Disable the default execute-api URL. Set true in staging/prod when edge CloudFront is the only public entrypoint."
+  type        = bool
+  default     = false
+}
+
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string

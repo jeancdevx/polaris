@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_hosts" {
-  for_each = toset(var.alb_target_group_arn_suffixes)
+  for_each = var.enable_alb_alarms ? var.alb_target_group_arn_suffixes : {}
 
-  alarm_name          = "${local.name_prefix}-alb-unhealthy-${replace(each.value, "targetgroup/", "")}"
+  alarm_name          = "${local.name_prefix}-alb-unhealthy-${each.key}"
   alarm_description   = "ALB target group has unhealthy hosts"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
@@ -26,7 +26,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_hosts" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "alb_target_5xx" {
-  count = var.alb_arn_suffix != "" ? 1 : 0
+  count = var.enable_alb_alarms ? 1 : 0
 
   alarm_name          = "${local.name_prefix}-alb-target-5xx"
   alarm_description   = "ALB target 5XX responses above threshold"

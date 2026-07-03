@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_metric_alarm" "api_gateway_5xx" {
-  count = var.api_gateway_public_api_id != "" ? 1 : 0
+  count = var.enable_api_gateway_alarms ? 1 : 0
 
   alarm_name          = "${local.name_prefix}-api-gateway-5xx"
   alarm_description   = "Public API Gateway 5XX errors above threshold"

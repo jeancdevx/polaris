@@ -5,12 +5,12 @@ output "admin_api_public_url" {
 
 output "graphql_public_url" {
   description = "AppSync GraphQL URL via custom domain (includes wss realtime on same host)"
-  value       = var.appsync_api_id != "" ? "https://${local.graphql_fqdn}/graphql" : null
+  value       = var.enable_appsync_custom_domain ? "https://${local.graphql_fqdn}/graphql" : null
 }
 
 output "auth_public_url" {
   description = "Cognito hosted UI URL via custom domain"
-  value       = var.cognito_user_pool_id != "" ? "https://${local.auth_fqdn}" : null
+  value       = var.enable_cognito_custom_domain ? "https://${local.auth_fqdn}" : null
 }
 
 output "admin_api_fqdn" {
@@ -35,7 +35,7 @@ output "admin_api_cloudfront_distribution_id" {
 
 output "appsync_custom_domain_name" {
   description = "AppSync custom domain name"
-  value       = var.appsync_api_id != "" ? aws_appsync_domain_name.graphql[0].domain_name : null
+  value       = var.enable_appsync_custom_domain ? aws_appsync_domain_name.graphql[0].domain_name : null
 }
 
 output "api_public_url" {
@@ -50,7 +50,7 @@ output "admin_public_url" {
 
 output "atlantis_public_url" {
   description = "Atlantis URL via CloudFront when enabled"
-  value       = var.atlantis_alb_dns_name != "" ? "https://${local.atlantis_fqdn}" : null
+  value       = var.enable_atlantis_cloudfront ? "https://${local.atlantis_fqdn}" : null
 }
 
 output "api_fqdn" {
@@ -89,19 +89,9 @@ output "origin_verify_header_name" {
   value       = var.origin_verify_header_name
 }
 
-output "admin_api_regional_waf_arn" {
-  description = "Regional WAF ACL ARN protecting the admin API Gateway"
-  value       = var.enable_admin_api_edge ? aws_wafv2_web_acl.admin_api_regional[0].arn : null
-}
-
 output "admin_api_gateway_regional_domain" {
-  description = "Regional admin API Gateway domain target (direct access blocked by WAF)"
+  description = "Regional admin API Gateway domain target (CloudFront custom domain is the public entrypoint)"
   value       = var.enable_admin_api_edge ? aws_apigatewayv2_domain_name.admin_api[0].domain_name_configuration[0].target_domain_name : null
-}
-
-output "api_regional_waf_arn" {
-  description = "Regional WAF ACL ARN protecting API Gateway"
-  value       = aws_wafv2_web_acl.api_regional.arn
 }
 
 output "cloudfront_waf_arn" {
@@ -110,6 +100,6 @@ output "cloudfront_waf_arn" {
 }
 
 output "api_gateway_regional_domain" {
-  description = "Regional API Gateway domain target (direct access blocked by WAF)"
+  description = "Regional API Gateway domain target (execute-api disabled in staging/prod; use api.* via CloudFront)"
   value       = aws_apigatewayv2_domain_name.api.domain_name_configuration[0].target_domain_name
 }

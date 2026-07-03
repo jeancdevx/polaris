@@ -1,5 +1,5 @@
 resource "aws_cloudfront_distribution" "atlantis" {
-  count = var.atlantis_alb_dns_name != "" ? 1 : 0
+  count = var.enable_atlantis_cloudfront ? 1 : 0
 
   enabled         = true
   is_ipv6_enabled = true

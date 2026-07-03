@@ -18,25 +18,27 @@ enable_nat_gateway   = true
 single_nat_gateway   = false
 enable_vpc_endpoints = true
 
-rds_capacity_mode           = "provisioned"
-rds_serverless_min_capacity = 0.5
-rds_serverless_max_capacity = 2
-rds_engine_version          = "18.3"
+alb_logs_prefix = "api-service"
 
+api_service_desired_count             = 2
+admin_service_desired_count           = 2
+reservation_service_desired_count     = 2
+event_processor_service_desired_count = 2
+
+rds_capacity_mode           = "provisioned"
+rds_engine_version          = "18.3"
 rds_reader_count            = 2
 rds_writer_instance_class   = "db.r6g.xlarge"
 rds_backup_retention_period = 30
 rds_deletion_protection     = true
 
-redis_capacity_mode                  = "provisioned"
-redis_engine_version                 = "7.1"
-redis_num_shards                     = 3
-redis_replicas_per_shard             = 1
-redis_node_type                      = "cache.r7g.xlarge"
-redis_transit_encryption_enabled     = true
-redis_major_engine_version           = "7"
-redis_serverless_max_data_storage_gb = 10
-redis_serverless_max_ecpu_per_second = 5000
+redis_capacity_mode              = "provisioned"
+redis_engine_version             = "7.1"
+redis_num_shards                 = 3
+redis_replicas_per_shard         = 1
+redis_node_type                  = "cache.r7g.xlarge"
+redis_transit_encryption_enabled = true
+redis_major_engine_version       = "7"
 
 kafka_version                    = "3.9.x.kraft"
 kafka_broker_count               = 3
@@ -47,4 +49,21 @@ kafka_default_replication_factor = 3
 kafka_min_insync_replicas        = 2
 kafka_default_num_partitions     = 3
 
-cognito_admin_create_user_only = true
+cognito_mfa_configuration           = "OPTIONAL"
+cognito_create_user_pool_domain     = false
+cognito_admin_create_user_only      = true
+
+dynamodb_billing_mode = "PROVISIONED"
+
+s3_lifecycle_glacier_transition_days = 90
+secrets_manager_rds_rotation_days    = 30
+
+base_domain    = "galaxymorph.com"
+hosted_zone_id = "Z0437101YIMTM4WCJEKJ"
+
+terraform_state_bucket = "REPLACE_WITH_BOOTSTRAP_STATE_BUCKET"
+
+# enable_atlantis = true
+# atlantis_domain_name = "atlantis-internal.galaxymorph.com"
+# atlantis_acm_certificate_arn = "arn:aws:acm:..."
+# atlantis_github_token = "ghp_..."

@@ -37,7 +37,7 @@ locals {
     local.api_fqdn,
     local.admin_fqdn,
     var.enable_admin_api_edge ? local.admin_api_fqdn : "",
-    var.atlantis_alb_dns_name != "" ? local.atlantis_fqdn : "",
+    var.enable_atlantis_cloudfront ? local.atlantis_fqdn : "",
   ])
 
   acm_sans = distinct(compact([
@@ -46,13 +46,9 @@ locals {
     local.admin_fqdn,
     local.admin_api_fqdn,
     local.atlantis_fqdn,
-    var.appsync_api_id != "" ? local.graphql_fqdn : "",
-    var.cognito_user_pool_id != "" ? local.auth_fqdn : "",
+    var.enable_appsync_custom_domain ? local.graphql_fqdn : "",
+    var.enable_cognito_custom_domain ? local.auth_fqdn : "",
   ]))
-
-  api_stage_arn = "arn:aws:apigateway:${var.aws_region}::/apis/${var.api_gateway_id}/stages/${var.api_gateway_stage_name}"
-
-  admin_api_stage_arn = "arn:aws:apigateway:${var.aws_region}::/apis/${var.admin_api_gateway_id}/stages/${var.admin_api_gateway_stage_name}"
 
   common_tags = merge(
     var.tags,

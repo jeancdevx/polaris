@@ -8,6 +8,11 @@ output "api_id" {
   value       = aws_apigatewayv2_api.public.id
 }
 
+output "default_stage_arn" {
+  description = "Default stage ARN for WAF association"
+  value       = aws_apigatewayv2_stage.default.arn
+}
+
 output "integration_id" {
   description = "ALB VPC Link integration identifier"
   value       = aws_apigatewayv2_integration.alb.id

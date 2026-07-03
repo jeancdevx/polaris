@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_metric_alarm" "appsync_5xx" {
-  count = var.appsync_api_id != "" ? 1 : 0
+  count = var.enable_appsync_alarms ? 1 : 0
 
   alarm_name          = "${local.name_prefix}-appsync-5xx"
   alarm_description   = "AppSync GraphQL 5XX errors above threshold"

@@ -1,6 +1,11 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { createClient, type RedisClientType } from 'redis'
+
+import {
+  connectRedis,
+  disconnectRedis,
+  type PolarisRedisClient
+} from '@polaris/shared-utils'
 
 import {
   EVENT_PROCESSOR_CONFIG_KEY,
@@ -9,12 +14,12 @@ import {
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
-  private client: RedisClientType | undefined
-  private connectPromise: Promise<RedisClientType> | undefined
+  private client: PolarisRedisClient | undefined
+  private connectPromise: Promise<PolarisRedisClient> | undefined
 
   constructor(private readonly configService: ConfigService) {}
 
-  async getClient(): Promise<RedisClientType> {
+  async getClient(): Promise<PolarisRedisClient> {
     if (this.client?.isOpen) {
       return this.client
     }
@@ -27,18 +32,17 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async onModuleDestroy(): Promise<void> {
-    if (this.client?.isOpen) {
-      await this.client.quit()
+    if (this.client) {
+      await disconnectRedis(this.client)
     }
   }
 
-  private async connect(): Promise<RedisClientType> {
+  private async connect(): Promise<PolarisRedisClient> {
     const config = this.configService.getOrThrow<EventProcessorConfig>(
       EVENT_PROCESSOR_CONFIG_KEY
     )
 
-    const client = createClient({ url: config.redisUrl })
-    await client.connect()
+    const client = await connectRedis(config.redisUrl)
     this.client = client
     return client
   }

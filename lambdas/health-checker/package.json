@@ -13,6 +13,7 @@
     "@aws-sdk/client-sns": "3.1075.0",
     "@polaris/database": "workspace:*",
     "@polaris/lambda-core": "workspace:*",
+    "@polaris/shared-utils": "workspace:*",
     "redis": "5.6.0"
   },
   "devDependencies": {

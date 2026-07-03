@@ -21,6 +21,7 @@
     "@nestjs/platform-fastify": "11.1.27",
     "@polaris/database": "workspace:*",
     "@polaris/shared-types": "workspace:*",
+    "@polaris/shared-utils": "workspace:*",
     "redis": "6.0.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2"

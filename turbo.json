@@ -8,9 +8,11 @@
         "src/**",
         "package.json",
         "tsconfig.json",
-        "rolldown.config.ts"
+        "rolldown.config.ts",
+        "next.config.ts",
+        "postcss.config.mjs"
       ],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "typecheck": {
       "dependsOn": ["^build"],

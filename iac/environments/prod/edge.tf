@@ -24,6 +24,8 @@ module "edge" {
 
   atlantis_alb_dns_name = try(module.atlantis[0].alb_dns_name, "")
 
+  enable_atlantis_cloudfront = var.enable_atlantis
+
   depends_on = [
     module.api_gateway,
     module.api_gateway_private,

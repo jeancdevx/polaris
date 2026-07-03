@@ -18,6 +18,16 @@ locals {
     "${local.name_prefix}-event-processor-service"
   )
 
+  db_bootstrap_name = coalesce(
+    var.db_bootstrap_name,
+    "${local.name_prefix}-db-bootstrap"
+  )
+
+  bootstrap_admin_password = coalesce(
+    var.bootstrap_admin_password,
+    try(random_password.bootstrap_admin[0].result, null)
+  )
+
   common_tags = merge(
     var.tags,
     {

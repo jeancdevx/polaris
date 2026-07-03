@@ -26,5 +26,3 @@ export const createDataSourceOptions = (): DataSourceOptions => {
 
 export const createDataSource = (): DataSource =>
   new DataSource(createDataSourceOptions())
-
-export const dataSource = createDataSource()

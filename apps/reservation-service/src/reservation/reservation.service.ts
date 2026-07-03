@@ -7,7 +7,6 @@ import {
   NotFoundException
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import type { RedisClientType } from 'redis'
 
 import {
   cancelReservation,
@@ -20,6 +19,7 @@ import {
   restoreReservation
 } from '@polaris/domain'
 import type { Reservation as ReservationDto } from '@polaris/shared-types'
+import type { PolarisRedisClient } from '@polaris/shared-utils'
 
 import { RedisService } from './redis.service.js'
 import type { CreateReserveBody } from './reservation-body.validation.js'
@@ -167,7 +167,7 @@ export class ReservationService {
   }
 
   private async assertRedisSpotIsFree(
-    client: RedisClientType,
+    client: PolarisRedisClient,
     spotId: string
   ): Promise<void> {
     const status = await client.hGet(
@@ -181,7 +181,7 @@ export class ReservationService {
   }
 
   private async markSpotReservedInRedis(
-    client: RedisClientType,
+    client: PolarisRedisClient,
     spotId: string,
     userId: string,
     reservationId: string
@@ -201,7 +201,7 @@ export class ReservationService {
   }
 
   private async markSpotFreeInRedis(
-    client: RedisClientType,
+    client: PolarisRedisClient,
     spotId: string
   ): Promise<void> {
     const spotKey = `${PARKING_SPOT_KEY_PREFIX}${spotId}`

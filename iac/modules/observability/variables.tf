@@ -40,10 +40,34 @@ variable "alb_arn_suffix" {
   type        = string
 }
 
+variable "enable_alb_alarms" {
+  description = "Create CloudWatch alarms for the ALB and target groups"
+  type        = bool
+  default     = true
+}
+
+variable "enable_api_gateway_alarms" {
+  description = "Create CloudWatch alarms for the public HTTP API Gateway"
+  type        = bool
+  default     = true
+}
+
+variable "enable_appsync_alarms" {
+  description = "Create CloudWatch alarms for AppSync"
+  type        = bool
+  default     = true
+}
+
+variable "enable_rds_alarms" {
+  description = "Create CloudWatch alarms for Aurora"
+  type        = bool
+  default     = true
+}
+
 variable "alb_target_group_arn_suffixes" {
-  description = "ALB target group ARN suffixes for unhealthy host alarms"
-  type        = list(string)
-  default     = []
+  description = "ALB target group ARN suffixes keyed by service name"
+  type        = map(string)
+  default     = {}
 }
 
 variable "api_gateway_public_api_id" {

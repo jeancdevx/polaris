@@ -74,7 +74,8 @@ data "aws_iam_policy_document" "assets" {
 }
 
 resource "aws_s3_bucket_policy" "assets" {
-  bucket = aws_s3_bucket.assets.id
+  count = var.manage_assets_bucket_policy ? 1 : 0
 
+  bucket = aws_s3_bucket.assets.id
   policy = data.aws_iam_policy_document.assets.json
 }

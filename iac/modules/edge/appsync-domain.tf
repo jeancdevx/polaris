@@ -3,10 +3,6 @@ resource "aws_appsync_domain_name" "graphql" {
 
   domain_name     = local.graphql_fqdn
   certificate_arn = aws_acm_certificate_validation.regional.certificate_arn
-
-  tags = merge(local.common_tags, {
-    Name = local.graphql_fqdn
-  })
 }
 
 resource "aws_appsync_domain_name_api_association" "graphql" {

@@ -13,6 +13,7 @@
     "@polaris/database": "workspace:*",
     "@polaris/lambda-core": "workspace:*",
     "@polaris/shared-types": "workspace:*",
+    "@polaris/shared-utils": "workspace:*",
     "redis": "6.0.0"
   },
   "devDependencies": {

@@ -5,9 +5,11 @@ Consumidor Kafka de Polaris (Fase 5). NestJS 11 + Fastify + ESM, puerto
 
 Procesa los 8 topics definidos en `@polaris/shared-types` → `KAFKA_TOPICS`.
 Handlers de negocio (Fase 5.2): `vehicle.entry`, `vehicle.exit`,
-`sensor.occupancy` → actualizan RDS (TypeORM) y Redis. Tras procesar con éxito,
-publican en EventBridge (`@polaris/eventbridge`) para orquestación
-(audit-logger, notificaciones, etc.).
+`sensor.occupancy` → actualizan RDS (TypeORM) y Redis. `reservation.created` /
+`reservation.cancelled` → reenvío a EventBridge (RDS/Redis los actualiza
+`reservation-service` de forma síncrona). Tras procesar con éxito, publican en
+EventBridge (`@polaris/eventbridge`) para orquestación (audit-logger,
+notificaciones, etc.).
 
 ## Desarrollo local
 

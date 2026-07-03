@@ -115,16 +115,32 @@ variable "atlantis_alb_dns_name" {
   default     = ""
 }
 
+variable "enable_appsync_custom_domain" {
+  description = "Create AppSync custom domain on graphql.* (requires appsync_api_id)"
+  type        = bool
+  default     = true
+}
+
+variable "enable_cognito_custom_domain" {
+  description = "Create Cognito hosted UI custom domain on auth.* (requires cognito_user_pool_id)"
+  type        = bool
+  default     = true
+}
+
+variable "enable_atlantis_cloudfront" {
+  description = "Expose Atlantis via atlantis.* CloudFront distribution (requires atlantis_alb_dns_name after Atlantis is deployed)"
+  type        = bool
+  default     = false
+}
+
 variable "appsync_api_id" {
-  description = "AppSync GraphQL API ID for custom domain on graphql.* (empty skips AppSync domain)"
+  description = "AppSync GraphQL API ID for custom domain on graphql.*"
   type        = string
-  default     = ""
 }
 
 variable "cognito_user_pool_id" {
-  description = "Cognito user pool ID for custom auth.* hosted UI domain (empty skips Cognito custom domain)"
+  description = "Cognito user pool ID for custom auth.* hosted UI domain"
   type        = string
-  default     = ""
 }
 
 variable "enable_admin_api_edge" {

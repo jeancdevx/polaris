@@ -55,7 +55,8 @@ type Query {
 }
 
 type Mutation {
-  publishOccupancyChanged(input: OccupancyChangedInput!): OccupancyChanged @aws_iam
+  publishOccupancyChanged(input: OccupancyChangedInput!): OccupancyChanged
+    @aws_iam
 }
 
 type Subscription {

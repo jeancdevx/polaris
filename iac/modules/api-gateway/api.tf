@@ -3,6 +3,8 @@ resource "aws_apigatewayv2_api" "public" {
   protocol_type = "HTTP"
   description   = "Public HTTP API for Polaris (api-service + reservation-service)"
 
+  disable_execute_api_endpoint = var.disable_execute_api_endpoint
+
   dynamic "cors_configuration" {
     for_each = length(var.cors_allow_origins) > 0 ? [1] : []
 

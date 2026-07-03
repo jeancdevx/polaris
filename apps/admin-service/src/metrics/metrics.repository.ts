@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
+
 import type { AuditLogRow, ReservationRow, UserRow } from '@polaris/database'
 
 import { DatabaseService } from '../infrastructure/database.service.js'
-
 import type { MetricsListQuery } from './metrics.types.js'
 
 type EventTypeCountRow = Readonly<{

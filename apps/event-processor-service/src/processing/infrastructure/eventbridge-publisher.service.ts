@@ -1,5 +1,6 @@
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+
 import {
   buildProcessedParkingEventDetail,
   createEventBridgeClient,

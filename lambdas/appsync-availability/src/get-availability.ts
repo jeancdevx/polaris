@@ -1,7 +1,6 @@
-import { createClient } from 'redis'
-
 import { createDataSource, type ParkingSpotRow } from '@polaris/database'
 import type { ParkingStatus } from '@polaris/shared-types'
+import { connectRedis, disconnectRedis } from '@polaris/shared-utils'
 
 import { PARKING_SPOT_KEY_PREFIX } from './parking.constants.js'
 import {
@@ -16,10 +15,9 @@ let dataSource: ReturnType<typeof createDataSource> | undefined
 const tryGetAvailabilityFromRedis = async (
   redisUrl: string
 ): Promise<ParkingStatus | null> => {
-  const client = createClient({ url: redisUrl })
+  const client = await connectRedis(redisUrl)
 
   try {
-    await client.connect()
     const spots = []
 
     for await (const rawKeys of client.scanIterator({
@@ -51,9 +49,7 @@ const tryGetAvailabilityFromRedis = async (
   } catch {
     return null
   } finally {
-    if (client.isOpen) {
-      await client.quit()
-    }
+    await disconnectRedis(client)
   }
 }
 

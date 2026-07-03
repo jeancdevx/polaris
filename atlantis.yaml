@@ -1,0 +1,36 @@
+version: 3
+automerge: false
+parallel_plan: false
+parallel_apply: false
+
+projects:
+  - name: dev
+    dir: iac/environments/dev
+    autoplan:
+      enabled: true
+      when_modified:
+        - '**/*.tf'
+        - '**/*.tfvars'
+        - '**/.terraform.lock.hcl'
+        - '../../../atlantis.yaml'
+    workflow: dev
+    apply_requirements: [undiverged]
+
+workflows:
+  dev:
+    plan:
+      steps:
+        - env:
+            name: TF_IN_AUTOMATION
+            value: 'true'
+        - run: |
+            rm -rf .terraform
+            terraform init -input=false \
+              -backend-config="bucket=${TF_STATE_BUCKET}" \
+              -backend-config="key=${TF_STATE_KEY}" \
+              -backend-config="region=${AWS_DEFAULT_REGION}" \
+              -backend-config="encrypt=true" \
+              -backend-config="use_lockfile=true"
+        - run: |
+            terraform plan -input=false -no-color -out="$PLANFILE" \
+              -var-file=dev.ci.tfvars

@@ -15,5 +15,7 @@ module "api_gateway" {
 
   cors_allow_origins = [local.admin_web_origin]
 
+  disable_execute_api_endpoint = true
+
   tags = var.tags
 }

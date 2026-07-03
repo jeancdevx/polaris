@@ -7,10 +7,11 @@ import {
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
-import { COGNITO_CONFIG_KEY, type CognitoConfig } from './cognito.config.js'
-import { mapCognitoError } from './cognito-error.mapper.js'
 import type { AuthTokensResponse } from './types/auth.types.js'
+
 import { createCognitoClient } from './cognito-client.factory.js'
+import { mapCognitoError } from './cognito-error.mapper.js'
+import { COGNITO_CONFIG_KEY, type CognitoConfig } from './cognito.config.js'
 
 @Injectable()
 export class CognitoService {

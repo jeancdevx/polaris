@@ -1,7 +1,8 @@
 import { Body, Controller, Headers, Post } from '@nestjs/common'
 
-import { AuthService } from './auth.service.js'
 import type { AuthTokensResponse, MessageResponse } from './types/auth.types.js'
+
+import { AuthService } from './auth.service.js'
 
 @Controller('auth')
 export class AuthController {

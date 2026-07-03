@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
-import type { RedisClientType } from 'redis'
 
 import type { ParkingSpot } from '@polaris/domain'
 import type { ParkingSpotStatus } from '@polaris/shared-types'
+import type { PolarisRedisClient } from '@polaris/shared-utils'
 
 import {
   PARKING_SPOT_KEY_PREFIX,
@@ -84,7 +84,7 @@ export class ParkingRedisStore {
 }
 
 const applyStatDelta = (
-  multi: ReturnType<RedisClientType['multi']>,
+  multi: ReturnType<PolarisRedisClient['multi']>,
   delta: StatDelta
 ): void => {
   if (delta.available !== 0) {

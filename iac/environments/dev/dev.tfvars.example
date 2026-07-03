@@ -67,3 +67,12 @@ dynamodb_websocket_connections_ttl_enabled = true
 s3_lifecycle_glacier_transition_days = 90
 
 secrets_manager_rds_rotation_days = 30
+
+# Bootstrap: terraform output -raw state_bucket_name
+terraform_state_bucket = "REPLACE_WITH_BOOTSTRAP_STATE_BUCKET"
+
+# Atlantis (opcional) — ver docs/ci-cd.md
+# enable_atlantis            = true
+# atlantis_domain_name       = "atlantis.tu-dominio.com"
+# atlantis_acm_certificate_arn = "arn:aws:acm:us-east-2:ACCOUNT:certificate/UUID"
+# atlantis_github_token      = "ghp_..."  # mejor: TF_VAR_atlantis_github_token en local

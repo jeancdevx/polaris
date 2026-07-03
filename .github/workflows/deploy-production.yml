@@ -1,0 +1,29 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: Redesplegar todos los servicios aunque no tengan cambios
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: prod
+      force_all:
+        ${{ github.event_name == 'workflow_dispatch' && inputs.force_all }}
+    secrets: inherit

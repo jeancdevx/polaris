@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
+
 import type { AuditLogRow } from '@polaris/database'
 
 import { DatabaseService } from '../infrastructure/database.service.js'
-
 import type { AuditLogListQuery } from './audit.types.js'
 
 @Injectable()

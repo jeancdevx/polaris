@@ -41,6 +41,7 @@ junit.xml
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
+!*.ci.tfvars
 *.auto.tfvars
 **/backend.hcl
 !**/backend.hcl.example

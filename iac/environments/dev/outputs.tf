@@ -159,6 +159,56 @@ output "cognito_user_pool_id" {
   value       = module.cognito.user_pool_id
 }
 
+output "github_terraform_apply_role_arn" {
+  description = "IAM role ARN for GitHub Actions terraform apply (AWS_TERRAFORM_APPLY_ROLE_ARN)"
+  value       = module.github_terraform.terraform_apply_role_arn
+}
+
+output "atlantis_url" {
+  description = "Atlantis HTTPS URL (empty if enable_atlantis is false)"
+  value       = var.enable_atlantis ? module.atlantis[0].atlantis_url : ""
+}
+
+output "atlantis_webhook_url" {
+  description = "GitHub webhook URL for Atlantis"
+  value       = var.enable_atlantis ? module.atlantis[0].webhook_url : ""
+}
+
+output "atlantis_alb_dns_name" {
+  description = "Atlantis ALB DNS name (CNAME target for atlantis_domain_name)"
+  value       = var.enable_atlantis ? module.atlantis[0].alb_dns_name : ""
+}
+
+output "db_bootstrap_ecr_repository_url" {
+  description = "ECR repository URL for db-bootstrap"
+  value       = module.ecr_db_bootstrap.repository_url
+}
+
+output "db_bootstrap_log_group_name" {
+  description = "CloudWatch log group for db-bootstrap ECS tasks"
+  value       = module.ecs.db_bootstrap_log_group_name
+}
+
+output "db_bootstrap_task_definition_family" {
+  description = "ECS task definition family for db-bootstrap"
+  value       = module.ecs.db_bootstrap_task_definition_family
+}
+
+output "ecs_security_group_id" {
+  description = "ECS Fargate security group ID"
+  value       = module.security_groups.ecs_security_group_id
+}
+
+output "github_deploy_role_arn" {
+  description = "IAM role ARN for GitHub Actions deployments (AWS_DEPLOY_ROLE_ARN secret)"
+  value       = module.github_oidc.deploy_role_arn
+}
+
+output "github_oidc_provider_arn" {
+  description = "GitHub Actions OIDC provider ARN"
+  value       = module.github_oidc.oidc_provider_arn
+}
+
 output "ecs_api_service_task_role_arn" {
   description = "IAM task role ARN for api-service ECS tasks"
   value       = module.iam.ecs_api_service_task_role_arn

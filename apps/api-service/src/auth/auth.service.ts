@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 
+import type { AuthTokensResponse, MessageResponse } from './types/auth.types.js'
+
 import {
   parseBearerAccessToken,
   parseLogoutBody,
@@ -7,7 +9,6 @@ import {
   parseSigninBody
 } from './auth-body.validation.js'
 import { CognitoService } from './cognito.service.js'
-import type { AuthTokensResponse, MessageResponse } from './types/auth.types.js'
 
 @Injectable()
 export class AuthService {

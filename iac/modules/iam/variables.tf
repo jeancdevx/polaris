@@ -68,6 +68,12 @@ variable "secrets_manager_secret_arns" {
   default     = []
 }
 
+variable "enable_ecs_db_bootstrap_cognito_policy" {
+  description = "Attach Cognito admin bootstrap permissions to the db-bootstrap ECS task role"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Additional tags applied to IAM roles"
   type        = map(string)

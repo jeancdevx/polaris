@@ -1,10 +1,9 @@
 import { Controller, Get, Headers, Query } from '@nestjs/common'
 
 import { requireAdminAuthorization } from '../auth/admin-auth.validation.js'
-
 import { parseMetricsListQuery } from './metrics-query.validation.js'
-import type { AdminMetricsResponse } from './metrics.types.js'
 import { MetricsService } from './metrics.service.js'
+import type { AdminMetricsResponse } from './metrics.types.js'
 
 @Controller('admin/metrics')
 export class MetricsController {

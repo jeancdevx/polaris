@@ -12,7 +12,7 @@ import {
   type RfidTag
 } from '@polaris/domain'
 
-import type { RfidLookupMode } from './read-env.js'
+import type { RfidLookupMode } from '../read-env.js'
 
 export type RfidLookupResult = Readonly<{
   tag: RfidTag

@@ -7,7 +7,7 @@
     "build": "rolldown -c rolldown.config.ts && printf '%s\\n' '{\"name\":\"@polaris/kafka-topic-creator\",\"type\":\"module\"}' > dist/package.json",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint src",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@polaris/lambda-core": "workspace:*",

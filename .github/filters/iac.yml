@@ -1,0 +1,11 @@
+dev:
+  - 'iac/environments/dev/**'
+  - 'iac/modules/**'
+  - 'iac/bootstrap/**'
+  - 'atlantis.yaml'
+
+prod:
+  - 'iac/environments/prod/**'
+  - 'iac/modules/**'
+  - 'iac/bootstrap/**'
+  - 'atlantis.yaml'

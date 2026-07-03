@@ -1,0 +1,48 @@
+# Apply de IaC en producción tras merge a `production`.
+# Requiere environment `prod` con required reviewers y que exista
+# iac/environments/prod (Fase 9).
+
+name: Terraform apply production
+
+on:
+  push:
+    branches: [production]
+    paths:
+      - 'iac/**'
+      - 'atlantis.yaml'
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-apply-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  changes:
+    name: Detect IaC changes (prod)
+    runs-on: ubuntu-latest
+    outputs:
+      prod: ${{ steps.filter.outputs.prod }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: .github/filters/iac.yml
+
+  apply:
+    needs: changes
+    if: needs.changes.outputs.prod == 'true'
+    uses: ./.github/workflows/iac-apply.yml
+    with:
+      environment: prod
+      terraform_directory: iac/environments/prod
+      var_file: prod.ci.tfvars
+      state_key: env/prod/terraform.tfstate
+    secrets: inherit

@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common'
+
+import type { ParkingSpotRow, ReservationRow } from '@polaris/database'
 import {
   businessRuleViolation,
   createReservationId,
@@ -7,7 +9,6 @@ import {
   restoreParkingSpot,
   type Reservation
 } from '@polaris/domain'
-import type { ParkingSpotRow, ReservationRow } from '@polaris/database'
 
 import { DatabaseService } from './database.service.js'
 import { mapDomainReservationToRow } from './reservation.mapper.js'

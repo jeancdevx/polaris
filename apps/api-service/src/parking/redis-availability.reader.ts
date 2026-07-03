@@ -3,13 +3,13 @@ import { Injectable, Logger } from '@nestjs/common'
 import type { ParkingStatus } from '@polaris/shared-types'
 
 import {
-  buildParkingStatus,
-  mapRedisHashToParkingSpot
-} from './parking.mapper.js'
-import {
   PARKING_SPOT_KEY_PREFIX,
   PARKING_STATS_KEYS
 } from './parking.constants.js'
+import {
+  buildParkingStatus,
+  mapRedisHashToParkingSpot
+} from './parking.mapper.js'
 import { RedisService } from './redis.service.js'
 
 @Injectable()

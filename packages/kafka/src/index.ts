@@ -32,6 +32,7 @@ export {
   disconnectProducer,
   publishDomainEvent,
   publishJsonMessage,
+  type Producer,
   type PublishDomainEventInput
 } from './producer/create-producer.js'
 

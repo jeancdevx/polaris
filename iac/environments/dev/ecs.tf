@@ -17,6 +17,7 @@ module "ecs" {
   ecs_admin_service_task_role_arn       = module.iam.ecs_admin_service_task_role_arn
   ecs_reservation_service_task_role_arn = module.iam.ecs_reservation_service_task_role_arn
   ecs_event_processor_task_role_arn     = module.iam.ecs_event_processor_task_role_arn
+  ecs_db_bootstrap_task_role_arn        = module.iam.ecs_db_bootstrap_task_role_arn
 
   ecr_repository_url                         = module.ecr_api_service.repository_url
   api_service_image_tag                      = var.api_service_image_tag
@@ -41,6 +42,10 @@ module "ecs" {
   event_processor_service_memory             = var.event_processor_service_memory
   eventbridge_bus_name                       = module.eventbridge.bus_name
   enable_deletion_protection                 = var.ecs_enable_deletion_protection
+
+  db_bootstrap_ecr_repository_url = module.ecr_db_bootstrap.repository_url
+  db_bootstrap_image_tag          = var.db_bootstrap_image_tag
+  bootstrap_admin_password        = var.bootstrap_admin_password
 
   rds_master_user_secret_arn       = module.rds.master_user_secret_arn
   rds_cluster_endpoint             = module.rds.cluster_endpoint

@@ -6,6 +6,8 @@ import type { KafkaTopic } from '@polaris/shared-types'
 
 import { createKafka } from '../config/create-kafka.js'
 
+export type { Producer } from 'kafkajs'
+
 export type PublishDomainEventInput = Readonly<{
   topic: KafkaTopic
   event: DomainEvent

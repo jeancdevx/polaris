@@ -11,19 +11,18 @@ import {
 } from '@nestjs/common'
 
 import { requireAdminAuthorization } from '../auth/admin-auth.validation.js'
-
 import {
   parseCreateAdminUserBody,
   parseIncludeInactiveQuery,
   parseUpdateAdminUserBody,
   parseUserIdParam
 } from './users-body.validation.js'
+import { UsersService } from './users.service.js'
 import type {
   AdminUserListResponse,
   AdminUserResponse,
   CreateAdminUserResponse
 } from './users.types.js'
-import { UsersService } from './users.service.js'
 
 @Controller('admin/users')
 export class UsersController {

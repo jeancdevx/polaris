@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
 import { AuditModule } from './audit/audit.module.js'
-import { DatabaseModule } from './infrastructure/database.module.js'
 import { HealthModule } from './health/health.module.js'
+import { DatabaseModule } from './infrastructure/database.module.js'
 import { MetricsModule } from './metrics/metrics.module.js'
 import { UsersModule } from './users/users.module.js'
 

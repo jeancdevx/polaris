@@ -28,6 +28,19 @@ variable "admin_service_image_tag" {
   default     = "latest"
 }
 
+variable "bootstrap_admin_password" {
+  description = "Initial admin password for db-bootstrap. Random when unset."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "db_bootstrap_image_tag" {
+  description = "ECR image tag deployed for db-bootstrap"
+  type        = string
+  default     = "latest"
+}
+
 variable "admin_service_memory" {
   description = "Fargate memory (MiB) for admin-service"
   type        = number
@@ -59,9 +72,9 @@ variable "api_service_memory" {
 }
 
 variable "aws_profile" {
-  description = "AWS CLI profile to use (SSO profile name)"
+  description = "AWS CLI profile for uso local (SSO). Dejar vacío en CI/Atlantis."
   type        = string
-  default     = "default"
+  default     = ""
 }
 
 variable "aws_region" {
@@ -110,6 +123,65 @@ variable "enable_vpc_endpoints" {
   description = "Create gateway and interface VPC endpoints"
   type        = bool
   default     = true
+}
+
+variable "github_repository" {
+  description = "GitHub repository (owner/name) allowed to deploy via OIDC"
+  type        = string
+  default     = "jeancdevx/polaris"
+}
+
+variable "terraform_state_bucket" {
+  description = "S3 bucket for Terraform remote state (bootstrap output state_bucket_name)"
+  type        = string
+  default     = "REPLACE_WITH_BOOTSTRAP_STATE_BUCKET"
+}
+
+variable "terraform_state_key" {
+  description = "S3 object key for this environment state file"
+  type        = string
+  default     = "env/dev/terraform.tfstate"
+}
+
+variable "enable_atlantis" {
+  description = "Deploy Atlantis on ECS (requires domain, ACM cert and GitHub token)"
+  type        = bool
+  default     = false
+
+  validation {
+    condition = !var.enable_atlantis || (
+      var.atlantis_domain_name != "" &&
+      var.atlantis_acm_certificate_arn != "" &&
+      var.atlantis_github_token != ""
+    )
+    error_message = "enable_atlantis requires atlantis_domain_name, atlantis_acm_certificate_arn and atlantis_github_token."
+  }
+}
+
+variable "atlantis_domain_name" {
+  description = "FQDN for Atlantis HTTPS endpoint (e.g. atlantis.polaris.example.com)"
+  type        = string
+  default     = ""
+}
+
+variable "atlantis_acm_certificate_arn" {
+  description = "ACM certificate ARN for Atlantis (must cover atlantis_domain_name)"
+  type        = string
+  default     = ""
+}
+
+variable "atlantis_github_token" {
+  description = "GitHub PAT for the Atlantis bot (repo scope)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "atlantis_webhook_secret" {
+  description = "GitHub webhook secret (empty = auto-generate and store in Secrets Manager)"
+  type        = string
+  sensitive   = true
+  default     = ""
 }
 
 variable "cognito_access_token_validity_hours" {

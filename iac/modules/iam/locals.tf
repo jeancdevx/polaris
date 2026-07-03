@@ -19,6 +19,7 @@ locals {
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-reservation-service-env-*",
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-event-processor-service-env-*",
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-admin-service-env-*",
+    "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-db-bootstrap-env-*",
   ]
 
   kms_decrypt_resource_arns = length(var.kms_key_arns) > 0 ? var.kms_key_arns : ["arn:aws:kms:${local.region}:${local.account_id}:key/*"]

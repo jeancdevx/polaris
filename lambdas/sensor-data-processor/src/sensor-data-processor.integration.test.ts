@@ -78,6 +78,10 @@ describe('sensor-data-processor integration', () => {
   })
 
   it('publishes sensor.occupancy events to Kafka', async () => {
+    if (!kafka) {
+      throw new Error('Kafka container not started')
+    }
+
     const brokers = [kafkaBrokerAddress(kafka)]
     const reading: OccupancyChangedIoTEvent = {
       deviceId: 'spots-zone-a',
@@ -104,22 +108,24 @@ describe('sensor-data-processor integration', () => {
       }
     } as unknown as SensorReadingsRepository
 
-    const deps = createProcessSensorReadingDependencies({
-      sensorReadingsTableName: 'test-SensorReadings',
-      sensorReadingsTtlDays: 0,
-      kafkaClientId: 'sensor-data-processor-integration'
-    })
-    deps.sensorReadings = sensorReadings
-    deps.kafkaPublisher = new KafkaOccupancyPublisher(
-      'sensor-data-processor-integration'
-    )
+    const deps = {
+      ...createProcessSensorReadingDependencies({
+        sensorReadingsTableName: 'test-SensorReadings',
+        sensorReadingsTtlDays: 0,
+        kafkaClientId: 'sensor-data-processor-integration'
+      }),
+      sensorReadings,
+      kafkaPublisher: new KafkaOccupancyPublisher(
+        'sensor-data-processor-integration'
+      )
+    }
 
     const consumer = await createConsumer(
+      'sensor-data-processor-integration',
       createKafka({
         clientId: 'sensor-data-processor-integration-consumer',
         brokers
-      }),
-      'sensor-data-processor-integration'
+      })
     )
 
     await consumer.subscribe({

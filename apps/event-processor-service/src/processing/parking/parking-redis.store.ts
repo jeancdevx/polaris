@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common'
+import type { RedisClientType } from 'redis'
+
 import type { ParkingSpot } from '@polaris/domain'
 import type { ParkingSpotStatus } from '@polaris/shared-types'
-import type { RedisClientType } from 'redis'
 
 import {
   PARKING_SPOT_KEY_PREFIX,

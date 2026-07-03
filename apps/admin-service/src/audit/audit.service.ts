@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 
 import { buildPaginatedResponse } from '../common/pagination.validation.js'
-
 import { mapAuditLogRow } from './audit.mapper.js'
 import { AuditRepository } from './audit.repository.js'
 import type { AuditLogListQuery, AuditLogListResponse } from './audit.types.js'

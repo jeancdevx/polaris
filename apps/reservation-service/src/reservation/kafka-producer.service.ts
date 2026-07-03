@@ -1,4 +1,5 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common'
+
 import { createKafka, createProducer, disconnectProducer } from '@polaris/kafka'
 
 type KafkaProducer = Awaited<ReturnType<typeof createProducer>>

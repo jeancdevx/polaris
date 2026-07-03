@@ -570,6 +570,12 @@ variable "secrets_manager_rotate_immediately" {
   default     = null
 }
 
+variable "observability_alarm_email_endpoints" {
+  description = "Optional email addresses subscribed to operational SNS alerts"
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   description = "Additional tags applied to all resources"
   type        = map(string)

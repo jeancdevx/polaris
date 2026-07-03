@@ -1,15 +1,17 @@
-import { fileURLToPath } from 'node:url'
+import { defineConfig, mergeConfig } from 'vitest/config'
 
-import { defineConfig } from 'vitest/config'
+import shared from '../../vitest.coverage.shared.js'
 
-export default defineConfig({
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+export default mergeConfig(
+  shared,
+  defineConfig({
+    test: {
+      environment: 'node',
+      include: ['src/**/*.test.ts'],
+      coverage: {
+        include: ['src/lib/**/*.ts'],
+        exclude: ['src/app/**', 'src/components/**']
+      }
     }
-  },
-  test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts']
-  }
-})
+  })
+)

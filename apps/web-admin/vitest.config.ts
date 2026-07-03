@@ -1,8 +1,17 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, mergeConfig } from 'vitest/config'
 
-export default defineConfig({
-  test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts']
-  }
-})
+import shared from '../../vitest.coverage.shared.js'
+
+export default mergeConfig(
+  shared,
+  defineConfig({
+    test: {
+      environment: 'node',
+      include: ['src/**/*.test.ts'],
+      coverage: {
+        include: ['src/lib/**/*.ts'],
+        exclude: ['src/app/**', 'src/components/**']
+      }
+    }
+  })
+)

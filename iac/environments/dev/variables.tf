@@ -28,6 +28,19 @@ variable "admin_service_image_tag" {
   default     = "latest"
 }
 
+variable "bootstrap_admin_password" {
+  description = "Initial admin password for db-bootstrap. Random when unset."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "db_bootstrap_image_tag" {
+  description = "ECR image tag deployed for db-bootstrap"
+  type        = string
+  default     = "latest"
+}
+
 variable "admin_service_memory" {
   description = "Fargate memory (MiB) for admin-service"
   type        = number

@@ -209,8 +209,9 @@ Estas reglas aplican a **todos** los módulos en `iac/modules/` y a `iac/environ
 
 | # | Tarea | DoD |
 |---|-------|-----|
-| 8.1 | `.github/workflows/ci.yml` — turbo lint, test, build | PR checks verdes |
-| 8.2 | `.github/workflows/deploy-dev.yml` | Deploy automático post-merge |
+| 8.1 | `.github/workflows/ci.yml` — turbo lint, test, build | ✅ PR checks verdes · docker/iac si cambian |
+| 8.2 | `.github/workflows/deploy-dev.yml` | ✅ Deploy apps post-merge · OIDC · `docs/ci-cd.md` |
+| 8.2b | Atlantis plan + GHA terraform apply | ✅ `atlantis.yaml` · `iac-apply-*.yml` · módulos OIDC/terraform/atlantis |
 | 8.3 | IaC: `observability` — dashboards, alarmas, X-Ray | Alarmas SNS configuradas |
 | 8.4 | Cobertura Vitest ≥ 80 % en packages + apps | Reporte coverage |
 

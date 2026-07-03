@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
+import { ReservationCancelledHandler } from './handlers/reservation-cancelled.handler.js'
+import { ReservationCreatedHandler } from './handlers/reservation-created.handler.js'
 import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
 import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
@@ -25,6 +27,8 @@ import { ParkingRepository } from './parking/parking.repository.js'
     VehicleEntryHandler,
     VehicleExitHandler,
     SensorOccupancyHandler,
+    ReservationCreatedHandler,
+    ReservationCancelledHandler,
     EventDispatcherService,
     KafkaConsumerService
   ],

@@ -26,7 +26,8 @@ para IaC, con autenticación OIDC hacia AWS (sin credenciales estáticas).
     ├── deploy-production.yml
     ├── iac-apply.yml             # terraform apply (reusable)
     ├── iac-apply-dev.yml
-    └── iac-apply-production.yml
+    ├── iac-apply-production.yml
+    └── db-bootstrap-dev.yml
 
 atlantis.yaml                     # Plan en PR (servidor Atlantis en ECS)
 ```
@@ -69,10 +70,45 @@ protegido.
 
 Tests de integración (testcontainers): `pnpm test:integration` local / manual.
 
+Los tests unitarios no requieren `DATABASE_URL` en GitHub Secrets: `@polaris/database`
+inicializa la conexión solo al llamar `createDataSource()`, no al importar el paquete.
+
 ## CD apps (`deploy.yml`)
 
 Solo redespliega servicios ECS cuyos paths cambiaron (`.github/filters/services.yml`):
 build → push ECR (`latest` + SHA) → `ecs update-service --force-new-deployment` → wait stable.
+
+## DB bootstrap (`db-bootstrap-dev.yml`)
+
+Task ECS **one-shot** (no servicio permanente) que corre después del primer deploy o cuando
+cambia `packages/database/**` o `apps/db-bootstrap/**` en `develop`.
+
+| Paso | Qué hace |
+| ---- | -------- |
+| Build/push | Imagen `polaris-<env>-db-bootstrap` en ECR |
+| `ecs run-task` | Task Fargate en subnets privadas |
+| Script idempotente | Migraciones → si BD vacía: seed + sync Redis + admin Cognito |
+
+**No hace falta secret en GitHub** para la contraseña admin: vive en Secrets Manager
+(`polaris-<env>-db-bootstrap-env`, clave `BOOTSTRAP_ADMIN_PASSWORD`). Terraform genera
+una contraseña aleatoria en dev si no defines `bootstrap_admin_password` en `dev.tfvars`.
+
+El script sale en segundos con *"Bootstrap skipped"* si la BD ya tiene datos y el admin
+existe en RDS y Cognito.
+
+**Cuándo corre:** push a `develop` con cambios en database/db-bootstrap, o manualmente
+via `workflow_dispatch`. Corre **después** de que IaC haya creado RDS/Redis/Cognito
+(primera vez: merge de IaC → `iac-apply-dev` → luego este workflow o push que lo dispare).
+
+Credenciales admin inicial tras bootstrap:
+
+```bash
+aws secretsmanager get-secret-value \
+  --secret-id polaris-dev-db-bootstrap-env \
+  --query 'SecretString' --output text | jq -r .BOOTSTRAP_ADMIN_PASSWORD
+```
+
+Login: `admin@polaris.local` / contraseña del secret anterior.
 
 ## IaC — Atlantis (plan)
 

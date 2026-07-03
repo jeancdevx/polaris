@@ -26,16 +26,17 @@ export const LowPolyCar = ({
   rotationY = 0
 }: LowPolyCarProps) => {
   const groupRef = useRef<Group>(null)
+  const elapsedRef = useRef(0)
 
   const materialProps = useMemo(
     () =>
       ghost
         ? {
-            color: '#2dd4bf',
+            color: '#16a34a',
             transparent: true,
-            opacity: 0.32,
-            emissive: '#2dd4bf',
-            emissiveIntensity: 0.6,
+            opacity: 0.35,
+            emissive: '#16a34a',
+            emissiveIntensity: 0.5,
             roughness: 0.2,
             metalness: 0.1
           }
@@ -47,29 +48,28 @@ export const LowPolyCar = ({
     [color, ghost]
   )
 
-  useFrame(state => {
+  useFrame((_, delta) => {
     if (!groupRef.current) {
       return
     }
 
+    elapsedRef.current += delta
+    const time = elapsedRef.current
+
     if (ghost) {
-      // Parpadeo 500 ms ON/OFF, como el firmware del LED de plaza reservada.
-      const blinkOn = Math.floor(state.clock.elapsedTime * 2) % 2 === 0
+      const blinkOn = Math.floor(time * 2) % 2 === 0
       groupRef.current.visible = blinkOn
-      groupRef.current.position.y =
-        0.08 + Math.sin(state.clock.elapsedTime * 2.2) * 0.05
+      groupRef.current.position.y = 0.08 + Math.sin(time * 2.2) * 0.05
     }
   })
 
   return (
     <group ref={groupRef} rotation={[0, rotationY, 0]}>
-      {/* Carrocería */}
       <mesh castShadow position={[0, 0.5, 0]}>
         <boxGeometry args={[1.3, 0.42, 2.5]} />
         <meshStandardMaterial {...materialProps} />
       </mesh>
 
-      {/* Cabina */}
       <mesh castShadow position={[0, 0.86, -0.15]}>
         <boxGeometry args={[1.1, 0.4, 1.3]} />
         <meshStandardMaterial
@@ -78,7 +78,6 @@ export const LowPolyCar = ({
         />
       </mesh>
 
-      {/* Ruedas */}
       {WHEEL_POSITIONS.map((position, index) => (
         <mesh
           castShadow
@@ -88,21 +87,20 @@ export const LowPolyCar = ({
         >
           <cylinderGeometry args={[0.26, 0.26, 0.2, 14]} />
           <meshStandardMaterial
-            color={ghost ? '#134e4a' : '#111827'}
-            transparent={ghost}
+            color={ghost ? '#14532d' : '#27272a'}
             opacity={ghost ? 0.4 : 1}
             roughness={0.9}
+            transparent={ghost}
           />
         </mesh>
       ))}
 
-      {/* Faros delanteros */}
       <mesh position={[-0.4, 0.52, 1.26]}>
         <boxGeometry args={[0.22, 0.12, 0.05]} />
         <meshStandardMaterial
           color='#fef9c3'
           emissive='#fde68a'
-          emissiveIntensity={ghost ? 0.3 : 1.4}
+          emissiveIntensity={ghost ? 0.3 : 1.2}
         />
       </mesh>
       <mesh position={[0.4, 0.52, 1.26]}>
@@ -110,17 +108,16 @@ export const LowPolyCar = ({
         <meshStandardMaterial
           color='#fef9c3'
           emissive='#fde68a'
-          emissiveIntensity={ghost ? 0.3 : 1.4}
+          emissiveIntensity={ghost ? 0.3 : 1.2}
         />
       </mesh>
 
-      {/* Luces traseras */}
       <mesh position={[0, 0.52, -1.26]}>
         <boxGeometry args={[0.9, 0.1, 0.05]} />
         <meshStandardMaterial
           color='#7f1d1d'
           emissive='#ef4444'
-          emissiveIntensity={ghost ? 0.2 : 0.9}
+          emissiveIntensity={ghost ? 0.2 : 0.8}
         />
       </mesh>
     </group>

@@ -13,9 +13,9 @@ type ParkingSpotPadProps = Readonly<{
 }>
 
 const STATUS_COLORS: Record<ParkingSpotStatus, string> = {
-  free: '#4ade80',
-  occupied: '#f87171',
-  reserved: '#fbbf24'
+  free: '#16a34a',
+  occupied: '#dc2626',
+  reserved: '#d97706'
 }
 
 /** Superficie interactiva de la plaza: piso, líneas pintadas y aro de estado. */
@@ -27,29 +27,30 @@ export const ParkingSpotPad = ({
 }: ParkingSpotPadProps) => {
   const ringRef = useRef<Mesh>(null)
   const ringMaterialRef = useRef<MeshStandardMaterial>(null)
+  const elapsedRef = useRef(0)
 
-  useFrame(state => {
+  useFrame((_, delta) => {
+    elapsedRef.current += delta
+    const time = elapsedRef.current
+
     if (!ringRef.current || !ringMaterialRef.current) {
       return
     }
 
-    const time = state.clock.elapsedTime
-
     if (selected) {
       const scale = 1 + Math.sin(time * 5) * 0.04
       ringRef.current.scale.setScalar(scale)
-      ringMaterialRef.current.emissiveIntensity = 1.6
+      ringMaterialRef.current.emissiveIntensity = 1.2
       return
     }
 
     ringRef.current.scale.setScalar(1)
 
     if (status === 'reserved') {
-      // Respiración lenta del aro ámbar mientras espera al vehículo.
       ringMaterialRef.current.emissiveIntensity =
-        0.7 + (Math.sin(time * 3) + 1) * 0.45
+        0.55 + (Math.sin(time * 3) + 1) * 0.35
     } else {
-      ringMaterialRef.current.emissiveIntensity = status === 'free' ? 0.75 : 0.5
+      ringMaterialRef.current.emissiveIntensity = status === 'free' ? 0.6 : 0.45
     }
   })
 
@@ -57,7 +58,6 @@ export const ParkingSpotPad = ({
 
   return (
     <group>
-      {/* Piso de la plaza (objetivo de toque) */}
       <mesh
         position={[0, 0.01, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
@@ -68,12 +68,11 @@ export const ParkingSpotPad = ({
       >
         <planeGeometry args={[SPOT_WIDTH - 0.3, SPOT_DEPTH - 0.3]} />
         <meshStandardMaterial
-          color={selected ? '#1c2a3d' : '#101825'}
+          color={selected ? '#e4e4e7' : '#f4f4f5'}
           roughness={0.95}
         />
       </mesh>
 
-      {/* Líneas laterales pintadas */}
       {[-1, 1].map(side => (
         <mesh
           key={side}
@@ -81,16 +80,10 @@ export const ParkingSpotPad = ({
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <planeGeometry args={[0.12, SPOT_DEPTH - 0.2]} />
-          <meshStandardMaterial
-            color='#cbd5e1'
-            emissive='#94a3b8'
-            emissiveIntensity={0.08}
-            roughness={0.8}
-          />
+          <meshStandardMaterial color='#fafafa' roughness={0.85} />
         </mesh>
       ))}
 
-      {/* Aro de estado (LED de la plaza) */}
       <mesh
         position={[0, 0.03, 0]}
         ref={ringRef}
@@ -102,18 +95,17 @@ export const ParkingSpotPad = ({
           emissive={color}
           ref={ringMaterialRef}
           transparent
-          opacity={0.9}
+          opacity={0.92}
         />
       </mesh>
 
-      {/* Marcador de "mi reserva" */}
       {mine ? (
         <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[1.18, 1.3, 40]} />
           <meshStandardMaterial
-            color='#2dd4bf'
-            emissive='#2dd4bf'
-            emissiveIntensity={1.1}
+            color='#2563eb'
+            emissive='#2563eb'
+            emissiveIntensity={0.9}
             transparent
             opacity={0.95}
           />

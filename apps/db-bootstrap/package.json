@@ -1,0 +1,20 @@
+{
+  "name": "db-bootstrap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "bootstrap": "node dist/bootstrap.js",
+    "lint": "oxlint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@polaris/database": "workspace:*"
+  },
+  "devDependencies": {
+    "@polaris/tsconfig": "workspace:*",
+    "@types/node": "26.0.0",
+    "typescript": "6.0.3"
+  }
+}

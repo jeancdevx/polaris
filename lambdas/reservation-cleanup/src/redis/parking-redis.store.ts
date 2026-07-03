@@ -1,4 +1,8 @@
-import { createClient, type RedisClientType } from 'redis'
+import {
+  connectRedis,
+  disconnectRedis,
+  type PolarisRedisClient
+} from '@polaris/shared-utils'
 
 const PARKING_SPOT_KEY_PREFIX = 'parking:spot:'
 
@@ -11,8 +15,7 @@ export class ParkingRedisStore {
   constructor(private readonly redisUrl: string) {}
 
   async markSpotFree(spotId: string): Promise<void> {
-    const client = createClient({ url: this.redisUrl })
-    await client.connect()
+    const client = await connectRedis(this.redisUrl)
 
     try {
       const spotKey = `${PARKING_SPOT_KEY_PREFIX}${spotId}`
@@ -25,9 +28,9 @@ export class ParkingRedisStore {
         .incr(PARKING_STATS_KEYS.totalAvailable)
         .exec()
     } finally {
-      await client.quit()
+      await disconnectRedis(client)
     }
   }
 }
 
-export type { RedisClientType }
+export type { PolarisRedisClient }

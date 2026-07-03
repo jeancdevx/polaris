@@ -1,4 +1,4 @@
-import { createClient } from 'redis'
+import { connectRedis, disconnectRedis } from '@polaris/shared-utils'
 
 import { createDataSource, type ParkingSpotRow } from '../index.js'
 
@@ -27,8 +27,7 @@ export const syncParkingRedis = async (
     await dataSource.destroy()
   }
 
-  const redis = createClient({ url: redisUrl })
-  await redis.connect()
+  const redis = await connectRedis(redisUrl)
 
   try {
     let totalAvailable = 0
@@ -72,6 +71,6 @@ export const syncParkingRedis = async (
       totalReserved
     }
   } finally {
-    await redis.quit()
+    await disconnectRedis(redis)
   }
 }

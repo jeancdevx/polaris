@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
-import { ParkingController } from './parking.controller.js'
 import { parkingConfig } from './parking.config.js'
+import { ParkingController } from './parking.controller.js'
 import { ParkingService } from './parking.service.js'
 import { RdsAvailabilityReader } from './rds-availability.reader.js'
 import { RedisAvailabilityReader } from './redis-availability.reader.js'

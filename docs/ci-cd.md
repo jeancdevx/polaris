@@ -128,8 +128,9 @@ En el PR verás el plan como comentario. Revisa creates/changes/destroys antes d
 
 1. Filtra cambios con `.github/filters/iac.yml`.
 2. Asume rol `AWS_TERRAFORM_APPLY_ROLE_ARN` (OIDC).
-3. `terraform init` con backend desde vars de GitHub.
-4. `terraform apply -auto-approve` con `dev.ci.tfvars` (sin `aws_profile`).
+3. `pnpm build:lambdas` — los módulos Terraform empaquetan `lambdas/*/dist` en zip.
+4. `terraform init` con backend desde vars de GitHub.
+5. `terraform apply -auto-approve` con `dev.ci.tfvars` (sin `aws_profile`).
 
 Concurrencia `terraform-apply-<env>` sin cancelación: un apply a la vez.
 

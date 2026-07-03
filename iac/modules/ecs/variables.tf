@@ -329,6 +329,59 @@ variable "tags" {
   default     = {}
 }
 
+variable "bootstrap_admin_email" {
+  description = "Email for the initial Cognito admin user created by db-bootstrap"
+  type        = string
+  default     = "admin@polaris.local"
+}
+
+variable "bootstrap_admin_password" {
+  description = "Initial admin password for db-bootstrap. Random when null."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "bootstrap_admin_user_id" {
+  description = "Polaris user ID for the initial admin user"
+  type        = string
+  default     = "usr-admin01"
+}
+
+variable "db_bootstrap_cpu" {
+  description = "Fargate CPU units for db-bootstrap one-shot tasks"
+  type        = number
+  default     = 256
+}
+
+variable "db_bootstrap_ecr_repository_url" {
+  description = "ECR repository URL for db-bootstrap"
+  type        = string
+}
+
+variable "db_bootstrap_image_tag" {
+  description = "Container image tag for db-bootstrap"
+  type        = string
+  default     = "latest"
+}
+
+variable "db_bootstrap_memory" {
+  description = "Fargate memory (MiB) for db-bootstrap one-shot tasks"
+  type        = number
+  default     = 512
+}
+
+variable "db_bootstrap_name" {
+  description = "Override for db-bootstrap ECS task definition family"
+  type        = string
+  default     = null
+}
+
+variable "ecs_db_bootstrap_task_role_arn" {
+  description = "IAM task role ARN for db-bootstrap"
+  type        = string
+}
+
 variable "vpc_id" {
   description = "VPC ID for the load balancer and target group"
   type        = string

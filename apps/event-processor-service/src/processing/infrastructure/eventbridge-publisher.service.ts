@@ -28,6 +28,18 @@ export type PublishProcessedParkingEventInput = Readonly<{
   sensorType?: string
 }>
 
+export type PublishReservationEventInput = Readonly<{
+  detailType: string
+  eventName: string
+  aggregateId: string
+  occurredAt: string
+  reservationId: string
+  userId: string
+  parkingSpotId: string
+  expiresAt?: string
+  reason?: string
+}>
+
 @Injectable()
 export class EventBridgePublisherService implements OnModuleDestroy {
   private readonly logger = new Logger(EventBridgePublisherService.name)
@@ -61,6 +73,47 @@ export class EventBridgePublisherService implements OnModuleDestroy {
 
     this.logger.debug(
       `Published ${input.detailType} for ${input.parkingSpotId} (${input.previousStatus} -> ${input.currentStatus})`
+    )
+  }
+
+  async publishReservationEvent(
+    input: PublishReservationEventInput
+  ): Promise<void> {
+    const config = this.configService.getOrThrow<EventProcessorConfig>(
+      EVENT_PROCESSOR_CONFIG_KEY
+    )
+
+    if (!config.eventBridgeEnabled) {
+      return
+    }
+
+    const detail: Record<string, string> = {
+      eventName: input.eventName,
+      aggregateId: input.aggregateId,
+      occurredAt: input.occurredAt,
+      processedAt: new Date().toISOString(),
+      reservationId: input.reservationId,
+      userId: input.userId,
+      parkingSpotId: input.parkingSpotId
+    }
+
+    if (input.expiresAt) {
+      detail.expiresAt = input.expiresAt
+    }
+
+    if (input.reason) {
+      detail.reason = input.reason
+    }
+
+    await publishEventBridgeEntry(this.getClient(config), {
+      busName: config.eventBridgeBusName,
+      source: config.eventBridgeSource,
+      detailType: input.detailType,
+      detail
+    })
+
+    this.logger.debug(
+      `Published ${input.detailType} for ${input.parkingSpotId} (${input.reservationId})`
     )
   }
 

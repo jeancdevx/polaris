@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 
 import { KAFKA_TOPICS } from '@polaris/shared-types'
 
+import { ReservationCancelledHandler } from './handlers/reservation-cancelled.handler.js'
+import { ReservationCreatedHandler } from './handlers/reservation-created.handler.js'
 import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
 import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
@@ -20,13 +22,27 @@ describe('EventDispatcherService', () => {
     const sensorOccupancyHandler = {
       handle: async () => undefined
     }
+    const reservationCreatedHandler = {
+      handle: async () => undefined
+    }
+    const reservationCancelledHandler = {
+      handle: async () => undefined
+    }
 
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         EventDispatcherService,
         { provide: VehicleEntryHandler, useValue: vehicleEntryHandler },
         { provide: VehicleExitHandler, useValue: vehicleExitHandler },
-        { provide: SensorOccupancyHandler, useValue: sensorOccupancyHandler }
+        { provide: SensorOccupancyHandler, useValue: sensorOccupancyHandler },
+        {
+          provide: ReservationCreatedHandler,
+          useValue: reservationCreatedHandler
+        },
+        {
+          provide: ReservationCancelledHandler,
+          useValue: reservationCancelledHandler
+        }
       ]
     }).compile()
 

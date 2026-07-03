@@ -1,7 +1,3 @@
-# Apply de IaC en producción tras merge a `production`.
-# Requiere environment `prod` con required reviewers y que exista
-# iac/environments/prod (Fase 9).
-
 name: Terraform apply production
 
 on:

@@ -43,11 +43,35 @@ data "aws_iam_policy_document" "deploy" {
     sid    = "EcsRunBootstrapTask"
     effect = "Allow"
     actions = [
+      "ecs:DescribeTaskDefinition",
       "ecs:DescribeTasks",
+      "ecs:RegisterTaskDefinition",
       "ecs:RunTask",
       "ecs:StopTask"
     ]
     resources = ["*"]
+  }
+
+  statement {
+    sid    = "Ec2ReadNetworkForBootstrap"
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeSubnets"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "CloudWatchLogsBootstrap"
+    effect = "Allow"
+    actions = [
+      "logs:DescribeLogStreams",
+      "logs:GetLogEvents"
+    ]
+    resources = [
+      "arn:aws:logs:${local.region}:${local.account_id}:log-group:/ecs/${local.name_prefix}-db-bootstrap:*"
+    ]
   }
 
   statement {

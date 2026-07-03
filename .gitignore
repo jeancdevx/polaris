@@ -69,3 +69,7 @@ apps/mobile/.expo/
 # Misc
 .cache/
 tmp/
+
+# Agents
+.agents/
+skills-lock.json

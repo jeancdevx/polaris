@@ -1,5 +1,5 @@
 variable "aws_region" {
-  description = "Regional AWS region for API Gateway, ACM (regional), and regional WAF"
+  description = "Regional AWS region for API Gateway and regional ACM"
   type        = string
 }
 
@@ -43,18 +43,6 @@ variable "api_gateway_id" {
 variable "admin_api_gateway_id" {
   description = "Admin HTTP API Gateway ID (separate API for /admin and /internal routes)"
   type        = string
-}
-
-variable "admin_api_gateway_stage_name" {
-  description = "Admin HTTP API Gateway stage name"
-  type        = string
-  default     = "$default"
-}
-
-variable "api_gateway_stage_name" {
-  description = "Public HTTP API Gateway stage name"
-  type        = string
-  default     = "$default"
 }
 
 variable "api_domain_name" {

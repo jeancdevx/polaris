@@ -89,19 +89,9 @@ output "origin_verify_header_name" {
   value       = var.origin_verify_header_name
 }
 
-output "admin_api_regional_waf_arn" {
-  description = "Regional WAF ACL ARN protecting the admin API Gateway"
-  value       = var.enable_admin_api_edge ? aws_wafv2_web_acl.admin_api_regional[0].arn : null
-}
-
 output "admin_api_gateway_regional_domain" {
-  description = "Regional admin API Gateway domain target (direct access blocked by WAF)"
+  description = "Regional admin API Gateway domain target (CloudFront custom domain is the public entrypoint)"
   value       = var.enable_admin_api_edge ? aws_apigatewayv2_domain_name.admin_api[0].domain_name_configuration[0].target_domain_name : null
-}
-
-output "api_regional_waf_arn" {
-  description = "Regional WAF ACL ARN protecting API Gateway"
-  value       = aws_wafv2_web_acl.api_regional.arn
 }
 
 output "cloudfront_waf_arn" {
@@ -110,6 +100,6 @@ output "cloudfront_waf_arn" {
 }
 
 output "api_gateway_regional_domain" {
-  description = "Regional API Gateway domain target (direct access blocked by WAF)"
+  description = "Regional API Gateway domain target (execute-api disabled in staging/prod; use api.* via CloudFront)"
   value       = aws_apigatewayv2_domain_name.api.domain_name_configuration[0].target_domain_name
 }

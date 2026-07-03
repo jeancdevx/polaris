@@ -50,10 +50,6 @@ locals {
     var.enable_cognito_custom_domain ? local.auth_fqdn : "",
   ]))
 
-  api_stage_arn = "arn:aws:apigateway:${var.aws_region}::/apis/${var.api_gateway_id}/stages/${var.api_gateway_stage_name}"
-
-  admin_api_stage_arn = "arn:aws:apigateway:${var.aws_region}::/apis/${var.admin_api_gateway_id}/stages/${var.admin_api_gateway_stage_name}"
-
   common_tags = merge(
     var.tags,
     {

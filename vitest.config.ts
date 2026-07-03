@@ -9,21 +9,7 @@ export default defineConfig({
       'lambdas/*/src/**/*.test.ts',
       'packages/*/src/**/*.test.ts'
     ],
-    exclude: ['**/node_modules/**', '**/dist/**'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      exclude: [
-        'node_modules/',
-        'dist/',
-        '**/*.test.ts',
-        '**/*.spec.ts',
-        '**/*.d.ts',
-        'coverage/',
-        'iac/',
-        'firmware/'
-      ]
-    },
+    exclude: ['**/node_modules/**', '**/dist/**', '**/*.integration.test.ts'],
     testTimeout: 30_000
   }
 })

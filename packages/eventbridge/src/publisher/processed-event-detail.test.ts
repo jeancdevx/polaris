@@ -32,4 +32,17 @@ describe('buildProcessedParkingEventDetail', () => {
       sensorType: undefined
     })
   })
+
+  it('defaults processedAt when omitted', () => {
+    const detail = buildProcessedParkingEventDetail({
+      eventName: 'sensor.occupancy',
+      aggregateId: 'spot-01',
+      occurredAt: '2025-06-19T10:00:00.000Z',
+      parkingSpotId: 'spot-01',
+      previousStatus: 'free',
+      currentStatus: 'occupied'
+    })
+
+    expect(detail.processedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+  })
 })

@@ -1,3 +1,31 @@
+resource "aws_route53_record" "apex" {
+  count = var.enable_cognito_custom_domain ? 1 : 0
+
+  zone_id = var.hosted_zone_id
+  name    = var.base_domain
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.web.domain_name
+    zone_id                = aws_cloudfront_distribution.web.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "apex_ipv6" {
+  count = var.enable_cognito_custom_domain ? 1 : 0
+
+  zone_id = var.hosted_zone_id
+  name    = var.base_domain
+  type    = "AAAA"
+
+  alias {
+    name                   = aws_cloudfront_distribution.web.domain_name
+    zone_id                = aws_cloudfront_distribution.web.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 resource "aws_route53_record" "api" {
   zone_id = var.hosted_zone_id
   name    = local.api_fqdn

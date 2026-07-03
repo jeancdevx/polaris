@@ -5,8 +5,13 @@ export {
   connectRedis,
   disconnectRedis,
   isRedisClusterUrl,
+  type ConnectRedisOptions,
   type PolarisRedisClient
 } from './redis/connect-redis.js'
+export {
+  scanRedisKeyBatches,
+  type ScanRedisKeysOptions
+} from './redis/scan-redis-keys.js'
 
 export const generateId = (prefix: string): string => {
   const timestamp = Date.now().toString(36)

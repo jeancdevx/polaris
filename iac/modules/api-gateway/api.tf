@@ -13,6 +13,10 @@ resource "aws_apigatewayv2_stage" "default" {
   name        = "$default"
   auto_deploy = true
 
+  default_route_settings {
+    detailed_metrics_enabled = true
+  }
+
   tags = merge(local.common_tags, {
     Name = "${local.api_name}-default"
   })

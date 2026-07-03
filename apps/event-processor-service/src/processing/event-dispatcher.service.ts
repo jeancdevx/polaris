@@ -4,11 +4,15 @@ import type {
   KafkaMessageContext,
   OccupancyChangedEvent,
   ParsedKafkaEvent,
+  ReservationCancelledEvent,
+  ReservationCreatedEvent,
   VehicleEntryEvent,
   VehicleExitEvent
 } from '@polaris/kafka'
 import { KAFKA_TOPICS, type KafkaTopic } from '@polaris/shared-types'
 
+import { ReservationCancelledHandler } from './handlers/reservation-cancelled.handler.js'
+import { ReservationCreatedHandler } from './handlers/reservation-created.handler.js'
 import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
 import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
@@ -21,7 +25,9 @@ export class EventDispatcherService {
   constructor(
     private readonly vehicleEntryHandler: VehicleEntryHandler,
     private readonly vehicleExitHandler: VehicleExitHandler,
-    private readonly sensorOccupancyHandler: SensorOccupancyHandler
+    private readonly sensorOccupancyHandler: SensorOccupancyHandler,
+    private readonly reservationCreatedHandler: ReservationCreatedHandler,
+    private readonly reservationCancelledHandler: ReservationCancelledHandler
   ) {}
 
   async dispatch(
@@ -38,8 +44,18 @@ export class EventDispatcherService {
       case KAFKA_TOPICS.SENSOR_OCCUPANCY:
         await this.sensorOccupancyHandler.handle(event as OccupancyChangedEvent)
         break
+      case KAFKA_TOPICS.RESERVATION_CREATED:
+        await this.reservationCreatedHandler.handle(
+          event as ReservationCreatedEvent
+        )
+        break
+      case KAFKA_TOPICS.RESERVATION_CANCELLED:
+        await this.reservationCancelledHandler.handle(
+          event as ReservationCancelledEvent
+        )
+        break
       default:
-        this.logger.debug(`No handler for topic ${context.topic} (phase 5.2+)`)
+        this.logger.debug(`No handler for topic ${context.topic}`)
         break
     }
 

@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
-import { eventProcessorConfig } from './event-processor.config.js'
-import { EventDispatcherService } from './event-dispatcher.service.js'
 import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
 import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
+
+import { EventDispatcherService } from './event-dispatcher.service.js'
+import { eventProcessorConfig } from './event-processor.config.js'
 import { DatabaseService } from './infrastructure/database.service.js'
 import { EventBridgePublisherService } from './infrastructure/eventbridge-publisher.service.js'
 import { RedisService } from './infrastructure/redis.service.js'

@@ -3,6 +3,9 @@
 Pipeline de integración y despliegue continuo sobre GitHub Actions + Atlantis
 para IaC, con autenticación OIDC hacia AWS (sin credenciales estáticas).
 
+**Guía completa de despliegue desde cero (bootstrap, dev, staging, prod,
+secrets de GitHub, primer apply local):** [`deploy-environments.md`](./deploy-environments.md).
+
 ## Modelo de ramas
 
 | Rama         | Rol                            | Al hacer merge                                      |
@@ -27,7 +30,8 @@ para IaC, con autenticación OIDC hacia AWS (sin credenciales estáticas).
     ├── iac-apply.yml             # terraform apply (reusable)
     ├── iac-apply-dev.yml
     ├── iac-apply-production.yml
-    └── db-bootstrap-dev.yml
+    ├── db-bootstrap-dev.yml
+    └── db-bootstrap-production.yml
 
 atlantis.yaml                     # Plan en PR (servidor Atlantis en ECS)
 ```
@@ -78,10 +82,15 @@ inicializa la conexión solo al llamar `createDataSource()`, no al importar el p
 Solo redespliega servicios ECS cuyos paths cambiaron (`.github/filters/services.yml`):
 build → push ECR (`latest` + SHA) → `ecs update-service --force-new-deployment` → wait stable.
 
-## DB bootstrap (`db-bootstrap-dev.yml`)
+## DB bootstrap (`db-bootstrap-dev.yml`, `db-bootstrap-production.yml`)
 
 Task ECS **one-shot** (no servicio permanente) que corre después del primer deploy o cuando
-cambia `packages/database/**` o `apps/db-bootstrap/**` en `develop`.
+cambia `packages/database/**` o `apps/db-bootstrap/**`.
+
+| Workflow | Rama | Environment GHA |
+| -------- | ---- | ----------------- |
+| `db-bootstrap-dev.yml` | `develop` | `dev` |
+| `db-bootstrap-production.yml` | `production` | `prod` |
 
 | Paso | Qué hace |
 | ---- | -------- |
@@ -91,20 +100,26 @@ cambia `packages/database/**` o `apps/db-bootstrap/**` en `develop`.
 
 **No hace falta secret en GitHub** para la contraseña admin: vive en Secrets Manager
 (`polaris-<env>-db-bootstrap-env`, clave `BOOTSTRAP_ADMIN_PASSWORD`). Terraform genera
-una contraseña aleatoria en dev si no defines `bootstrap_admin_password` en `dev.tfvars`.
+una contraseña aleatoria si no defines `bootstrap_admin_password` en el `.tfvars`.
 
 El script sale en segundos con *"Bootstrap skipped"* si la BD ya tiene datos y el admin
 existe en RDS y Cognito.
 
-**Cuándo corre:** push a `develop` con cambios en database/db-bootstrap, o manualmente
-via `workflow_dispatch`. Corre **después** de que IaC haya creado RDS/Redis/Cognito
-(primera vez: merge de IaC → `iac-apply-dev` → luego este workflow o push que lo dispare).
+**Cuándo corre:** push a `develop` / `production` con cambios en database/db-bootstrap,
+o manualmente via `workflow_dispatch`. En prod respeta **required reviewers** del
+environment `prod`. Corre **después** de que IaC haya creado RDS/Redis/Cognito.
 
 Credenciales admin inicial tras bootstrap:
 
 ```bash
+# dev
 aws secretsmanager get-secret-value \
   --secret-id polaris-dev-db-bootstrap-env \
+  --query 'SecretString' --output text | jq -r .BOOTSTRAP_ADMIN_PASSWORD
+
+# prod
+aws secretsmanager get-secret-value \
+  --secret-id polaris-prod-db-bootstrap-env \
   --query 'SecretString' --output text | jq -r .BOOTSTRAP_ADMIN_PASSWORD
 ```
 

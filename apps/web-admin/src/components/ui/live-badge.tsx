@@ -1,13 +1,30 @@
+import { Badge } from '@/components/ui/badge'
+
+import { cn } from '@/lib/utils'
+
 type LiveBadgeProps = Readonly<{
+  connected?: boolean
   label?: string
 }>
 
-export const LiveBadge = ({ label = 'En vivo' }: LiveBadgeProps) => (
-  <span className='inline-flex items-center gap-2 rounded-full border border-polaris-live/30 bg-polaris-live/10 px-3 py-1 text-xs font-medium tracking-wide text-amber-100 uppercase'>
+export const LiveBadge = ({
+  connected = true,
+  label = 'En vivo'
+}: LiveBadgeProps) => (
+  <Badge
+    className={cn(
+      'gap-1.5 font-normal',
+      connected ? 'text-foreground' : 'text-muted-foreground'
+    )}
+    variant={connected ? 'secondary' : 'outline'}
+  >
     <span
       aria-hidden
-      className='size-2 rounded-full bg-polaris-live animate-pulse-live'
+      className={cn(
+        'size-1.5 rounded-full',
+        connected ? 'bg-spot-free animate-pulse' : 'bg-muted-foreground'
+      )}
     />
-    {label}
-  </span>
+    {connected ? label : 'Sin conexión'}
+  </Badge>
 )

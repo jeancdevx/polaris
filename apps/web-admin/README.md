@@ -1,13 +1,20 @@
 # web-admin
 
-Panel Next.js + Tailwind CSS para operadores admin. Consulta
-`Query.availability` y escucha `Subscription.onOccupancyChanged` vía AppSync con
-auth Cognito (grupo `admin`).
+Panel Next.js + shadcn/ui para operadores admin: ocupación en vivo (AppSync),
+gestión de usuarios, auditoría, alertas y métricas (REST vía BFF →
+`admin-service`).
+
+## Stack UI
+
+- [shadcn/ui](https://ui.shadcn.com) preset **Lyra** (radix, neutral)
+- Sidebar layout, tablas, formularios con `Field`, diálogos de confirmación
+- Iconos: `@phosphor-icons/react`
 
 ## Requisitos
 
 - Infra dev desplegada (`appsync`, `cognito`)
 - Usuario Cognito en el grupo `admin`
+- `admin-service` accesible (local o túnel hacia la API privada en VPC)
 
 ## Configuración local
 
@@ -15,16 +22,29 @@ auth Cognito (grupo `admin`).
 bash scripts/web-admin-env-dev.sh
 ```
 
-Genera `apps/web-admin/.env.local` desde outputs de Terraform.
+Genera `apps/web-admin/.env.local` desde outputs de Terraform y define
+`ADMIN_API_URL=http://127.0.0.1:3004` para el proxy BFF.
 
 ## Desarrollo
 
+En dos terminales:
+
 ```bash
-pnpm install
-pnpm --filter web-admin dev
+pnpm dev --filter admin-service   # REST en :3004
+pnpm --filter web-admin dev       # UI en :3000
 ```
 
 Abrir `http://localhost:3000/dashboard`.
+
+## Rutas
+
+| Ruta         | Módulo                                             |
+| ------------ | -------------------------------------------------- |
+| `/dashboard` | Ocupación + anomalías (naranja) + detalle de plaza |
+| `/alerts`    | Alertas operativas (24 h)                          |
+| `/users`     | CRUD usuarios                                      |
+| `/audit`     | Logs de auditoría                                  |
+| `/metrics`   | Agregados históricos                               |
 
 ## Build
 
@@ -33,15 +53,17 @@ pnpm --filter web-admin build
 pnpm --filter web-admin start
 ```
 
-## AppSync
+## Arquitectura
 
-- Query inicial: ocupación completa (Redis → RDS fallback en backend)
-- Subscription: actualiza plazas en tiempo real cuando EventBridge publica
-  `sensor.occupancy` → `appsync-occupancy-publisher`
+| Capa                 | Uso                                                                           |
+| -------------------- | ----------------------------------------------------------------------------- |
+| AppSync + Cognito    | Ocupación (`Query.availability`, `Subscription.onOccupancyChanged`)           |
+| `/api/admin/*` (BFF) | Proxy server-side hacia `ADMIN_API_URL` con `Authorization: Bearer` (idToken) |
+| `admin-service`      | `/admin/users`, `/admin/audit`, `/admin/metrics`                              |
 
-## Smoke manual
+## Añadir componentes shadcn
 
-1. Login con usuario admin.
-2. Verificar totales y mapa por zonas A/B.
-3. Disparar un cambio de ocupación (`pnpm appsync:subscription:smoke:dev` o
-   sensor real) y confirmar que la plaza cambia sin recargar.
+```bash
+cd apps/web-admin
+pnpm dlx shadcn@latest add <component>
+```

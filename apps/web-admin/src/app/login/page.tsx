@@ -1,58 +1,47 @@
 import { LoginForm } from '@/components/login-form'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
+import Link from 'next/link'
 
 export default function LoginPage() {
   return (
-    <main className='relative min-h-screen overflow-hidden'>
-      <div
-        aria-hidden
-        className='pointer-events-none absolute inset-0 bg-grid opacity-40'
-      />
-      <div
-        aria-hidden
-        className='pointer-events-none absolute inset-0 bg-noise'
-      />
+    <main className='flex min-h-screen items-center justify-center bg-muted/30 p-6'>
+      <div className='grid w-full max-w-4xl gap-8 lg:grid-cols-[1fr_400px] lg:items-center'>
+        <section className='flex flex-col gap-4'>
+          <p className='text-sm font-medium tracking-wide text-muted-foreground uppercase'>
+            Polaris · Estacionamiento IoT
+          </p>
+          <h1 className='text-3xl font-semibold tracking-tight text-balance lg:text-4xl'>
+            Consola de administración
+          </h1>
+          <p className='max-w-md text-sm leading-relaxed text-muted-foreground'>
+            Supervisa ocupación, gestiona usuarios y revisa auditoría y alertas
+            operativas. Acceso restringido al grupo admin de Cognito.
+          </p>
+        </section>
 
-      <div className='relative mx-auto flex min-h-screen max-w-6xl items-center px-6 py-12 lg:px-10'>
-        <div className='grid w-full gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center'>
-          <section className='animate-fade-up space-y-6'>
-            <p className='font-mono text-xs tracking-[0.28em] text-polaris-accent uppercase'>
-              Polaris · IoT Parking
-            </p>
-            <h1 className='max-w-xl text-5xl leading-[1.05] font-semibold tracking-tight text-balance'>
-              Sala de control para operadores
-            </h1>
-            <p className='max-w-lg text-lg leading-relaxed text-polaris-muted'>
-              Supervisa la ocupación del estacionamiento con datos en vivo desde
-              AppSync. Acceso restringido al grupo admin.
-            </p>
-            <div className='flex flex-wrap gap-3 font-mono text-xs text-polaris-muted'>
-              <span className='rounded-full border border-polaris-border px-3 py-1'>
-                Cognito
-              </span>
-              <span className='rounded-full border border-polaris-border px-3 py-1'>
-                AppSync GraphQL
-              </span>
-              <span className='rounded-full border border-polaris-border px-3 py-1'>
-                Subscriptions
-              </span>
-            </div>
-          </section>
-
-          <section
-            className='animate-fade-up rounded-3xl border border-polaris-border/80 bg-polaris-panel/80 p-8 shadow-[0_30px_80px_rgb(0_0_0/0.35)] backdrop-blur-md'
-            style={{ animationDelay: '120ms' }}
-          >
-            <div className='mb-8 space-y-2'>
-              <h2 className='text-2xl font-semibold tracking-tight'>
-                Iniciar sesión
-              </h2>
-              <p className='text-sm text-polaris-muted'>
-                Usa tus credenciales de operador admin.
-              </p>
-            </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Iniciar sesión</CardTitle>
+            <CardDescription>
+              Credenciales de operador administrador.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <LoginForm />
-          </section>
-        </div>
+            <p className='mt-6 text-center text-xs text-muted-foreground'>
+              ¿Problemas de acceso?{' '}
+              <Link className='underline-offset-4 hover:underline' href='#'>
+                Contactar soporte
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </main>
   )

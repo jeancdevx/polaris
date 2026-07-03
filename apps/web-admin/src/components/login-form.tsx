@@ -1,5 +1,15 @@
 'use client'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel
+} from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 import { signIn, signOut } from 'aws-amplify/auth'
 import { useRouter } from 'next/navigation'
 import { useState, type FormEvent } from 'react'
@@ -43,50 +53,55 @@ export const LoginForm = () => {
   }
 
   return (
-    <form className='space-y-5' onSubmit={handleSubmit}>
-      <label className='block space-y-2'>
-        <span className='font-mono text-xs tracking-[0.18em] text-polaris-muted uppercase'>
-          Usuario
-        </span>
-        <input
-          autoComplete='username'
-          className='w-full rounded-xl border border-polaris-border bg-polaris-bg/80 px-4 py-3 text-polaris-ink outline-none transition focus:border-polaris-accent/60 focus:ring-2 focus:ring-polaris-accent/20'
-          name='username'
-          required
-          type='text'
-          value={username}
-          onChange={event => setUsername(event.target.value)}
-        />
-      </label>
+    <form className='flex flex-col gap-5' onSubmit={handleSubmit}>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor='username'>Usuario</FieldLabel>
+          <Input
+            autoComplete='username'
+            id='username'
+            name='username'
+            required
+            type='text'
+            value={username}
+            onChange={event => setUsername(event.target.value)}
+          />
+        </Field>
 
-      <label className='block space-y-2'>
-        <span className='font-mono text-xs tracking-[0.18em] text-polaris-muted uppercase'>
-          Contraseña
-        </span>
-        <input
-          autoComplete='current-password'
-          className='w-full rounded-xl border border-polaris-border bg-polaris-bg/80 px-4 py-3 text-polaris-ink outline-none transition focus:border-polaris-accent/60 focus:ring-2 focus:ring-polaris-accent/20'
-          name='password'
-          required
-          type='password'
-          value={password}
-          onChange={event => setPassword(event.target.value)}
-        />
-      </label>
+        <Field>
+          <FieldLabel htmlFor='password'>Contraseña</FieldLabel>
+          <Input
+            autoComplete='current-password'
+            id='password'
+            name='password'
+            required
+            type='password'
+            value={password}
+            onChange={event => setPassword(event.target.value)}
+          />
+        </Field>
+      </FieldGroup>
 
       {error ? (
-        <p className='rounded-xl border border-polaris-occupied/30 bg-polaris-occupied/10 px-4 py-3 text-sm text-red-200'>
-          {error}
-        </p>
+        <Alert variant='destructive'>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : null}
 
-      <button
-        className='w-full rounded-full bg-linear-to-r from-polaris-accent-dim to-polaris-accent px-5 py-3 text-sm font-semibold text-polaris-bg transition hover:brightness-110 disabled:cursor-wait disabled:opacity-70'
-        disabled={loading}
-        type='submit'
-      >
-        {loading ? 'Autenticando…' : 'Acceder al panel'}
-      </button>
+      <Button className='w-full' disabled={loading} type='submit'>
+        {loading ? (
+          <>
+            <Spinner data-icon='inline-start' />
+            Autenticando…
+          </>
+        ) : (
+          'Acceder'
+        )}
+      </Button>
+
+      <FieldDescription className='text-center'>
+        La sesión usa Cognito y el token se reenvía al API admin vía BFF.
+      </FieldDescription>
     </form>
   )
 }

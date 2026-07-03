@@ -38,6 +38,33 @@ data "aws_iam_policy_document" "deploy" {
       "arn:aws:ecs:${local.region}:${local.account_id}:service/${local.name_prefix}-cluster/${local.name_prefix}-*"
     ]
   }
+
+  statement {
+    sid    = "EcsRunBootstrapTask"
+    effect = "Allow"
+    actions = [
+      "ecs:DescribeTasks",
+      "ecs:RunTask",
+      "ecs:StopTask"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid     = "PassBootstrapTaskRoles"
+    effect  = "Allow"
+    actions = ["iam:PassRole"]
+    resources = [
+      "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-ecs-exec-*",
+      "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-ecs-db-bootstrap-task-*"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com"]
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "deploy" {

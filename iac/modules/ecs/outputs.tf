@@ -3,6 +3,45 @@ output "alb_arn" {
   value       = aws_lb.main.arn
 }
 
+output "alb_arn_suffix" {
+  description = "ALB ARN suffix for CloudWatch ApplicationELB dimensions"
+  value       = aws_lb.main.arn_suffix
+}
+
+output "alb_target_group_arn_suffixes" {
+  description = "ALB target group ARN suffixes for CloudWatch alarms"
+  value = [
+    aws_lb_target_group.api_service.arn_suffix,
+    aws_lb_target_group.admin_service.arn_suffix,
+    aws_lb_target_group.reservation_service.arn_suffix,
+  ]
+}
+
+output "api_service_name" {
+  description = "ECS service name for api-service"
+  value       = local.api_service_name
+}
+
+output "admin_service_name" {
+  description = "ECS service name for admin-service"
+  value       = local.admin_service_name
+}
+
+output "reservation_service_name" {
+  description = "ECS service name for reservation-service"
+  value       = local.reservation_service_name
+}
+
+output "ecs_service_names" {
+  description = "ECS service names behind the ALB and internal processors"
+  value = [
+    local.api_service_name,
+    local.admin_service_name,
+    local.reservation_service_name,
+    local.event_processor_service_name,
+  ]
+}
+
 output "alb_dns_name" {
   description = "DNS name of the application load balancer"
   value       = aws_lb.main.dns_name

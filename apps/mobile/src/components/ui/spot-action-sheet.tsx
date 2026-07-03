@@ -1,4 +1,4 @@
-import { fonts, palette, statusColor } from '@/theme/tokens'
+import { fonts, palette, radii, statusColor } from '@/theme/tokens'
 import {
   ActivityIndicator,
   Pressable,
@@ -40,7 +40,7 @@ export const SpotActionSheet = ({
         <View style={styles.titleRow}>
           <View style={[styles.statusDot, { backgroundColor: color }]} />
           <Text style={styles.title}>{spotDisplayName(spot.spotId)}</Text>
-          <Text style={styles.zone}>ZONA {spot.zone.toUpperCase()}</Text>
+          <Text style={styles.zone}>Zona {spot.zone.toUpperCase()}</Text>
         </View>
         <Pressable hitSlop={12} onPress={onClose}>
           <Text style={styles.close}>✕</Text>
@@ -65,7 +65,7 @@ export const SpotActionSheet = ({
           onPress={onReserve}
         >
           {busy ? (
-            <ActivityIndicator color={palette.bg} />
+            <ActivityIndicator color={palette.primaryForeground} />
           ) : (
             <Text style={styles.actionReserveText}>Reservar esta plaza</Text>
           )}
@@ -83,7 +83,7 @@ export const SpotActionSheet = ({
           onPress={onCancelReservation}
         >
           {busy ? (
-            <ActivityIndicator color={palette.danger} />
+            <ActivityIndicator color={palette.destructive} />
           ) : (
             <Text style={styles.actionCancelText}>Cancelar reserva</Text>
           )}
@@ -99,8 +99,8 @@ export const SpotActionSheet = ({
 
       {spot.status === 'reserved' && !mine ? (
         <Text style={styles.hint}>
-          Reservada por otro usuario. El LED de la plaza parpadea en verde hasta
-          que llegue su vehículo.
+          Reservada por otro usuario. El LED de la plaza parpadea hasta que
+          llegue su vehículo.
         </Text>
       ) : null}
 
@@ -116,12 +116,12 @@ export const SpotActionSheet = ({
 
 const styles = StyleSheet.create({
   sheet: {
-    backgroundColor: 'rgba(20, 30, 43, 0.97)',
+    backgroundColor: palette.card,
     borderColor: palette.border,
-    borderRadius: 24,
+    borderRadius: radii.lg,
     borderWidth: 1,
     gap: 12,
-    padding: 20
+    padding: 16
   },
   header: {
     alignItems: 'center',
@@ -131,23 +131,22 @@ const styles = StyleSheet.create({
   titleRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 10
+    gap: 8
   },
   statusDot: {
-    borderRadius: 999,
+    borderRadius: radii.full,
     height: 10,
     width: 10
   },
   title: {
-    color: palette.ink,
+    color: palette.foreground,
     fontFamily: fonts.sansSemiBold,
-    fontSize: 20
+    fontSize: 18
   },
   zone: {
     color: palette.muted,
-    fontFamily: fonts.mono,
-    fontSize: 11,
-    letterSpacing: 2
+    fontFamily: fonts.sans,
+    fontSize: 11
   },
   close: {
     color: palette.muted,
@@ -155,45 +154,44 @@ const styles = StyleSheet.create({
     fontSize: 16
   },
   status: {
-    fontFamily: fonts.monoMedium,
-    fontSize: 13,
-    letterSpacing: 1
+    fontFamily: fonts.sansMedium,
+    fontSize: 13
   },
   error: {
-    backgroundColor: 'rgba(248, 113, 113, 0.12)',
-    borderColor: 'rgba(248, 113, 113, 0.35)',
-    borderRadius: 12,
+    backgroundColor: palette.destructiveMuted,
+    borderColor: '#fecaca',
+    borderRadius: radii.md,
     borderWidth: 1,
-    color: '#fecaca',
+    color: palette.destructive,
     fontFamily: fonts.sans,
     fontSize: 13,
-    padding: 12
+    padding: 10
   },
   action: {
     alignItems: 'center',
-    borderRadius: 999,
-    paddingVertical: 14
+    borderRadius: radii.md,
+    paddingVertical: 12
   },
   actionReserve: {
-    backgroundColor: palette.accent
+    backgroundColor: palette.primary
   },
   actionReserveText: {
-    color: palette.bg,
+    color: palette.primaryForeground,
     fontFamily: fonts.sansSemiBold,
     fontSize: 15
   },
   actionCancel: {
-    backgroundColor: 'rgba(248, 113, 113, 0.12)',
-    borderColor: 'rgba(248, 113, 113, 0.4)',
+    backgroundColor: palette.destructiveMuted,
+    borderColor: '#fecaca',
     borderWidth: 1
   },
   actionCancelText: {
-    color: palette.danger,
+    color: palette.destructive,
     fontFamily: fonts.sansSemiBold,
     fontSize: 15
   },
   actionPressed: {
-    opacity: 0.7
+    opacity: 0.75
   },
   hint: {
     color: palette.muted,

@@ -1,4 +1,4 @@
-import { fonts, palette } from '@/theme/tokens'
+import { fonts, palette, radii } from '@/theme/tokens'
 import { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
 
@@ -44,7 +44,7 @@ export const LiveBadge = ({ connected }: LiveBadgeProps) => {
         ]}
       />
       <Text style={[styles.text, !connected && styles.textOffline]}>
-        {connected ? 'EN VIVO' : 'SIN CONEXIÓN'}
+        {connected ? 'En vivo' : 'Sin conexión'}
       </Text>
     </View>
   )
@@ -53,22 +53,21 @@ export const LiveBadge = ({ connected }: LiveBadgeProps) => {
 const styles = StyleSheet.create({
   badge: {
     alignItems: 'center',
-    backgroundColor: 'rgba(251, 191, 36, 0.1)',
-    borderColor: 'rgba(251, 191, 36, 0.35)',
-    borderRadius: 999,
+    backgroundColor: palette.secondary,
+    borderColor: palette.border,
+    borderRadius: radii.full,
     borderWidth: 1,
     flexDirection: 'row',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 5
+    paddingHorizontal: 10,
+    paddingVertical: 4
   },
   badgeOffline: {
-    backgroundColor: 'rgba(143, 163, 188, 0.1)',
-    borderColor: palette.border
+    backgroundColor: palette.secondary
   },
   dot: {
-    backgroundColor: palette.live,
-    borderRadius: 999,
+    backgroundColor: palette.spotFree,
+    borderRadius: radii.full,
     height: 7,
     width: 7
   },
@@ -76,10 +75,9 @@ const styles = StyleSheet.create({
     backgroundColor: palette.muted
   },
   text: {
-    color: '#fde68a',
-    fontFamily: fonts.mono,
-    fontSize: 10,
-    letterSpacing: 2
+    color: palette.foreground,
+    fontFamily: fonts.sansMedium,
+    fontSize: 11
   },
   textOffline: {
     color: palette.muted

@@ -1,4 +1,4 @@
-import { fonts, palette } from '@/theme/tokens'
+import { fonts, palette, radii } from '@/theme/tokens'
 import { StyleSheet, Text, View } from 'react-native'
 
 type StatChipProps = Readonly<{
@@ -10,7 +10,7 @@ type StatChipProps = Readonly<{
 export const StatChip = ({
   label,
   value,
-  color = palette.ink
+  color = palette.foreground
 }: StatChipProps) => (
   <View style={styles.chip}>
     <Text style={[styles.value, { color }]}>{value}</Text>
@@ -21,23 +21,22 @@ export const StatChip = ({
 const styles = StyleSheet.create({
   chip: {
     alignItems: 'center',
-    backgroundColor: 'rgba(20, 30, 43, 0.88)',
+    backgroundColor: palette.secondary,
     borderColor: palette.border,
-    borderRadius: 16,
+    borderRadius: radii.md,
     borderWidth: 1,
     flex: 1,
     gap: 2,
-    paddingVertical: 10
+    paddingVertical: 8
   },
   value: {
     fontFamily: fonts.monoMedium,
-    fontSize: 22
+    fontSize: 20
   },
   label: {
     color: palette.muted,
-    fontFamily: fonts.mono,
+    fontFamily: fonts.sans,
     fontSize: 10,
-    letterSpacing: 1.5,
     textTransform: 'uppercase'
   }
 })

@@ -15,5 +15,5 @@ resource "aws_apigatewayv2_domain_name" "api" {
 resource "aws_apigatewayv2_api_mapping" "api" {
   api_id      = var.api_gateway_id
   domain_name = aws_apigatewayv2_domain_name.api.id
-  stage       = var.api_gateway_stage_name
+  stage       = "$default"
 }

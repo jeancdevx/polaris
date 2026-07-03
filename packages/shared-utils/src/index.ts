@@ -1,6 +1,12 @@
 import { randomBytes } from 'node:crypto'
 
 export { findMonorepoRoot, loadLocalEnv } from './load-local-env.js'
+export {
+  connectRedis,
+  disconnectRedis,
+  isRedisClusterUrl,
+  type PolarisRedisClient
+} from './redis/connect-redis.js'
 
 export const generateId = (prefix: string): string => {
   const timestamp = Date.now().toString(36)

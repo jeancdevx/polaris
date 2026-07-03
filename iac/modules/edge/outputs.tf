@@ -5,12 +5,12 @@ output "admin_api_public_url" {
 
 output "graphql_public_url" {
   description = "AppSync GraphQL URL via custom domain (includes wss realtime on same host)"
-  value       = var.appsync_api_id != "" ? "https://${local.graphql_fqdn}/graphql" : null
+  value       = var.enable_appsync_custom_domain ? "https://${local.graphql_fqdn}/graphql" : null
 }
 
 output "auth_public_url" {
   description = "Cognito hosted UI URL via custom domain"
-  value       = var.cognito_user_pool_id != "" ? "https://${local.auth_fqdn}" : null
+  value       = var.enable_cognito_custom_domain ? "https://${local.auth_fqdn}" : null
 }
 
 output "admin_api_fqdn" {
@@ -35,7 +35,7 @@ output "admin_api_cloudfront_distribution_id" {
 
 output "appsync_custom_domain_name" {
   description = "AppSync custom domain name"
-  value       = var.appsync_api_id != "" ? aws_appsync_domain_name.graphql[0].domain_name : null
+  value       = var.enable_appsync_custom_domain ? aws_appsync_domain_name.graphql[0].domain_name : null
 }
 
 output "api_public_url" {
@@ -50,7 +50,7 @@ output "admin_public_url" {
 
 output "atlantis_public_url" {
   description = "Atlantis URL via CloudFront when enabled"
-  value       = var.atlantis_alb_dns_name != "" ? "https://${local.atlantis_fqdn}" : null
+  value       = var.enable_atlantis_cloudfront ? "https://${local.atlantis_fqdn}" : null
 }
 
 output "api_fqdn" {

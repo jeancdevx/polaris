@@ -1,0 +1,10 @@
+# Copiar a backend.hcl para uso local (no commitear credenciales).
+# terraform init -backend-config=backend.hcl
+
+bucket       = "REPLACE_WITH_TERRAFORM_STATE_BUCKET"
+key          = "env/prod/terraform.tfstate"
+region       = "us-east-2"
+use_lockfile = true
+encrypt      = true
+
+# profile = "your-sso-profile"

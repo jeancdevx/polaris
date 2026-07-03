@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "turbo run build",
+    "build:lambdas": "turbo run build --filter='./lambdas/*'",
     "dev": "turbo run dev",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",

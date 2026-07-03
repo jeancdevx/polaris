@@ -47,7 +47,7 @@ resource "aws_route53_record" "admin_ipv6" {
 }
 
 resource "aws_route53_record" "atlantis" {
-  count = var.atlantis_alb_dns_name != "" ? 1 : 0
+  count = var.enable_atlantis_cloudfront ? 1 : 0
 
   zone_id = var.hosted_zone_id
   name    = local.atlantis_fqdn
@@ -61,7 +61,7 @@ resource "aws_route53_record" "atlantis" {
 }
 
 resource "aws_route53_record" "atlantis_ipv6" {
-  count = var.atlantis_alb_dns_name != "" ? 1 : 0
+  count = var.enable_atlantis_cloudfront ? 1 : 0
 
   zone_id = var.hosted_zone_id
   name    = local.atlantis_fqdn
@@ -103,7 +103,7 @@ resource "aws_route53_record" "admin_api_ipv6" {
 }
 
 resource "aws_route53_record" "graphql" {
-  count = var.appsync_api_id != "" ? 1 : 0
+  count = var.enable_appsync_custom_domain ? 1 : 0
 
   zone_id = var.hosted_zone_id
   name    = local.graphql_fqdn
@@ -117,7 +117,7 @@ resource "aws_route53_record" "graphql" {
 }
 
 resource "aws_route53_record" "auth" {
-  count = var.cognito_user_pool_id != "" ? 1 : 0
+  count = var.enable_cognito_custom_domain ? 1 : 0
 
   zone_id = var.hosted_zone_id
   name    = local.auth_fqdn
@@ -131,7 +131,7 @@ resource "aws_route53_record" "auth" {
 }
 
 resource "aws_route53_record" "auth_ipv6" {
-  count = var.cognito_user_pool_id != "" ? 1 : 0
+  count = var.enable_cognito_custom_domain ? 1 : 0
 
   zone_id = var.hosted_zone_id
   name    = local.auth_fqdn

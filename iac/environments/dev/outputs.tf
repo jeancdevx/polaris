@@ -381,6 +381,16 @@ output "sns_alerts_topic_arn" {
   value       = module.sns.alerts_topic_arn
 }
 
+output "observability_dashboard_name" {
+  description = "CloudWatch system dashboard name"
+  value       = module.observability.dashboard_system_name
+}
+
+output "observability_alarm_count" {
+  description = "Number of CloudWatch alarms managed by observability module"
+  value       = module.observability.alarm_count
+}
+
 output "eventbridge_notification_sender_rule_names" {
   description = "EventBridge rule names that invoke notification-sender"
   value       = module.eventbridge.notification_sender_rule_names

@@ -1,10 +1,9 @@
 import { Controller, Get, Headers, Query } from '@nestjs/common'
 
 import { requireAdminAuthorization } from '../auth/admin-auth.validation.js'
-
 import { parseAuditLogListQuery } from './audit-query.validation.js'
-import type { AuditLogListResponse } from './audit.types.js'
 import { AuditService } from './audit.service.js'
+import type { AuditLogListResponse } from './audit.types.js'
 
 @Controller('admin/audit')
 export class AuditController {

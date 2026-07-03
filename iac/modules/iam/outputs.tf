@@ -28,6 +28,11 @@ output "ecs_reservation_service_task_role_name" {
   value       = aws_iam_role.ecs_reservation_service_task.name
 }
 
+output "ecs_db_bootstrap_task_role_arn" {
+  description = "IAM task role ARN for db-bootstrap ECS tasks"
+  value       = aws_iam_role.ecs_db_bootstrap_task.arn
+}
+
 output "ecs_event_processor_task_role_arn" {
   description = "IAM task role ARN for event-processor-service ECS tasks"
   value       = aws_iam_role.ecs_event_processor_task.arn

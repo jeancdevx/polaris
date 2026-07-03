@@ -16,7 +16,18 @@ export class ReservationEventPublisher {
 
   constructor(private readonly kafkaProducerService: KafkaProducerService) {}
 
+  private isPublishEnabled(): boolean {
+    return process.env.KAFKA_PUBLISH_ENABLED !== 'false'
+  }
+
   async publishCreated(reservation: Reservation): Promise<void> {
+    if (!this.isPublishEnabled()) {
+      this.logger.warn(
+        `Kafka publish skipped (KAFKA_PUBLISH_ENABLED=false) for ${reservation.reservationId}`
+      )
+      return
+    }
+
     const producer = await this.kafkaProducerService.getProducer()
     const event = createReservationCreatedEvent({
       reservationId: reservation.reservationId,
@@ -36,6 +47,13 @@ export class ReservationEventPublisher {
   }
 
   async publishCancelled(reservation: Reservation): Promise<void> {
+    if (!this.isPublishEnabled()) {
+      this.logger.warn(
+        `Kafka publish skipped (KAFKA_PUBLISH_ENABLED=false) for ${reservation.reservationId}`
+      )
+      return
+    }
+
     const producer = await this.kafkaProducerService.getProducer()
     const event = createReservationCancelledEvent({
       reservationId: reservation.reservationId,

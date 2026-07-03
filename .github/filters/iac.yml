@@ -4,6 +4,12 @@ dev:
   - 'iac/bootstrap/**'
   - 'atlantis.yaml'
 
+staging:
+  - 'iac/environments/staging/**'
+  - 'iac/modules/**'
+  - 'iac/bootstrap/**'
+  - 'atlantis.yaml'
+
 prod:
   - 'iac/environments/prod/**'
   - 'iac/modules/**'

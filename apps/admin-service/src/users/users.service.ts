@@ -4,6 +4,7 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common'
+
 import {
   createEmail,
   createRfidTag,
@@ -14,11 +15,6 @@ import {
   updateUserProfile
 } from '@polaris/domain'
 
-import type {
-  AdminUserListResponse,
-  AdminUserResponse,
-  CreateAdminUserResponse
-} from './users.types.js'
 import { CognitoAdminService } from './cognito-admin.service.js'
 import { RfidValidationStore } from './rfid-validation.store.js'
 import { generateTemporaryPassword, generateUserId } from './user-id.js'
@@ -28,6 +24,11 @@ import type {
 } from './users-body.validation.js'
 import { mapUserRowToResponse } from './users.mapper.js'
 import { UsersRepository } from './users.repository.js'
+import type {
+  AdminUserListResponse,
+  AdminUserResponse,
+  CreateAdminUserResponse
+} from './users.types.js'
 
 @Injectable()
 export class UsersService {

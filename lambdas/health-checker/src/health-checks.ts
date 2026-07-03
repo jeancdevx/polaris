@@ -1,6 +1,5 @@
-import { createClient } from 'redis'
-
 import { createDataSource } from '@polaris/database'
+import { connectRedis, disconnectRedis } from '@polaris/shared-utils'
 
 export type HealthCheckResult = Readonly<{
   name: string
@@ -31,15 +30,13 @@ export const checkRds = async (): Promise<HealthCheckResult> => {
 export const checkRedis = async (
   redisUrl: string
 ): Promise<HealthCheckResult> => {
-  const client = createClient({
-    url: redisUrl,
+  const client = await connectRedis(redisUrl, {
     socket: {
       connectTimeout: 5_000
     }
   })
 
   try {
-    await client.connect()
     const pong = await client.ping()
 
     return {
@@ -54,8 +51,6 @@ export const checkRedis = async (
       detail: error instanceof Error ? error.message : 'Redis check failed'
     }
   } finally {
-    if (client.isOpen) {
-      await client.quit()
-    }
+    await disconnectRedis(client)
   }
 }

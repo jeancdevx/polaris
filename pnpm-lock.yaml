@@ -153,6 +153,9 @@ importers:
       '@polaris/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+      '@polaris/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
       redis:
         specifier: 6.0.0
         version: 6.0.0
@@ -571,6 +574,9 @@ importers:
       '@polaris/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+      '@polaris/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
       redis:
         specifier: 6.0.0
         version: 6.0.0
@@ -682,6 +688,9 @@ importers:
       '@polaris/lambda-core':
         specifier: workspace:*
         version: link:../../packages/lambda-core
+      '@polaris/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
       redis:
         specifier: 5.6.0
         version: 5.6.0
@@ -821,6 +830,9 @@ importers:
       '@polaris/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+      '@polaris/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
       redis:
         specifier: 5.6.0
         version: 5.6.0
@@ -1187,6 +1199,9 @@ importers:
       dotenv:
         specifier: 17.4.2
         version: 17.4.2
+      redis:
+        specifier: 6.0.0
+        version: 6.0.0
     devDependencies:
       '@polaris/build-config':
         specifier: workspace:*

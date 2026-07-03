@@ -21,9 +21,11 @@
     "migration:show": "tsx src/cli/migrate-show.ts",
     "seed": "tsx src/cli/seed.ts",
     "seed:redis": "tsx src/cli/sync-redis.ts",
+    "bootstrap": "tsx src/cli/bootstrap.ts",
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "3.1075.0",
     "@polaris/domain": "workspace:*",
     "@polaris/shared-types": "workspace:*",
     "@polaris/shared-utils": "workspace:*",

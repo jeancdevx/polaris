@@ -70,7 +70,7 @@ output "appsync_occupancy_publisher_function_name" {
 }
 
 output "api_gateway_private_endpoint" {
-  description = "Private REST API invoke URL (VPC endpoint only)"
+  description = "Admin HTTP API invoke URL (execute-api when enabled; null when disable_execute_api_endpoint is true)"
   value       = module.api_gateway_private.api_endpoint
 }
 

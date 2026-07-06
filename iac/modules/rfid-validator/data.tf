@@ -2,6 +2,10 @@ data "aws_secretsmanager_secret_version" "rds_master" {
   secret_id = var.rds_master_secret_arn
 }
 
+data "aws_iot_endpoint" "data_ats" {
+  endpoint_type = "iot:Data-ATS"
+}
+
 locals {
   rds_credentials = jsondecode(data.aws_secretsmanager_secret_version.rds_master.secret_string)
 

@@ -14,6 +14,8 @@ module "rfid_validator" {
   subnet_ids         = module.vpc.private_subnet_ids
   security_group_ids = [module.security_groups.lambda_security_group_id]
 
+  gate_commands_enabled = true
+
   tags = var.tags
 
   depends_on = [

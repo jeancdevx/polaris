@@ -68,10 +68,24 @@ variable "rfid_rules" {
   }
 }
 
-variable "simulator_device_id" {
-  description = "Logical device ID for the Terraform-managed simulator thing"
-  type        = string
-  default     = "entry-gate-01"
+variable "devices" {
+  description = "ESP32 IoT things to provision (thing name suffix → device_id + role). Default: entry gate only (smoke tests)."
+  type = map(object({
+    device_id = string
+    role      = string
+  }))
+
+  default = {
+    entry-gate-01 = {
+      device_id = "entry-gate-01"
+      role      = "entry-gate"
+    }
+  }
+
+  validation {
+    condition     = contains(keys(var.devices), "entry-gate-01")
+    error_message = "devices must include entry-gate-01 for entry gate MQTT and smoke tests."
+  }
 }
 
 variable "tags" {

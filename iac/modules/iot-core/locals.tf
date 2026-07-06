@@ -6,5 +6,5 @@ locals {
 
   iot_arn_prefix = "arn:aws:iot:${local.region}:${local.account_id}"
 
-  simulator_thing_name = "${local.name_prefix}-${var.simulator_device_id}"
+  entry_gate_device_key = "entry-gate-01"
 }

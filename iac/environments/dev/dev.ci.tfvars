@@ -66,6 +66,6 @@ secrets_manager_rds_rotation_days = 30
 
 github_repository = "jeancdevx/polaris"
 
-terraform_state_bucket = "polaris-bootstrap-tfstate-737710549633-us-east-2"
+terraform_state_bucket = "polaris-bootstrap-tfstate-730355530394-us-east-2"
 
 enable_atlantis = false

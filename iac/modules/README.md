@@ -26,7 +26,7 @@ Módulos planificados:
 19. `kafka-topic-creator` ✅ (Fase 2.12 — Lambda infra MSK topics)
 20. `kafka-msk-smoke` ✅ (Fase 2.13 — Lambda smoke MSK IAM desde VPC)
 21. `observability` ✅ (Fase 8.3 — CloudWatch dashboards/alarms → SNS)
-22. `edge` (Route53, CloudFront, WAF — solo staging/prod)
+22. `edge` ✅ (Fase 9.1 — Route53, CloudFront, WAF — staging/prod)
 
 ## Convenciones
 

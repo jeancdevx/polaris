@@ -263,4 +263,21 @@ Tras `terraform apply`:
 pnpm --filter @polaris/kafka-msk-smoke build
 pnpm kafka:smoke:msk:dev
 ```
+
+## IoT Core — 4 ESP32 (Fase 10, solo dev)
+
+`iot-core.tf` provisiona Things + certificados para entrada, salida y plazas A/B.
+`rfid-validator` tiene `gate_commands_enabled = true` (comandos MQTT servo/LCD).
+
+Tras `terraform apply`:
+
+```bash
+terraform output -json iot_device_thing_names
+terraform output -json iot_device_certificate_pems   # sensitive
+terraform output -json iot_device_private_keys     # sensitive
+pnpm iot:smoke:dev
+```
+
+Prod/staging siguen con un solo dispositivo (`entry-gate-01`) hasta activar los 4
+allí.
 ````

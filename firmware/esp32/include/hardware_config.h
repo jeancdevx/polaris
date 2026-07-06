@@ -1,0 +1,35 @@
+#pragma once
+
+namespace polaris::hw {
+
+// HC-SR04 (entry)
+constexpr int kApproachCm = 50;
+constexpr int kAtGateCm = 10;
+constexpr int kSafetyBlockCm = 15;
+constexpr int kClearedCm = 50;
+constexpr unsigned long kUltrasonicPollMs = 200;
+constexpr unsigned long kClearedHoldMs = 500;
+constexpr unsigned long kProximityTimeoutMs = 30'000;
+constexpr unsigned long kBarrierMaxOpenMs = 120'000;
+constexpr unsigned long kPassageTelemetryMs = 1'000;
+
+// SG90
+constexpr int kServoClosedAngle = 0;
+constexpr int kServoOpenAngle = 90;
+
+// Exit gate heuristic (no ultrasonic)
+constexpr unsigned long kExitMinOpenMs = 2'000;
+constexpr unsigned long kExitCloseAfterMs = 6'000;
+constexpr unsigned long kExitMaxOpenMs = 60'000;
+
+// FC-51 zone sensors
+constexpr unsigned long kFc51DebounceMs = 300;
+constexpr unsigned long kZonePollMs = 100;
+
+// RGB reserved blink
+constexpr unsigned long kLedBlinkMs = 500;
+
+// RFID
+constexpr unsigned long kRfidCooldownMs = 2'000;
+
+}  // namespace polaris::hw

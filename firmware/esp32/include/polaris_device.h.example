@@ -1,0 +1,30 @@
+#pragma once
+
+// Copy to include/polaris_device.h and fill from Terraform outputs (dev).
+// PEMs must use static const char[] — NOT #define (preprocessor breaks raw strings).
+
+#define POLARIS_WIFI_SSID "your-wifi-ssid"
+#define POLARIS_WIFI_PASSWORD "your-wifi-password"
+
+#define POLARIS_IOT_ENDPOINT "xxxxxxxxxx-ats.iot.us-east-2.amazonaws.com"
+
+// Must match AWS IoT Thing name (= MQTT client id), e.g. polaris-dev-entry-gate-01
+#define POLARIS_IOT_THING_NAME "polaris-dev-entry-gate-01"
+
+static const char POLARIS_IOT_DEVICE_CERT[] = R"EOF(
+-----BEGIN CERTIFICATE-----
+(paste certificate lines here)
+-----END CERTIFICATE-----
+)EOF";
+
+static const char POLARIS_IOT_DEVICE_PRIVATE_KEY[] = R"EOF(
+-----BEGIN RSA PRIVATE KEY-----
+(paste private key lines here)
+-----END RSA PRIVATE KEY-----
+)EOF";
+
+static const char POLARIS_IOT_ROOT_CA[] = R"EOF(
+-----BEGIN CERTIFICATE-----
+(paste Amazon Root CA 1 lines here)
+-----END CERTIFICATE-----
+)EOF";

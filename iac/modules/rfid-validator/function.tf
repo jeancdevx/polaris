@@ -10,18 +10,23 @@ resource "aws_lambda_function" "main" {
   source_code_hash = data.archive_file.lambda_package.output_base64sha256
 
   environment {
-    variables = {
-      DATABASE_URL                 = local.database_url
-      RFID_LOOKUP_MODE             = "dynamodb_with_rds_fallback"
-      RFID_VALIDATIONS_TABLE_NAME  = var.rfid_validations_table_name
-      GATE_COMMANDS_ENABLED        = tostring(var.gate_commands_enabled)
-      KAFKA_BROKERS                = var.bootstrap_brokers
-      KAFKA_AUTH_MODE              = "iam"
-      KAFKA_CLIENT_ID              = local.function_name
-      POWERTOOLS_LOG_LEVEL         = var.powertools_log_level
-      POWERTOOLS_METRICS_NAMESPACE = "Polaris"
-      POWERTOOLS_SERVICE_NAME      = local.function_name
-    }
+    variables = merge(
+      {
+        DATABASE_URL                 = local.database_url
+        RFID_LOOKUP_MODE             = "dynamodb_with_rds_fallback"
+        RFID_VALIDATIONS_TABLE_NAME  = var.rfid_validations_table_name
+        GATE_COMMANDS_ENABLED        = tostring(var.gate_commands_enabled)
+        KAFKA_BROKERS                = var.bootstrap_brokers
+        KAFKA_AUTH_MODE              = "iam"
+        KAFKA_CLIENT_ID              = local.function_name
+        POWERTOOLS_LOG_LEVEL         = var.powertools_log_level
+        POWERTOOLS_METRICS_NAMESPACE = "Polaris"
+        POWERTOOLS_SERVICE_NAME      = local.function_name
+      },
+      var.gate_commands_enabled ? {
+        IOT_DATA_ENDPOINT = data.aws_iot_endpoint.data_ats.endpoint_address
+      } : {}
+    )
   }
 
   tracing_config {

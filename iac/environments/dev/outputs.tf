@@ -483,6 +483,23 @@ output "iot_simulator_private_key" {
   sensitive   = true
 }
 
+output "iot_device_thing_names" {
+  description = "AWS IoT thing names for all provisioned ESP32 devices"
+  value       = module.iot_core.device_thing_names
+}
+
+output "iot_device_certificate_pems" {
+  description = "PEM-encoded certificates per ESP32 device key (entry-gate-01, exit-gate-01, …)"
+  value       = module.iot_core.device_certificate_pems
+  sensitive   = true
+}
+
+output "iot_device_private_keys" {
+  description = "PEM-encoded private keys per ESP32 device key — flash once; stored in Terraform state"
+  value       = module.iot_core.device_private_keys
+  sensitive   = true
+}
+
 output "msk_client_role_arn" {
   description = "IAM role ARN for MSK IAM SASL clients"
   value       = module.iam.msk_client_role_arn

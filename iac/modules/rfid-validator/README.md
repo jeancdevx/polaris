@@ -32,7 +32,9 @@ module "rfid_validator" {
   rfid_validations_table_name  = module.dynamodb.table_names.RFIDValidations
   rds_master_secret_arn        = module.rds.master_user_secret_arn
   rds_cluster_endpoint         = module.rds.cluster_endpoint
-  rds_database_name            = module.rds.database_name
+  rds_database_name           = module.rds.database_name
+
+  gate_commands_enabled = true # dev: publish MQTT servo/LCD commands via IOT_DATA_ENDPOINT
 
   subnet_ids         = module.vpc.private_subnet_ids
   security_group_ids = [module.security_groups.lambda_security_group_id]

@@ -30,9 +30,9 @@ import {
   type ReservationConfig
 } from './reservation.config.js'
 import {
-  PARKING_LOCK_KEY_PREFIX,
-  PARKING_SPOT_KEY_PREFIX,
-  PARKING_STATS_KEYS
+  PARKING_STATS_KEYS,
+  parkingLockKey,
+  parkingSpotKey
 } from './reservation.constants.js'
 import { mapReservationRow } from './reservation.mapper.js'
 import { ReservationRepository } from './reservation.repository.js'
@@ -65,7 +65,7 @@ export class ReservationService {
       )
 
       const client = await this.redisService.getClient()
-      const lockKey = `${PARKING_LOCK_KEY_PREFIX}${spotId.value}`
+      const lockKey = parkingLockKey(spotId.value)
       const lockAcquired = await client.set(lockKey, userId, {
         NX: true,
         EX: config.lockTtlSeconds
@@ -170,10 +170,7 @@ export class ReservationService {
     client: PolarisRedisClient,
     spotId: string
   ): Promise<void> {
-    const status = await client.hGet(
-      `${PARKING_SPOT_KEY_PREFIX}${spotId}`,
-      'status'
-    )
+    const status = await client.hGet(parkingSpotKey(spotId), 'status')
 
     if (status && status !== 'free') {
       throw new ConflictException('Parking spot is not available')
@@ -186,7 +183,7 @@ export class ReservationService {
     userId: string,
     reservationId: string
   ): Promise<void> {
-    const spotKey = `${PARKING_SPOT_KEY_PREFIX}${spotId}`
+    const spotKey = parkingSpotKey(spotId)
 
     await client
       .multi()
@@ -204,7 +201,7 @@ export class ReservationService {
     client: PolarisRedisClient,
     spotId: string
   ): Promise<void> {
-    const spotKey = `${PARKING_SPOT_KEY_PREFIX}${spotId}`
+    const spotKey = parkingSpotKey(spotId)
 
     await client
       .multi()

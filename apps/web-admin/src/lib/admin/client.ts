@@ -7,6 +7,18 @@ type AdminFetchOptions = Readonly<{
   searchParams?: Record<string, string | number | boolean | undefined>
 }>
 
+const readAdminApiBaseUrl = (): string => {
+  const base = process.env.NEXT_PUBLIC_ADMIN_API_URL
+
+  if (!base) {
+    throw new Error(
+      'NEXT_PUBLIC_ADMIN_API_URL is required (admin API Gateway URL)'
+    )
+  }
+
+  return base.replace(/\/$/, '')
+}
+
 const buildSearch = (
   searchParams: AdminFetchOptions['searchParams']
 ): string => {
@@ -35,14 +47,17 @@ export const adminFetch = async <T>(
 ): Promise<T> => {
   const token = await getAdminIdToken()
   const search = buildSearch(options.searchParams)
-  const response = await fetch(`/api/admin${path}${search}`, {
-    method: options.method ?? 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(options.body ? { 'Content-Type': 'application/json' } : {})
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined
-  })
+  const response = await fetch(
+    `${readAdminApiBaseUrl()}/admin${path}${search}`,
+    {
+      method: options.method ?? 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(options.body ? { 'Content-Type': 'application/json' } : {})
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined
+    }
+  )
 
   if (!response.ok) {
     throw new AdminApiError(

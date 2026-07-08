@@ -5,8 +5,8 @@ import type { ParkingSpotStatus } from '@polaris/shared-types'
 import type { PolarisRedisClient } from '@polaris/shared-utils'
 
 import {
-  PARKING_SPOT_KEY_PREFIX,
-  PARKING_STATS_KEYS
+  PARKING_STATS_KEYS,
+  parkingSpotKey
 } from '../infrastructure/parking.constants.js'
 import { RedisService } from '../infrastructure/redis.service.js'
 
@@ -53,7 +53,7 @@ export class ParkingRedisStore {
   ): Promise<void> {
     const client = await this.redisService.getClient()
     const delta = statDeltaForTransition(previousStatus, spot.status)
-    const spotKey = `${PARKING_SPOT_KEY_PREFIX}${spot.spotId.value}`
+    const spotKey = parkingSpotKey(spot.spotId.value)
 
     const multi = client.multi()
 

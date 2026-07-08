@@ -10,6 +10,8 @@ module "api_gateway_private" {
   cognito_app_client_id = module.cognito.app_client_id
   cognito_issuer_url    = module.cognito.issuer_url
 
+  cors_allow_origins = local.dev_cors_origins
+
   tags = var.tags
 
   depends_on = [

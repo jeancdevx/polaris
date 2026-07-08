@@ -41,6 +41,18 @@ variable "disable_execute_api_endpoint" {
   default     = false
 }
 
+variable "stage_throttling_burst_limit" {
+  description = "Stage burst limit. Must be > 0; provider default 0 blocks all traffic (429)."
+  type        = number
+  default     = 5000
+}
+
+variable "stage_throttling_rate_limit" {
+  description = "Stage steady-state rate limit (req/s). Must be > 0; provider default 0 blocks all traffic."
+  type        = number
+  default     = 10000
+}
+
 variable "project_name" {
   description = "Project name used for resource naming and tags"
   type        = string

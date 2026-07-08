@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "next build",
+    "build:static": "NEXT_OUTPUT=export next build",
     "dev": "next dev --port 3000",
     "lint": "oxlint src",
     "start": "next start --port 3000",

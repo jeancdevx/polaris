@@ -1,0 +1,53 @@
+name: Deploy web-admin (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description:
+          GitHub environment y sufijo de recursos AWS (dev, staging, prod)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy web-admin (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+      NEXT_PUBLIC_AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+      NEXT_PUBLIC_ADMIN_API_URL: ${{ vars.NEXT_PUBLIC_ADMIN_API_URL }}
+      NEXT_PUBLIC_APPSYNC_GRAPHQL_ENDPOINT:
+        ${{ vars.NEXT_PUBLIC_APPSYNC_GRAPHQL_ENDPOINT }}
+      NEXT_PUBLIC_COGNITO_USER_POOL_ID:
+        ${{ vars.NEXT_PUBLIC_COGNITO_USER_POOL_ID }}
+      NEXT_PUBLIC_COGNITO_CLIENT_ID: ${{ vars.NEXT_PUBLIC_COGNITO_CLIENT_ID }}
+      WEB_ADMIN_S3_BUCKET: ${{ vars.WEB_ADMIN_S3_BUCKET }}
+      WEB_ADMIN_S3_PREFIX: ${{ vars.WEB_ADMIN_S3_PREFIX || 'web-admin' }}
+      WEB_CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.WEB_CLOUDFRONT_DISTRIBUTION_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build and upload to S3
+        run: bash scripts/deploy-web-admin.sh "${{ inputs.environment }}"

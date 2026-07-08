@@ -1,8 +1,11 @@
-import { connectRedis, disconnectRedis } from '@polaris/shared-utils'
+import {
+  connectRedis,
+  disconnectRedis,
+  PARKING_STATS_KEYS,
+  parkingSpotKey
+} from '@polaris/shared-utils'
 
 import { createDataSource, type ParkingSpotRow } from '../index.js'
-
-const PARKING_SPOT_KEY_PREFIX = 'parking:spot:'
 
 export type SyncParkingRedisResult = Readonly<{
   spotsSynced: number
@@ -49,7 +52,7 @@ export const syncParkingRedis = async (
         hash.occupiedSince = String(row.occupiedSince.getTime())
       }
 
-      await redis.hSet(`${PARKING_SPOT_KEY_PREFIX}${row.spotId}`, hash)
+      await redis.hSet(parkingSpotKey(row.spotId), hash)
 
       if (row.status === 'free') {
         totalAvailable += 1
@@ -60,9 +63,9 @@ export const syncParkingRedis = async (
       }
     }
 
-    await redis.set('parking:stats:total_available', totalAvailable)
-    await redis.set('parking:stats:total_occupied', totalOccupied)
-    await redis.set('parking:stats:total_reserved', totalReserved)
+    await redis.set(PARKING_STATS_KEYS.totalAvailable, totalAvailable)
+    await redis.set(PARKING_STATS_KEYS.totalOccupied, totalOccupied)
+    await redis.set(PARKING_STATS_KEYS.totalReserved, totalReserved)
 
     return {
       spotsSynced: rows.length,

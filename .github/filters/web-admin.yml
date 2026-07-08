@@ -1,0 +1,11 @@
+shared-workspace: &shared-workspace
+  - 'package.json'
+  - 'pnpm-lock.yaml'
+  - 'pnpm-workspace.yaml'
+  - 'turbo.json'
+  - 'packages/tsconfig/**'
+  - 'packages/shared-types/**'
+
+web-admin:
+  - *shared-workspace
+  - 'apps/web-admin/**'

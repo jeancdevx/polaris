@@ -8,6 +8,31 @@ output "s3_bucket_names" {
   value       = module.s3.bucket_names
 }
 
+output "web_admin_assets_bucket_name" {
+  description = "S3 bucket for web-admin static assets"
+  value       = module.s3.assets_bucket_name
+}
+
+output "web_admin_s3_prefix" {
+  description = "S3 prefix for web-admin static files"
+  value       = "web-admin"
+}
+
+output "web_admin_cloudfront_domain_name" {
+  description = "CloudFront domain name for web-admin (dev)"
+  value       = module.edge.web_cloudfront_domain_name
+}
+
+output "web_admin_cloudfront_distribution_id" {
+  description = "CloudFront distribution ID for web-admin (dev)"
+  value       = module.edge.web_cloudfront_distribution_id
+}
+
+output "web_admin_public_url" {
+  description = "Web-admin HTTPS URL via CloudFront (dev)"
+  value       = module.edge.admin_public_url
+}
+
 output "s3_bucket_arns" {
   description = "S3 bucket ARNs by logical key"
   value       = module.s3.bucket_arns

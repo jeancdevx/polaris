@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RedisService } from './redis.service.js'
 import { ReservationEventPublisher } from './reservation-event.publisher.js'
 import { reservationConfig } from './reservation.config.js'
+import { parkingLockKey } from './reservation.constants.js'
 import { ReservationRepository } from './reservation.repository.js'
 import { ReservationService } from './reservation.service.js'
 
@@ -86,7 +87,7 @@ describe('ReservationService', () => {
     expect(reservation.reservationId).toBe('res-test0001')
     expect(reservation.parkingSpotId).toBe('spot-07')
     expect(repository.insertActiveReservation).toHaveBeenCalledOnce()
-    expect(redisClient.del).toHaveBeenCalledWith('parking:lock:spot-07')
+    expect(redisClient.del).toHaveBeenCalledWith(parkingLockKey('spot-07'))
   })
 
   it('returns conflict when lock cannot be acquired', async () => {

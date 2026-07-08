@@ -1,9 +1,7 @@
-export const PARKING_SPOT_KEY_PREFIX = 'parking:spot:'
-
-export const PARKING_LOCK_KEY_PREFIX = 'parking:lock:'
-
-export const PARKING_STATS_KEYS = {
-  totalAvailable: 'parking:stats:total_available',
-  totalOccupied: 'parking:stats:total_occupied',
-  totalReserved: 'parking:stats:total_reserved'
-} as const
+export {
+  PARKING_LOCK_KEY_PREFIX,
+  PARKING_SPOT_KEY_PREFIX,
+  PARKING_STATS_KEYS,
+  parkingLockKey,
+  parkingSpotKey
+} from '@polaris/shared-utils'

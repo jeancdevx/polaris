@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common'
 
 import type { ParkingStatus } from '@polaris/shared-types'
-import { scanRedisKeyBatches } from '@polaris/shared-utils'
+import {
+  scanRedisKeyBatches,
+  spotIdFromParkingSpotKey
+} from '@polaris/shared-utils'
 
 import {
-  PARKING_SPOT_KEY_PREFIX,
+  PARKING_SPOT_KEY_PATTERN,
   PARKING_STATS_KEYS
 } from './parking.constants.js'
 import {
@@ -25,11 +28,11 @@ export class RedisAvailabilityReader {
       const spots = []
 
       for await (const keys of scanRedisKeyBatches(client, {
-        match: `${PARKING_SPOT_KEY_PREFIX}*`,
+        match: PARKING_SPOT_KEY_PATTERN,
         count: 100
       })) {
         for (const key of keys) {
-          const spotId = key.slice(PARKING_SPOT_KEY_PREFIX.length)
+          const spotId = spotIdFromParkingSpotKey(key)
           const hash = await client.hGetAll(key)
           const spot = mapRedisHashToParkingSpot(spotId, hash)
 

@@ -246,13 +246,37 @@ pnpm appsync:smoke:dev
 pnpm appsync:subscription:smoke:dev
 ```
 
-## Web admin (7.3)
+## Web admin + mobile (dev AWS, sin local backend)
 
-Next.js + AppSync (Cognito grupo `admin`):
+APIs en `execute-api` (dev no tiene módulo `edge`). Tras `terraform apply` con CORS
+y throttling corregidos:
 
 ```bash
-pnpm web-admin:env:dev
-pnpm web-admin:dev
+# Regenerar env desde Terraform
+pnpm web-admin:env:dev    # ADMIN_API_URL → api_gateway_private_endpoint
+pnpm mobile:env:dev       # EXPO_PUBLIC_API_URL → api_gateway_endpoint
+
+# Web: UI en localhost, datos en AWS
+pnpm --filter web-admin dev   # http://localhost:3000
+
+# Móvil: bundler local, APIs en AWS
+pnpm mobile:dev
+```
+
+Usuario admin: credenciales del `db-bootstrap` (Cognito grupo `admin`).
+
+### 429 Too Many Requests en `/health`
+
+El stage HTTP API tenía `ThrottlingRateLimit=0` (default del provider Terraform) →
+bloquea **todo** el tráfico. Fix en `iac/modules/api-gateway*/api.tf`:
+`throttling_burst_limit=5000`, `throttling_rate_limit=10000`.
+
+Hotfix inmediato (sin apply) para **cada** HTTP API (pública + admin):
+
+```bash
+aws apigatewayv2 update-stage --api-id <API_ID> --stage-name '$default' \
+  --region us-east-2 \
+  --default-route-settings '{"ThrottlingBurstLimit":5000,"ThrottlingRateLimit":10000,"DetailedMetricsEnabled":true}'
 ```
 
 ## Smoke test MSK (2.13)

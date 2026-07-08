@@ -63,8 +63,8 @@ s3_lifecycle_glacier_transition_days = 90
 
 secrets_manager_rds_rotation_days = 30
 
-base_domain    = "galaxymorph.com"
-hosted_zone_id = "Z0437101YIMTM4WCJEKJ"
+base_domain    = "nevadolg.com"
+hosted_zone_id = "Z05508811M0ZDY4TTSR4A"
 
 github_repository = "jeancdevx/polaris"
 

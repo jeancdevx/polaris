@@ -9,7 +9,5 @@ module "s3" {
   kms_key_arn                       = var.s3_kms_key_arn
   lifecycle_glacier_transition_days = var.s3_lifecycle_glacier_transition_days
 
-  manage_assets_bucket_policy = false
-
   tags = var.tags
 }

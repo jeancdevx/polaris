@@ -89,6 +89,41 @@ data "aws_iam_policy_document" "deploy" {
       values   = ["ecs-tasks.amazonaws.com"]
     }
   }
+
+  dynamic "statement" {
+    for_each = var.assets_bucket_arn != "" ? [1] : []
+
+    content {
+      sid    = "WebAdminS3Deploy"
+      effect = "Allow"
+      actions = [
+        "s3:DeleteObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:PutObject"
+      ]
+      resources = [
+        var.assets_bucket_arn,
+        "${var.assets_bucket_arn}/${var.web_admin_s3_prefix}/*"
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.web_cloudfront_distribution_id != "" ? [1] : []
+
+    content {
+      sid    = "WebAdminCloudFrontInvalidate"
+      effect = "Allow"
+      actions = [
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetInvalidation"
+      ]
+      resources = [
+        "arn:aws:cloudfront::${local.account_id}:distribution/${var.web_cloudfront_distribution_id}"
+      ]
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "deploy" {

@@ -12,6 +12,16 @@ export {
   scanRedisKeyBatches,
   type ScanRedisKeysOptions
 } from './redis/scan-redis-keys.js'
+export {
+  PARKING_LOCK_KEY_PREFIX,
+  PARKING_REDIS_HASH_TAG,
+  PARKING_SPOT_KEY_PATTERN,
+  PARKING_SPOT_KEY_PREFIX,
+  PARKING_STATS_KEYS,
+  parkingLockKey,
+  parkingSpotKey,
+  spotIdFromParkingSpotKey
+} from './redis/parking-keys.js'
 
 export const generateId = (prefix: string): string => {
   const timestamp = Date.now().toString(36)

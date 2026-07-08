@@ -13,7 +13,7 @@
 
 // Este firmware corre en el ESP32 #2:
 // - Controla 2 servos (entrada + salida)
-// - Lee FC-51 (ocupación) y publica occupancy_changed para spots 1..4 y 7..10
+// - Lee FC-51 (ocupación) y publica occupancy_changed para spots 1..10
 
 namespace {
 
@@ -47,6 +47,10 @@ Fc51Spot gSpots[polaris::pins::actuators::kFc51Count] = {
      Fc51Sensor(polaris::pins::actuators::kFc51Pins[6])},
     {polaris::pins::actuators::kFc51SpotNumbers[7],
      Fc51Sensor(polaris::pins::actuators::kFc51Pins[7])},
+    {polaris::pins::actuators::kFc51SpotNumbers[8],
+     Fc51Sensor(polaris::pins::actuators::kFc51Pins[8])},
+    {polaris::pins::actuators::kFc51SpotNumbers[9],
+     Fc51Sensor(polaris::pins::actuators::kFc51Pins[9])},
 };
 
 unsigned long gLastZonePollMs = 0;
@@ -211,7 +215,7 @@ void setup() {
     }
   }
 
-  Serial.println("[actuators] Ready — 2× servo + FC-51 occupancy (spots 1..4,7..10)");
+  Serial.println("[actuators] Ready — 2× servo + FC-51 occupancy (spots 1..10)");
 }
 
 void loop() {

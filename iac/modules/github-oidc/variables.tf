@@ -41,3 +41,21 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "assets_bucket_arn" {
+  description = "S3 assets bucket ARN for web-admin static deploy (empty skips S3 permissions)"
+  type        = string
+  default     = ""
+}
+
+variable "web_admin_s3_prefix" {
+  description = "S3 prefix for web-admin static files"
+  type        = string
+  default     = "web-admin"
+}
+
+variable "web_cloudfront_distribution_id" {
+  description = "CloudFront distribution ID for web-admin invalidation (empty skips invalidation permission)"
+  type        = string
+  default     = ""
+}

@@ -170,6 +170,7 @@ export default function ParkingScreen() {
       await loadAvailability()
       setSelectedSpotId(null)
     } catch (error) {
+      await loadAvailability()
       setActionError(
         error instanceof Error ? error.message : 'No se pudo crear la reserva.'
       )

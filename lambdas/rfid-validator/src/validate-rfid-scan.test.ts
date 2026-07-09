@@ -22,7 +22,7 @@ const baseEnv: RfidValidatorEnv = {
 }
 
 const entryScan: RfidScanEvent = {
-  deviceId: 'entry-gate-01',
+  deviceId: 'entry-io-01',
   rfidUid: 'A3:BF:22:01',
   readerLocation: 'entry',
   occurredAt: new Date('2025-06-19T14:00:00.000Z')

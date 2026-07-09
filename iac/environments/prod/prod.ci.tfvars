@@ -28,7 +28,13 @@ rds_engine_version          = "18.3"
 rds_reader_count            = 2
 rds_writer_instance_class   = "db.r6g.xlarge"
 rds_backup_retention_period = 30
-rds_deletion_protection     = true
+
+# Alinear con prod.tfvars al hacer teardown (evita que CI reactive protecciones).
+rds_deletion_protection              = false
+ecs_enable_deletion_protection       = false
+cognito_deletion_protection          = false
+dynamodb_deletion_protection_enabled = false
+s3_force_destroy                     = true
 
 redis_capacity_mode              = "provisioned"
 redis_engine_version             = "7.1"

@@ -4,6 +4,7 @@ import {
   EVENTBRIDGE_DEFAULT_BUS_NAME,
   EVENTBRIDGE_SOURCE_EVENT_PROCESSOR
 } from '@polaris/eventbridge'
+import { normalizeIotDataEndpoint } from '@polaris/shared-utils'
 
 export type EventProcessorConfig = {
   clientId: string
@@ -36,7 +37,9 @@ export const eventProcessorConfig = registerAs(
       process.env.AWS_ENDPOINT_URL ?? process.env.LOCALSTACK_ENDPOINT,
     eventBridgeSource:
       process.env.EVENTBRIDGE_SOURCE ?? EVENTBRIDGE_SOURCE_EVENT_PROCESSOR,
-    iotDataEndpoint: process.env.IOT_DATA_ENDPOINT,
+    iotDataEndpoint: process.env.IOT_DATA_ENDPOINT
+      ? normalizeIotDataEndpoint(process.env.IOT_DATA_ENDPOINT)
+      : undefined,
     ledCommandsEnabled: process.env.LED_COMMANDS_ENABLED === 'true'
   })
 )

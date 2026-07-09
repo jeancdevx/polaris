@@ -483,13 +483,18 @@ output "iot_simulator_private_key" {
   sensitive   = true
 }
 
+output "iot_device_ids" {
+  description = "Logical deviceId per ESP32 key (entry-io-01, actuators-01, …)"
+  value       = module.iot_core.device_ids
+}
+
 output "iot_device_thing_names" {
   description = "AWS IoT thing names for all provisioned ESP32 devices"
   value       = module.iot_core.device_thing_names
 }
 
 output "iot_device_certificate_pems" {
-  description = "PEM-encoded certificates per ESP32 device key (entry-gate-01, exit-gate-01, …)"
+  description = "PEM-encoded certificates per ESP32 device key (entry-io-01, actuators-01, …)"
   value       = module.iot_core.device_certificate_pems
   sensitive   = true
 }

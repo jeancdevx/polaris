@@ -71,22 +71,19 @@ Variables de entorno del build (ver `.env.example`):
 | `NEXT_PUBLIC_ADMIN_API_URL`                       | API Gateway admin (CORS debe incluir el origen de la web) |
 | `NEXT_PUBLIC_APPSYNC_*` / `NEXT_PUBLIC_COGNITO_*` | Ocupación en vivo                                         |
 
-CI: workflows `deploy-web-admin-dev.yml` (rama `develop`) y
+CI: workflows `deploy-web-admin-staging.yml` (manual) y
 `deploy-web-admin-production.yml` (rama `production`) cuando cambia
-`apps/web-admin/**`. Configura en el GitHub Environment:
+`apps/web-admin/**`. Configura en los GitHub Environments **staging** y
+**prod**:
 
 - `NEXT_PUBLIC_ADMIN_API_URL`, `NEXT_PUBLIC_APPSYNC_GRAPHQL_ENDPOINT`,
   `NEXT_PUBLIC_COGNITO_USER_POOL_ID`, `NEXT_PUBLIC_COGNITO_CLIENT_ID`
 - `WEB_ADMIN_S3_BUCKET` (opcional; default `polaris-assets-{env}-{account}`)
-- `WEB_CLOUDFRONT_DISTRIBUTION_ID` (staging/prod; omitir en dev)
+- `WEB_CLOUDFRONT_DISTRIBUTION_ID` (output Terraform
+  `web_cloudfront_distribution_id`)
 
-Deploy manual:
-
-```bash
-pnpm web-admin:env:dev   # genera .env.local con URLs de dev
-set -a && source apps/web-admin/.env.local && set +a
-bash scripts/deploy-web-admin.sh dev
-```
+En **dev** la UI corre en local (`pnpm --filter web-admin dev`); el deploy
+estático requiere infra **staging** o **prod** con módulo `edge`.
 
 ## Arquitectura
 

@@ -23,11 +23,15 @@ describe('VehicleEntryHandler', () => {
     const eventBridgePublisher = {
       publishProcessedParkingEvent: vi.fn(async () => undefined)
     }
+    const ledCommands = {
+      publishSpotMode: vi.fn(async () => true)
+    }
 
     const handler = new VehicleEntryHandler(
       parkingRepository as never,
       parkingRedisStore as never,
-      eventBridgePublisher as never
+      eventBridgePublisher as never,
+      ledCommands as never
     )
 
     await handler.handle({

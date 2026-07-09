@@ -18,19 +18,20 @@ trap cleanup EXIT
 cd "$dev_dir"
 
 endpoint="$(terraform output -raw iot_data_endpoint)"
-thing_name="$(terraform output -raw iot_simulator_thing_name)"
+device_id="$(terraform output -json iot_device_ids | jq -r '.["actuators-01"]')"
+thing_name="$(terraform output -json iot_device_thing_names | jq -r '.["actuators-01"]')"
 spot_id="${IOT_SMOKE_SPOT_ID:-spot-01}"
 topic="parking/sensors/occupancy/${spot_id}"
 wait_seconds="${IOT_SMOKE_WAIT_SECONDS:-45}"
 
-terraform output -raw iot_simulator_certificate_pem >"$cert_file"
-terraform output -raw iot_simulator_private_key >"$key_file"
+terraform output -json iot_device_certificate_pems | jq -r '.["actuators-01"]' >"$cert_file"
+terraform output -json iot_device_private_keys | jq -r '.["actuators-01"]' >"$key_file"
 
 curl -fsSL "https://www.amazontrust.com/repository/AmazonRootCA1.pem" -o "$ca_file"
 
 cat >"$payload_file" <<EOF
 {
-  "deviceId": "spots-zone-a",
+  "deviceId": "${device_id}",
   "spotId": "${spot_id}",
   "event": "occupancy_changed",
   "status": "occupied",

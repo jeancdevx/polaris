@@ -885,6 +885,9 @@ importers:
       '@polaris/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+      '@polaris/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
     devDependencies:
       '@polaris/build-config':
         specifier: workspace:*

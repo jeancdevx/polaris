@@ -58,15 +58,18 @@ sg="$(aws ec2 describe-security-groups \
 
 echo "Running dev reset task (TRUNCATE + seed + Redis flush/sync)..."
 
+database_url="$(bash "${repo_root}/scripts/build-database-url-from-rds.sh" "${name_prefix}")"
+
 task_arn="$(aws ecs run-task \
   --cluster "${name_prefix}-cluster" \
   --task-definition "${family}:${revision}" \
   --launch-type FARGATE \
   --network-configuration "awsvpcConfiguration={subnets=[${subnets}],securityGroups=[${sg}],assignPublicIp=DISABLED}" \
   --overrides "$(jq -n \
+    --arg url "$database_url" \
     --arg cmd0 "node" \
     --arg cmd1 "dist/reset.js" \
-    '{containerOverrides:[{name:"db-bootstrap",command:[$cmd0,$cmd1]}]}')" \
+    '{containerOverrides:[{name:"db-bootstrap",command:[$cmd0,$cmd1],environment:[{name:"DATABASE_URL",value:$url}]}]}')" \
   --query 'tasks[0].taskArn' \
   --output text)"
 

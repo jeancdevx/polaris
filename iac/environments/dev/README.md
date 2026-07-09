@@ -82,6 +82,29 @@ Tras `terraform destroy` + `terraform apply`:
    Aurora/Redis dev.
 4. **Cognito** — recrear usuario de prueba (CLI en sección E2E).
 
+### Reset dev (BD vacía + seed + Redis)
+
+Tras errores parciales (p. ej. CROSSSLOT en reservas) o datos inconsistentes:
+
+**GitHub Actions (recomendado):** repo → **Actions** → **DB reset dev** → **Run
+workflow** → en `confirm` escribe exactamente `reset-dev`.
+
+Alternativa local:
+
+```bash
+pnpm db:reset:dev
+SKIP_PUSH=1 pnpm db:reset:dev   # solo task ECS (imagen :latest ya en ECR)
+```
+
+Qué hace la task `node dist/reset.js`:
+
+1. `TRUNCATE` tablas de app (usuarios, plazas, reservas, audit, sensores)
+2. Seed (`usr-admin01`, `usr-12345`, 10 plazas `free`)
+3. Borra claves Redis `{parking}:*` y legacy `parking:*`
+4. `syncParkingRedis` desde RDS
+
+**No borra** usuarios de Cognito.
+
 ### Secrets Manager: scheduled for deletion
 
 Si `terraform apply` falla al crear `polaris-dev-*-service-env`:

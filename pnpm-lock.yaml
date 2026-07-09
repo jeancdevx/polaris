@@ -98,6 +98,9 @@ importers:
       rxjs:
         specifier: 7.8.2
         version: 7.8.2
+      typeorm:
+        specifier: 1.0.0
+        version: 1.0.0(pg@8.22.0)(redis@6.0.0)
     devDependencies:
       '@nestjs/cli':
         specifier: 11.0.23

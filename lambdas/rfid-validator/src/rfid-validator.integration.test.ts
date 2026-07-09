@@ -202,4 +202,39 @@ describe('rfid-validator integration', () => {
       await disconnectConsumer(consumer)
     }
   }, 60_000)
+
+  it('allows walk-in entry without reservation when free spots exist', async () => {
+    const deps = createValidateRfidScanDependencies(readRfidValidatorEnv())
+    const result = await validateRfidScan(
+      {
+        deviceId: 'entry-io-01',
+        rfidUid: 'B1:CE:33:02',
+        readerLocation: 'entry',
+        occurredAt: new Date('2025-06-19T14:10:00.000Z')
+      },
+      deps
+    )
+
+    expect(result.valid).toBe(true)
+    expect(result.accessType).toBe('walk_in')
+    expect(result.sessionId).toBeDefined()
+
+    const dataSource = createDataSource()
+    await dataSource.initialize()
+
+    try {
+      const session = await dataSource
+        .getRepository('ParkingSession')
+        .findOne({ where: { sessionId: result.sessionId } })
+
+      expect(session).toMatchObject({
+        rfidUid: 'B1:CE:33:02',
+        status: 'open',
+        userId: 'usr-visitor01'
+      })
+    } finally {
+      await dataSource.destroy()
+      await deps.kafkaPublisher.disconnect()
+    }
+  }, 60_000)
 })

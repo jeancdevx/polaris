@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 
 import { KAFKA_TOPICS } from '@polaris/shared-types'
 
+import { EntryProximityHandler } from './handlers/entry-proximity.handler.js'
 import { ReservationCancelledHandler } from './handlers/reservation-cancelled.handler.js'
 import { ReservationCreatedHandler } from './handlers/reservation-created.handler.js'
+import { RfidValidationHandler } from './handlers/rfid-validation.handler.js'
 import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
 import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
@@ -28,6 +30,12 @@ describe('EventDispatcherService', () => {
     const reservationCancelledHandler = {
       handle: async () => undefined
     }
+    const rfidValidationHandler = {
+      handle: async () => undefined
+    }
+    const entryProximityHandler = {
+      handle: async () => undefined
+    }
 
     const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
@@ -42,7 +50,9 @@ describe('EventDispatcherService', () => {
         {
           provide: ReservationCancelledHandler,
           useValue: reservationCancelledHandler
-        }
+        },
+        { provide: RfidValidationHandler, useValue: rfidValidationHandler },
+        { provide: EntryProximityHandler, useValue: entryProximityHandler }
       ]
     }).compile()
 

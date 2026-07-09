@@ -17,7 +17,7 @@ function_name="$(terraform output -raw rfid_validator_function_name)"
 
 payload="$(cat <<'EOF'
 {
-  "deviceId": "entry-gate-01",
+  "deviceId": "entry-io-01",
   "event": "rfid_scan",
   "rfid_uid": "A3:BF:22:01",
   "reader_location": "entry",

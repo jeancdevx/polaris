@@ -242,7 +242,9 @@ resource "aws_ecs_task_definition" "event_processor_service" {
         { name = "KAFKA_CLIENT_ID", value = "event-processor-service" },
         { name = "KAFKA_CONSUMER_GROUP_ID", value = "event-processor-service" },
         { name = "EVENTBRIDGE_ENABLED", value = "true" },
-        { name = "EVENTBRIDGE_BUS_NAME", value = var.eventbridge_bus_name }
+        { name = "EVENTBRIDGE_BUS_NAME", value = var.eventbridge_bus_name },
+        { name = "LED_COMMANDS_ENABLED", value = tostring(var.led_commands_enabled) },
+        { name = "IOT_DATA_ENDPOINT", value = var.iot_data_endpoint }
       ]
 
       secrets = [

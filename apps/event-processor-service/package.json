@@ -25,6 +25,7 @@
     "@polaris/kafka": "workspace:*",
     "@polaris/shared-types": "workspace:*",
     "@polaris/shared-utils": "workspace:*",
+    "@aws-sdk/client-iot-data-plane": "3.1075.0",
     "redis": "6.0.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2"

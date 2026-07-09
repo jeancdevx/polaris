@@ -110,13 +110,13 @@ const sampleEvents: ReadonlyArray<{
     event: createOccupancyChangedEvent({
       spotId: 'spot-05',
       status: 'occupied',
-      deviceId: 'spots-zone-a'
+      deviceId: 'actuators-01'
     })
   },
   {
     topic: KAFKA_TOPICS.SENSOR_PROXIMITY,
     event: createProximityDetectedEvent({
-      deviceId: 'entry-gate-01',
+      deviceId: 'entry-io-01',
       distanceCm: 8
     })
   },
@@ -125,7 +125,7 @@ const sampleEvents: ReadonlyArray<{
     event: createRfidValidatedEvent({
       rfidUid: 'A3:BF:22:01',
       readerLocation: 'entry',
-      deviceId: 'entry-gate-01',
+      deviceId: 'entry-io-01',
       result: { valid: true, userId: 'usr-12345' }
     })
   },

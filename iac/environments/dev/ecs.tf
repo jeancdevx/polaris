@@ -41,6 +41,8 @@ module "ecs" {
   event_processor_service_cpu                = var.event_processor_service_cpu
   event_processor_service_memory             = var.event_processor_service_memory
   eventbridge_bus_name                       = module.eventbridge.bus_name
+  iot_data_endpoint                          = module.iot_core.data_endpoint
+  led_commands_enabled                       = true
   enable_deletion_protection                 = var.ecs_enable_deletion_protection
 
   db_bootstrap_ecr_repository_url = module.ecr_db_bootstrap.repository_url

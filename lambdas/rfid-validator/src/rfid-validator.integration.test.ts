@@ -173,7 +173,7 @@ describe('rfid-validator integration', () => {
       const deps = createValidateRfidScanDependencies(readRfidValidatorEnv())
       const result = await validateRfidScan(
         {
-          deviceId: 'entry-gate-01',
+          deviceId: 'entry-io-01',
           rfidUid: 'A3:BF:22:01',
           readerLocation: 'entry',
           occurredAt: new Date('2025-06-19T14:05:00.000Z')

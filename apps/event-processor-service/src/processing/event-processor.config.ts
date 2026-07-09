@@ -14,6 +14,8 @@ export type EventProcessorConfig = {
   eventBridgeRegion: string
   eventBridgeEndpoint?: string
   eventBridgeSource: string
+  iotDataEndpoint?: string
+  ledCommandsEnabled: boolean
 }
 
 export const EVENT_PROCESSOR_CONFIG_KEY = 'eventProcessor'
@@ -33,6 +35,8 @@ export const eventProcessorConfig = registerAs(
     eventBridgeEndpoint:
       process.env.AWS_ENDPOINT_URL ?? process.env.LOCALSTACK_ENDPOINT,
     eventBridgeSource:
-      process.env.EVENTBRIDGE_SOURCE ?? EVENTBRIDGE_SOURCE_EVENT_PROCESSOR
+      process.env.EVENTBRIDGE_SOURCE ?? EVENTBRIDGE_SOURCE_EVENT_PROCESSOR,
+    iotDataEndpoint: process.env.IOT_DATA_ENDPOINT,
+    ledCommandsEnabled: process.env.LED_COMMANDS_ENABLED === 'true'
   })
 )

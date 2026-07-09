@@ -17,7 +17,7 @@ const baseEnv: SensorDataProcessorEnv = {
 }
 
 const occupancyReading: OccupancyChangedIoTEvent = {
-  deviceId: 'spots-zone-a',
+  deviceId: 'actuators-01',
   spotId: 'spot-05',
   status: 'occupied',
   sensorType: 'fc-51',
@@ -32,7 +32,7 @@ const buildDeps = (
     saveOccupancyReading: vi.fn().mockResolvedValue({
       sensorId: 'spot-05',
       timestamp: '2025-06-19T15:00:00.000Z',
-      deviceId: 'spots-zone-a',
+      deviceId: 'actuators-01',
       spotId: 'spot-05',
       status: 'occupied',
       sensorType: 'fc-51',

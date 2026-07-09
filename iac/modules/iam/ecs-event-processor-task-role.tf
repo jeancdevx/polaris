@@ -21,3 +21,30 @@ resource "aws_iam_role_policy_attachment" "ecs_event_processor_secrets_read" {
   role       = aws_iam_role.ecs_event_processor_task.name
   policy_arn = aws_iam_policy.secrets_read.arn
 }
+
+data "aws_iam_policy_document" "ecs_event_processor_iot_publish" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "iot:Publish"
+    ]
+    resources = [
+      "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/led/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "ecs_event_processor_iot_publish" {
+  name_prefix = "${local.name_prefix}-ecs-evproc-iot-"
+  description = "Publish LED commands to AWS IoT Core for event-processor-service"
+  policy      = data.aws_iam_policy_document.ecs_event_processor_iot_publish.json
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-ecs-event-processor-iot-publish-policy"
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_event_processor_iot_publish" {
+  role       = aws_iam_role.ecs_event_processor_task.name
+  policy_arn = aws_iam_policy.ecs_event_processor_iot_publish.arn
+}

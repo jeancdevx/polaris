@@ -1,18 +1,24 @@
 #pragma once
 
-// ESP32 entrada IO — RC522 (SPI), LCD I2C, HC-SR04.
+// ESP32 entrada IO — 2× RC522 (SPI compartido), LCD I2C, HC-SR04.
 // Este ESP32 NO controla servos ni FC-51 (eso va en `actuators`).
 
 namespace polaris::pins::entry_io {
 
-// RC522 SPI
-constexpr int kRfidSs = 5;
-constexpr int kRfidRst = 27;
+// Bus SPI compartido por ambos RC522
 constexpr int kRfidSck = 18;
 constexpr int kRfidMiso = 19;
 constexpr int kRfidMosi = 23;
 
-// HC-SR04
+// RC522 entrada (barrera de ingreso)
+constexpr int kRfidEntrySs = 5;
+constexpr int kRfidEntryRst = 27;
+
+// RC522 salida (barrera de egreso) — SS/RST propios, mismo bus SPI
+constexpr int kRfidExitSs = 4;
+constexpr int kRfidExitRst = 15;
+
+// HC-SR04 (solo entrada)
 constexpr int kUltrasonicTrig = 17;
 constexpr int kUltrasonicEcho = 16;
 
@@ -22,4 +28,3 @@ constexpr int kLcdScl = 22;
 constexpr uint8_t kLcdAddress = 0x27;
 
 }  // namespace polaris::pins::entry_io
-

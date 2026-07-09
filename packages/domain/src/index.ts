@@ -61,9 +61,11 @@ export { createDomainEvent, domainEventToJson } from './events/domain-event.js'
 export type { DomainEvent, DomainEventPayload } from './events/domain-event.js'
 
 export {
+  createEntryProximityTelemetryEvent,
   createOccupancyChangedEvent,
   createProximityDetectedEvent
 } from './events/occupancy-events.js'
+export type { EntryProximityTelemetryEventName } from './events/occupancy-events.js'
 
 export {
   createReservationCancelledEvent,

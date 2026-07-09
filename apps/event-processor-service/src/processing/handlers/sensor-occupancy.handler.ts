@@ -4,7 +4,9 @@ import { isBusinessRuleViolationError } from '@polaris/domain'
 import type { OccupancyChangedEvent } from '@polaris/kafka'
 import { KAFKA_TOPICS } from '@polaris/shared-types'
 
+import { AuditLogRepository } from '../infrastructure/audit-log.repository.js'
 import { EventBridgePublisherService } from '../infrastructure/eventbridge-publisher.service.js'
+import { IotLedCommandPublisher } from '../infrastructure/iot-led-command.publisher.js'
 import { ParkingRedisStore } from '../parking/parking-redis.store.js'
 import { ParkingRepository } from '../parking/parking.repository.js'
 
@@ -15,7 +17,9 @@ export class SensorOccupancyHandler {
   constructor(
     private readonly parkingRepository: ParkingRepository,
     private readonly parkingRedisStore: ParkingRedisStore,
-    private readonly eventBridgePublisher: EventBridgePublisherService
+    private readonly eventBridgePublisher: EventBridgePublisherService,
+    private readonly auditLogRepository: AuditLogRepository,
+    private readonly ledCommands: IotLedCommandPublisher
   ) {}
 
   async handle(event: OccupancyChangedEvent): Promise<void> {
@@ -46,6 +50,27 @@ export class SensorOccupancyHandler {
         deviceId: event.deviceId,
         sensorType: event.sensorType
       })
+
+      if (
+        result.previousStatus === 'free' &&
+        result.spot.status === 'occupied' &&
+        !result.spot.userId
+      ) {
+        await this.auditLogRepository.insert({
+          eventType: 'anomaly_unregistered_occupancy',
+          parkingSpotId: event.spotId,
+          metadata: {
+            deviceId: event.deviceId,
+            sensorType: event.sensorType
+          },
+          timestamp: new Date(event.occurredAt)
+        })
+      }
+
+      await this.ledCommands.publishSpotMode(
+        event.spotId,
+        result.spot.status === 'occupied' ? 'occupied' : 'free'
+      )
 
       this.logger.log(
         `Sensor occupancy processed for ${event.spotId} (${result.previousStatus} -> ${result.spot.status})`

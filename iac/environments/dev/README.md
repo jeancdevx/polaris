@@ -337,16 +337,26 @@ pnpm kafka:smoke:msk:dev
 
 ## IoT Core — 4 ESP32 (Fase 10, solo dev)
 
-`iot-core.tf` provisiona Things + certificados para entrada, salida y plazas A/B.
-`rfid-validator` tiene `gate_commands_enabled = true` (comandos MQTT servo/LCD).
+`iot-core.tf` provisiona 4 Things alineados con el firmware PlatformIO:
 
-Tras `terraform apply`:
+| Clave Terraform | `deviceId`     | Rol        |
+| --------------- | -------------- | ---------- |
+| `entry-io-01`   | `entry-io-01`  | 2× RFID + LCD + HC-SR04 |
+| `actuators-01`  | `actuators-01` | Servos + FC-51 ×10 |
+| `leds-zone-a`   | `leds-zone-a`  | RGB plazas 1–5 |
+| `leds-zone-b`   | `leds-zone-b`  | RGB plazas 6–10 |
+
+Tras `terraform apply` (incluye `iot-moved.tf` para renombrar Things legacy sin
+rotar certificados):
 
 ```bash
 terraform output -json iot_device_thing_names
+terraform output -json iot_device_ids
 terraform output -json iot_device_certificate_pems   # sensitive
 terraform output -json iot_device_private_keys     # sensitive
-pnpm iot:smoke:dev
+
+cd firmware/esp32
+./scripts/write-config-from-terraform.sh actuators-01
 ```
 
 Prod/staging siguen con un solo dispositivo (`entry-gate-01`) hasta activar los 4

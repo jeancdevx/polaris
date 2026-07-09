@@ -36,6 +36,10 @@ variable "sensor_occupancy_rules" {
       description = "Route FC-51 occupancy changes to sensor-data-processor"
       topic       = "parking/sensors/occupancy/+"
     }
+    entry_proximity = {
+      description = "Route HC-SR04 entry proximity telemetry to sensor-data-processor"
+      topic       = "parking/rfid/entry/proximity"
+    }
   }
 }
 
@@ -54,12 +58,14 @@ variable "rfid_rules" {
   type = map(object({
     description = string
     topic       = string
+    sql         = optional(string)
   }))
 
   default = {
     rfid_entry = {
       description = "Route RFID entry scans to rfid-validator"
       topic       = "parking/rfid/entry/+"
+      sql         = "SELECT * FROM 'parking/rfid/entry/+' WHERE topic(4) <> 'proximity'"
     }
     rfid_exit = {
       description = "Route RFID exit scans to rfid-validator"
@@ -83,8 +89,11 @@ variable "devices" {
   }
 
   validation {
-    condition     = contains(keys(var.devices), "entry-gate-01")
-    error_message = "devices must include entry-gate-01 for entry gate MQTT and smoke tests."
+    condition = (
+      contains(keys(var.devices), "entry-gate-01") ||
+      contains(keys(var.devices), "entry-io-01")
+    )
+    error_message = "devices must include entry-gate-01 (prod/staging) or entry-io-01 (dev) for smoke tests."
   }
 }
 

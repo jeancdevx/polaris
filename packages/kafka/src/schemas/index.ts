@@ -2,14 +2,15 @@ import { KAFKA_TOPICS, type KafkaTopic } from '@polaris/shared-types'
 
 import {
   parseAuditEvent,
+  parseEntryProximityTelemetryEvent,
   parseOccupancyChangedEvent,
-  parseProximityDetectedEvent,
   parseReservationCancelledEvent,
   parseReservationCreatedEvent,
   parseRfidValidationEvent,
   parseVehicleEntryEvent,
   parseVehicleExitEvent,
   type AuditEvent,
+  type EntryProximityTelemetryEvent,
   type OccupancyChangedEvent,
   type ProximityDetectedEvent,
   type ReservationCancelledEvent,
@@ -21,6 +22,7 @@ import {
 
 export {
   parseAuditEvent,
+  parseEntryProximityTelemetryEvent,
   parseOccupancyChangedEvent,
   parseProximityDetectedEvent,
   parseReservationCancelledEvent,
@@ -29,6 +31,7 @@ export {
   parseVehicleEntryEvent,
   parseVehicleExitEvent,
   type AuditEvent,
+  type EntryProximityTelemetryEvent,
   type OccupancyChangedEvent,
   type ProximityDetectedEvent,
   type ReservationCancelledEvent,
@@ -49,6 +52,7 @@ export type ParsedKafkaEvent =
   | ReservationCancelledEvent
   | VehicleEntryEvent
   | VehicleExitEvent
+  | EntryProximityTelemetryEvent
   | OccupancyChangedEvent
   | ProximityDetectedEvent
   | RfidValidationEvent
@@ -70,7 +74,7 @@ export const parseKafkaEventByTopic = (
     case KAFKA_TOPICS.SENSOR_OCCUPANCY:
       return parseOccupancyChangedEvent(raw)
     case KAFKA_TOPICS.SENSOR_PROXIMITY:
-      return parseProximityDetectedEvent(raw)
+      return parseEntryProximityTelemetryEvent(raw)
     case KAFKA_TOPICS.RFID_VALIDATION:
       return parseRfidValidationEvent(raw)
     case KAFKA_TOPICS.AUDIT_EVENTS:

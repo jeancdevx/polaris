@@ -11,21 +11,21 @@ module "iot_core" {
   sensor_data_processor_function_name = module.sensor_data_processor.function_name
 
   devices = {
-    entry-gate-01 = {
-      device_id = "entry-gate-01"
-      role      = "entry-gate"
+    entry-io-01 = {
+      device_id = "entry-io-01"
+      role      = "entry-io"
     }
-    exit-gate-01 = {
-      device_id = "exit-gate-01"
-      role      = "exit-gate"
+    actuators-01 = {
+      device_id = "actuators-01"
+      role      = "actuators"
     }
-    spots-zone-a = {
-      device_id = "spots-zone-a"
-      role      = "spots-zone-a"
+    leds-zone-a = {
+      device_id = "leds-zone-a"
+      role      = "leds-zone"
     }
-    spots-zone-b = {
-      device_id = "spots-zone-b"
-      role      = "spots-zone-b"
+    leds-zone-b = {
+      device_id = "leds-zone-b"
+      role      = "leds-zone"
     }
   }
 

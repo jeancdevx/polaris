@@ -23,6 +23,7 @@ export const runDevReset = async (): Promise<DevResetResult> => {
       TRUNCATE TABLE
         sensor_data,
         audit_logs,
+        parking_sessions,
         reservations,
         rfid_tags,
         parking_spots,

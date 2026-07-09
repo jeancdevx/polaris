@@ -15,6 +15,7 @@ import {
 
 import { DatabaseModule } from '../infrastructure/database.module.js'
 import { CognitoAdminService } from './cognito-admin.service.js'
+import { releasedRfidUidForUser } from './release-rfid-uid.js'
 import { RfidValidationStore } from './rfid-validation.store.js'
 import { usersConfig } from './users.config.js'
 import { UsersModule } from './users.module.js'
@@ -140,6 +141,45 @@ describe('users integration', () => {
       expect(spot?.status).toBe('free')
     } finally {
       await dataSourceAfter.destroy()
+    }
+  })
+
+  it('registers a new user reusing an active visitor RFID', async () => {
+    const created = await usersService.create({
+      name: 'Jeancarlo Morales',
+      email: 'reclaim.visitor@example.com',
+      vehiclePlate: 'XYZ-123',
+      rfidUid: 'D2:D7:1B:F1',
+      userType: 'registered',
+      role: 'user',
+      password: 'PolarisTest1!'
+    })
+
+    expect(created.rfidUid).toBe('D2:D7:1B:F1')
+    expect(created.userType).toBe('registered')
+
+    const dataSource = createDataSource()
+    await dataSource.initialize()
+
+    try {
+      const visitor = await dataSource
+        .getRepository('User')
+        .findOne({ where: { userId: 'usr-card04' } })
+
+      expect(visitor?.isActive).toBe(false)
+      expect(visitor?.rfidUid).toBe(releasedRfidUidForUser('usr-card04'))
+
+      const rfidTag = await dataSource
+        .getRepository('RfidTag')
+        .findOne({ where: { rfidUid: 'D2:D7:1B:F1' } })
+
+      expect(rfidTag).toMatchObject({
+        userId: created.userId,
+        userType: 'registered',
+        isActive: true
+      })
+    } finally {
+      await dataSource.destroy()
     }
   })
 })

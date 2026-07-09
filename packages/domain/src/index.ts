@@ -75,11 +75,14 @@ export {
 } from './events/reservation-events.js'
 
 export {
+  createAccessDeniedEvent,
   createEntryDeniedEvent,
   createRfidValidatedEvent
 } from './events/rfid-events.js'
 export type {
+  AccessDenialReason,
   EntryDenialReason,
+  ParkingAccessType,
   RfidValidationResult
 } from './events/rfid-events.js'
 

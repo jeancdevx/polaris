@@ -216,6 +216,18 @@ variable "eventbridge_bus_name" {
   default     = "polaris-events"
 }
 
+variable "iot_data_endpoint" {
+  description = "AWS IoT Core ATS data endpoint for LED MQTT commands"
+  type        = string
+  default     = ""
+}
+
+variable "led_commands_enabled" {
+  description = "When true, event-processor-service publishes LED commands to IoT Core"
+  type        = bool
+  default     = false
+}
+
 variable "health_check_path" {
   description = "HTTP path for target group health checks"
   type        = string

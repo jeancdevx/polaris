@@ -23,9 +23,9 @@ Rutas protegidas: authorizer Cognito JWT. El **idToken** debe incluir
 no son válidos en parameter mapping de HTTP API.
 
 **Identidad en reservation-service:** el mapping `append:header.x-user-id` no es
-fiable con VPC Link → ALB. El servicio lee `preferred_username` del Bearer token
-(API GW ya validó el JWT). El header `X-User-Id` sigue funcionando para pruebas
-directas contra el ALB.
+fiable con VPC Link → ALB. El servicio usa `preferred_username` del Bearer token
+(coincide con la app móvil). El header `X-User-Id` solo aplica en pruebas
+directas contra el ALB sin JWT.
 
 ### Troubleshooting `X-User-Id header is required`
 

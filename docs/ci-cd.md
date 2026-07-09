@@ -31,7 +31,8 @@ secrets de GitHub, primer apply local):** [`deploy-environments.md`](./deploy-en
     ├── iac-apply-dev.yml
     ├── iac-apply-production.yml
     ├── db-bootstrap-dev.yml
-    └── db-bootstrap-production.yml
+    ├── db-bootstrap-production.yml
+    └── db-reset-dev.yml
 
 atlantis.yaml                     # Plan en PR (servidor Atlantis en ECS)
 ```
@@ -124,6 +125,29 @@ aws secretsmanager get-secret-value \
 ```
 
 Login: `admin@polaris.local` / contraseña del secret anterior.
+
+## DB reset dev (`db-reset-dev.yml`)
+
+**Solo manual** (`workflow_dispatch`). **Destructivo:** vacía tablas de aplicación en
+RDS dev, recarga el seed y re-sincroniza Redis (incluye borrar claves legacy `parking:*`).
+
+| Workflow | Trigger | Environment GHA |
+| -------- | ------- | ----------------- |
+| `db-reset-dev.yml` | Manual; input `confirm` = `reset-dev` | `dev` |
+
+| Paso | Qué hace |
+| ---- | -------- |
+| Build/push | Imagen `polaris-dev-db-bootstrap` (incluye `dist/reset.js`) |
+| `ecs run-task` | `node dist/reset.js` en subnets privadas |
+| Script | `TRUNCATE` → seed → flush Redis → `syncParkingRedis` |
+
+**No borra** usuarios de Cognito. Usar tras datos inconsistentes (p. ej. reservas
+parciales por CROSSSLOT) antes de probar de nuevo mobile/web.
+
+**Cómo lanzarlo:** GitHub → Actions → **DB reset dev** → Run workflow → escribe
+`reset-dev` en el campo de confirmación.
+
+Alternativa local: `pnpm db:reset:dev` (misma task ECS vía script).
 
 ## IaC — Atlantis (plan)
 

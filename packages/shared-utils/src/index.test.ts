@@ -6,6 +6,7 @@ import {
   isValidEmail,
   isValidRfidUid,
   isValidVehiclePlate,
+  normalizeIotDataEndpoint,
   parseTimestamp,
   retry,
   sleep
@@ -31,6 +32,15 @@ describe('shared-utils', () => {
     expect(isValidVehiclePlate('INVALID')).toBe(false)
     expect(isValidRfidUid('A3:BF:22:01')).toBe(true)
     expect(isValidRfidUid('bad')).toBe(false)
+  })
+
+  it('normalizes IoT data endpoints for AWS SDK clients', () => {
+    expect(
+      normalizeIotDataEndpoint('a1iijvdf1e4x1g-ats.iot.us-east-2.amazonaws.com')
+    ).toBe('https://a1iijvdf1e4x1g-ats.iot.us-east-2.amazonaws.com')
+    expect(
+      normalizeIotDataEndpoint('https://example.iot.us-east-1.amazonaws.com')
+    ).toBe('https://example.iot.us-east-1.amazonaws.com')
   })
 
   it('retries until success', async () => {

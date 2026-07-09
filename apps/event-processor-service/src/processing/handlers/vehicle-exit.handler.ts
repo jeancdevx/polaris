@@ -5,6 +5,7 @@ import type { VehicleExitEvent } from '@polaris/kafka'
 import { KAFKA_TOPICS } from '@polaris/shared-types'
 
 import { EventBridgePublisherService } from '../infrastructure/eventbridge-publisher.service.js'
+import { IotLedCommandPublisher } from '../infrastructure/iot-led-command.publisher.js'
 import { ParkingRedisStore } from '../parking/parking-redis.store.js'
 import { ParkingRepository } from '../parking/parking.repository.js'
 
@@ -15,7 +16,8 @@ export class VehicleExitHandler {
   constructor(
     private readonly parkingRepository: ParkingRepository,
     private readonly parkingRedisStore: ParkingRedisStore,
-    private readonly eventBridgePublisher: EventBridgePublisherService
+    private readonly eventBridgePublisher: EventBridgePublisherService,
+    private readonly ledCommands: IotLedCommandPublisher
   ) {}
 
   async handle(event: VehicleExitEvent): Promise<void> {
@@ -43,6 +45,8 @@ export class VehicleExitHandler {
         reservationId: event.reservationId,
         vehiclePlate: event.vehiclePlate
       })
+
+      await this.ledCommands.publishSpotMode(event.parkingSpotId, 'free')
 
       this.logger.log(
         `Vehicle exit processed for ${event.parkingSpotId} (${previousStatus} -> ${spot.status})`

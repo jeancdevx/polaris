@@ -3,7 +3,7 @@ import { runDevReset } from '@polaris/database'
 runDevReset()
   .then(result => {
     process.stdout.write(
-      `Dev reset completed: seeded ${result.seed.users} users, ${result.seed.parkingSpots} spots; Redis synced (${result.redisKeysDeleted} old keys removed)\n`
+      `Dev reset completed: seeded ${result.seed.users} users, ${result.seed.parkingSpots} spots, ${result.seed.rfidTags} RFID tags; Redis synced (${result.redisKeysDeleted} old keys removed)\n`
     )
   })
   .catch(error => {

@@ -60,7 +60,11 @@ export class UsersService {
   }
 
   async create(body: CreateAdminUserBody): Promise<CreateAdminUserResponse> {
-    await this.assertUniqueIdentity(body.email, body.rfidUid, body.userType)
+    const reclaimRfidFromUserId = await this.resolveRfidReclaim(
+      body.email,
+      body.rfidUid,
+      body.userType
+    )
 
     const userId = generateUserId()
     const password = body.password ?? generateTemporaryPassword()
@@ -91,7 +95,8 @@ export class UsersService {
         vehiclePlate: domainUser.vehiclePlate.value,
         rfidUid: domainUser.rfidUid.value,
         userType: body.userType,
-        role: body.role
+        role: body.role,
+        reclaimRfidFromUserId
       })
 
       const rfidTag = createRfidTag({
@@ -194,11 +199,11 @@ export class UsersService {
     return mapUserRowToResponse(row)
   }
 
-  private async assertUniqueIdentity(
+  private async resolveRfidReclaim(
     email: string,
     rfidUid: string,
     userType: CreateAdminUserBody['userType']
-  ): Promise<void> {
+  ): Promise<string | undefined> {
     const [existingEmail, existingRfid] = await Promise.all([
       this.usersRepository.findByEmail(email),
       this.usersRepository.findByRfidUid(rfidUid)
@@ -209,7 +214,7 @@ export class UsersService {
     }
 
     if (!existingRfid) {
-      return
+      return undefined
     }
 
     if (
@@ -217,13 +222,13 @@ export class UsersService {
       existingRfid.userType === 'visitor' &&
       existingRfid.isActive
     ) {
-      await this.usersRepository.deactivateUser(existingRfid.userId)
-      await this.rfidValidationStore.setActive(existingRfid.rfidUid, false)
-      return
+      return existingRfid.userId
     }
 
     if (existingRfid.isActive) {
       throw new ConflictException(`RFID ${rfidUid} is already assigned`)
     }
+
+    return undefined
   }
 }

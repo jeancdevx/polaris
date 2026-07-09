@@ -22,32 +22,51 @@ describe('buildSeedData', () => {
     ])
   })
 
-  it('creates one admin and one test user', () => {
+  it('creates admin, registered test user, and visitor', () => {
     const { users } = buildSeedData()
 
-    expect(users).toHaveLength(2)
+    expect(users).toHaveLength(3)
 
     const admin = users.find(user => user.role === 'admin')
     const testUser = users.find(user => user.userId === 'usr-12345')
+    const visitor = users.find(user => user.userId === 'usr-visitor01')
 
     expect(admin).toMatchObject({
       userId: 'usr-admin01',
       email: 'admin@polaris.local',
-      role: 'admin'
+      role: 'admin',
+      userType: 'registered'
     })
     expect(testUser).toMatchObject({
       userId: 'usr-12345',
       email: 'juan@example.com',
       vehiclePlate: 'ABC-1234',
       rfidUid: 'A3:BF:22:01',
-      role: 'user'
+      role: 'user',
+      userType: 'registered'
+    })
+    expect(visitor).toMatchObject({
+      userId: 'usr-visitor01',
+      email: 'visitor@polaris.local',
+      vehiclePlate: 'VIS-0001',
+      rfidUid: 'B1:CE:33:02',
+      role: 'user',
+      userType: 'visitor'
     })
   })
 
   it('creates RFID tags for seeded users', () => {
     const { rfidTags } = buildSeedData()
 
-    expect(rfidTags).toHaveLength(2)
+    expect(rfidTags).toHaveLength(3)
     expect(rfidTags.every(tag => tag.isActive)).toBe(true)
+    expect(rfidTags.map(tag => tag.rfidUid)).toEqual([
+      'A1:B2:C3:D4',
+      'A3:BF:22:01',
+      'B1:CE:33:02'
+    ])
+    expect(rfidTags.find(tag => tag.rfidUid === 'B1:CE:33:02')?.userType).toBe(
+      'visitor'
+    )
   })
 })

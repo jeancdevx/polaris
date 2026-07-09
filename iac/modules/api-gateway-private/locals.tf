@@ -14,6 +14,8 @@ locals {
   )
 
   api_endpoint = var.disable_execute_api_endpoint ? null : "https://${aws_apigatewayv2_api.private.id}.execute-api.${data.aws_region.current.region}.amazonaws.com"
+
+  admin_http_methods = ["DELETE", "GET", "PATCH", "POST", "PUT"]
 }
 
 data "aws_region" "current" {}

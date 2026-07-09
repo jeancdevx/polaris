@@ -32,7 +32,7 @@ cat >"$payload_file" <<EOF
 {
   "deviceId": "${device_id}",
   "event": "rfid_scan",
-  "rfid_uid": "A3:BF:22:01",
+  "rfid_uid": "40:62:BD:DC",
   "reader_location": "entry",
   "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }

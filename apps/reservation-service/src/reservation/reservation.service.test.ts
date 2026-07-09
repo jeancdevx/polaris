@@ -90,6 +90,60 @@ describe('ReservationService', () => {
     expect(redisClient.del).toHaveBeenCalledWith(parkingLockKey('spot-07'))
   })
 
+  it('returns reservation when Kafka publish fails after persistence', async () => {
+    const publisher = {
+      publishCreated: vi.fn().mockRejectedValue(new Error('kafka down')),
+      publishCancelled: vi.fn()
+    }
+
+    const moduleRef: TestingModule = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot({ load: [reservationConfig] })],
+      providers: [
+        ReservationService,
+        {
+          provide: RedisService,
+          useValue: {
+            getClient: vi.fn().mockResolvedValue(redisClient)
+          }
+        },
+        {
+          provide: ReservationRepository,
+          useValue: repository
+        },
+        {
+          provide: ReservationEventPublisher,
+          useValue: publisher
+        }
+      ]
+    }).compile()
+
+    const resilientService = moduleRef.get(ReservationService)
+
+    await expect(
+      resilientService.create('usr-12345', {
+        parkingSpotId: 'spot-07',
+        reservationDate: '2025-06-19T14:00:00.000Z'
+      })
+    ).resolves.toMatchObject({
+      reservationId: 'res-test0001',
+      userId: 'usr-12345'
+    })
+  })
+
+  it('returns reservation when lock release fails after persistence', async () => {
+    redisClient.del.mockRejectedValue(new Error('redis del failed'))
+
+    await expect(
+      service.create('usr-12345', {
+        parkingSpotId: 'spot-07',
+        reservationDate: '2025-06-19T14:00:00.000Z'
+      })
+    ).resolves.toMatchObject({
+      reservationId: 'res-test0001',
+      userId: 'usr-12345'
+    })
+  })
+
   it('returns conflict when lock cannot be acquired', async () => {
     redisClient.set.mockResolvedValue(null)
 

@@ -9,7 +9,7 @@
     "dev": "next dev --port 3000",
     "lint": "oxlint src",
     "start": "next start --port 3000",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "rm -rf .next/types tsconfig.tsbuildinfo && tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {

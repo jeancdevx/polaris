@@ -15,6 +15,7 @@ locals {
   secrets_resource_arns = length(var.secrets_manager_secret_arns) > 0 ? var.secrets_manager_secret_arns : [
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${var.project_name}/${var.environment}/rds-*",
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-rds-*",
+    "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:rds!cluster-*",
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-api-service-env-*",
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-reservation-service-env-*",
     "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:${local.name_prefix}-event-processor-service-env-*",

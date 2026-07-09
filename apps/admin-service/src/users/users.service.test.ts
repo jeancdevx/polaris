@@ -84,12 +84,6 @@ describe('UsersService', () => {
       userType: 'visitor',
       email: 'tarjeta-02@polaris.local'
     })
-    vi.mocked(usersRepository.deactivateUser).mockResolvedValue({
-      ...sampleRow,
-      userId: 'usr-card02',
-      userType: 'visitor',
-      isActive: false
-    })
     vi.mocked(usersRepository.insertUserWithRfidTag).mockResolvedValue(
       sampleRow
     )
@@ -104,12 +98,13 @@ describe('UsersService', () => {
       password: 'PolarisTest1!'
     })
 
-    expect(usersRepository.deactivateUser).toHaveBeenCalledWith('usr-card02')
-    expect(rfidValidationStore.setActive).toHaveBeenCalledWith(
-      'F2:BE:30:F1',
-      false
+    expect(usersRepository.insertUserWithRfidTag).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rfidUid: 'F2:BE:30:F1',
+        reclaimRfidFromUserId: 'usr-card02'
+      })
     )
-    expect(usersRepository.insertUserWithRfidTag).toHaveBeenCalledOnce()
+    expect(usersRepository.deactivateUser).not.toHaveBeenCalled()
   })
 
   it('rejects duplicate email', async () => {

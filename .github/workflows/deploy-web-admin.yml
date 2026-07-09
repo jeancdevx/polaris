@@ -4,8 +4,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description:
-          GitHub environment y sufijo de recursos AWS (dev, staging, prod)
+        description: GitHub environment (staging, prod)
         required: true
         type: string
 

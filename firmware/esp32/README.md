@@ -1,25 +1,24 @@
 # ESP32 Firmware (PlatformIO)
 
-Firmware Fase 10.3 para los 4 nodos Polaris. Ver `docs/flujos.md`.
+Firmware para los **4 nodos** Polaris. Ver `docs/flujos.md`.
 
-## Entornos
+## Entornos PlatformIO
 
-| Env      | Nodo            | Hardware                      | Plazas MQTT           |
-| -------- | --------------- | ----------------------------- | --------------------- |
-| `entry`  | `entry-gate-01` | HC-SR04, RC522, SG90, LCD I2C | —                     |
-| `exit`   | `exit-gate-01`  | RC522, SG90                   | —                     |
-| `zone_a` | `spots-zone-a`  | 4× FC-51, 4× RGB              | `spot-01` … `spot-04` |
-| `zone_b` | `spots-zone-b`  | 4× FC-51, 4× RGB              | `spot-07` … `spot-10` |
+| Env           | `deviceId`     | Thing AWS (dev)            | Hardware                                   |
+| ------------- | -------------- | -------------------------- | ------------------------------------------ |
+| `entry_io`    | `entry-io-01`  | `polaris-dev-entry-io-01`  | 2× RFID (entrada/salida), LCD I2C, HC-SR04 |
+| `actuators`   | `actuators-01` | `polaris-dev-actuators-01` | 2× SG90, 10× FC-51 (spots 1–10)            |
+| `leds_zone_a` | `leds-zone-a`  | `polaris-dev-leds-zone-a`  | RGB plazas 1–5                             |
+| `leds_zone_b` | `leds-zone-b`  | `polaris-dev-leds-zone-b`  | RGB plazas 6–10                            |
 
-`spot-05` y `spot-06` no tienen sensor en hardware (8 plazas instrumentadas de
-10 lógicas).
+Cada placa necesita **su propio certificado** en `polaris_device.h` (Thing name
+= client id MQTT).
 
 ## Build / flash
 
 ```bash
 cd firmware/esp32
-pio run -e entry          # compilar entrada
-pio run -e entry -t upload
+pio run -e actuators -t upload
 pio device monitor
 ```
 
@@ -28,68 +27,49 @@ pio device monitor
 Copiar `include/polaris_device.h.example` → `include/polaris_device.h`
 (gitignored).
 
-PEMs como `static const char[] = R"EOF(...)EOF";` — ver comentarios en el
-example.
+Tras `terraform apply` en dev:
 
 ```bash
-./scripts/write-config-from-terraform.sh entry-gate-01
+cd firmware/esp32
+./scripts/write-config-from-terraform.sh actuators-01
+# Pegar PEM cert/key del output indicado
 ```
 
-## Mapa de pines (ESP32 DevKit V1)
+Claves disponibles: `entry-io-01`, `actuators-01`, `leds-zone-a`, `leds-zone-b`.
 
-Editar `include/pins_*.h` si tu cableado difiere.
+## Mapa de pines
 
-### Entrada (`pins_entry.h`)
+Editar `include/pins_*.h` según cableado.
 
-| Componente | Pines                                  |
-| ---------- | -------------------------------------- |
-| RC522 SPI  | SS=5, RST=27, SCK=18, MISO=19, MOSI=23 |
-| HC-SR04    | TRIG=17, ECHO=16                       |
-| SG90       | 13                                     |
-| LCD I2C    | SDA=21, SCL=22, addr `0x27`            |
+| Board     | Archivo            |
+| --------- | ------------------ |
+| entry_io  | `pins_entry_io.h`  |
+| actuators | `pins_actuators.h` |
+| leds      | `pins_leds.h`      |
 
-### Salida (`pins_exit.h`)
+### `entry_io` — 2× RC522 (SPI compartido)
 
-| Componente | Pines             |
-| ---------- | ----------------- |
-| RC522 SPI  | igual que entrada |
-| SG90       | 13                |
+| Señal | Entrada | Salida  | Compartido |
+| ----- | ------- | ------- | ---------- |
+| SCK   | —       | —       | GPIO 18    |
+| MISO  | —       | —       | GPIO 19    |
+| MOSI  | —       | —       | GPIO 23    |
+| SS    | GPIO 5  | GPIO 4  | —          |
+| RST   | GPIO 27 | GPIO 15 | —          |
 
-### Zonas A/B (`pins_zone.h`) — 16 GPIO
+HC-SR04: TRIG=17, ECHO=16. LCD I2C: SDA=21, SCL=22.
 
-| Slot | FC-51 | RGB (R,G,B) | zone_a spot | zone_b spot |
-| ---- | ----- | ----------- | ----------- | ----------- |
-| 0    | 32    | 14, 27, 26  | spot-01     | spot-07     |
-| 1    | 33    | 17, 16, 4   | spot-02     | spot-08     |
-| 2    | 25    | 18, 19, 21  | spot-03     | spot-09     |
-| 3    | 35    | 22, 23, 5   | spot-04     | spot-10     |
-
-FC-51: **LOW** = obstáculo. RGB cátodo común: HIGH enciende color.
-
-## Estructura código
-
-```
-include/           Config, pines, headers drivers
-src/common/        Drivers (wifi, RFID, ultrasonic, servo, LCD, FC-51, RGB)
-src/entry/         Flujo ingreso (proximidad + RFID + barrera segura)
-src/exit/          Flujo salida (RFID + barrera heurística)
-src/zone/          Ocupación FC-51 + LEDs + MQTT
-```
-
-## Comportamiento (resumen)
-
-**Entrada:** HC-SR04 cada 200 ms → `proximity_detected`; RC522 → `rfid_scan`;
-comandos MQTT servo/LCD; cierre barrera solo con zona despejada (>50 cm, 500
-ms).
-
-**Salida:** RC522 → `rfid_scan`; apertura por MQTT; cierre a los 6 s sin nueva
-lectura (mín. 2 s abierta, máx. 60 s).
-
-**Zona:** FC-51 con debounce 300 ms → `occupancy_changed`; LED
-verde/rojo/parpadeo por comando `parking/commands/led/{spotId}`.
+FC-51: **LOW** = obstáculo. Sin sensor cableado, usar `INPUT_PULLUP` o no
+alimentar el ESP (pines flotantes → falsas ocupaciones en AWS).
 
 ## Smoke desde PC
 
 ```bash
 pnpm iot:smoke:dev
 ```
+
+## Importante (dev)
+
+El ESP **actuators** publica `occupancy_changed` a IoT Core → actualiza
+Redis/RDS en AWS. Sin FC-51 reales, corre **DB reset dev** en GitHub Actions
+tras pruebas de banco.

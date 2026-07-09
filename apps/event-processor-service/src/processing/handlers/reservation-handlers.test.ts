@@ -10,8 +10,14 @@ describe('ReservationCreatedHandler', () => {
     const eventBridgePublisher = {
       publishReservationEvent: vi.fn(async () => undefined)
     }
+    const ledCommands = {
+      publishSpotMode: vi.fn(async () => true)
+    }
 
-    const handler = new ReservationCreatedHandler(eventBridgePublisher as never)
+    const handler = new ReservationCreatedHandler(
+      eventBridgePublisher as never,
+      ledCommands as never
+    )
 
     await handler.handle({
       eventName: KAFKA_TOPICS.RESERVATION_CREATED,
@@ -41,9 +47,13 @@ describe('ReservationCancelledHandler', () => {
     const eventBridgePublisher = {
       publishReservationEvent: vi.fn(async () => undefined)
     }
+    const ledCommands = {
+      publishSpotMode: vi.fn(async () => true)
+    }
 
     const handler = new ReservationCancelledHandler(
-      eventBridgePublisher as never
+      eventBridgePublisher as never,
+      ledCommands as never
     )
 
     await handler.handle({

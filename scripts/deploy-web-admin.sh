@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-environment="${1:?Usage: deploy-web-admin.sh <dev|staging|prod>}"
+environment="${1:?Usage: deploy-web-admin.sh <staging|prod>}"
+
+if [[ "${environment}" != "staging" && "${environment}" != "prod" ]]; then
+  echo "Unsupported environment: ${environment} (use staging or prod)" >&2
+  exit 1
+fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 aws_region="${AWS_REGION:-us-east-2}"
@@ -51,15 +56,16 @@ find "${out_dir}" -name '*.html' -print0 | while IFS= read -r -d '' file; do
     --content-type "text/html; charset=utf-8"
 done
 
-if [ -n "${dist_id}" ]; then
-  echo "Invalidating CloudFront distribution ${dist_id}"
-  aws cloudfront create-invalidation \
-    --distribution-id "${dist_id}" \
-    --paths "/*" \
-    --query 'Invalidation.Id' \
-    --output text
-else
-  echo "WEB_CLOUDFRONT_DISTRIBUTION_ID not set — skipping CloudFront invalidation"
+if [ -z "${dist_id}" ]; then
+  echo "WEB_CLOUDFRONT_DISTRIBUTION_ID is required for ${environment}" >&2
+  exit 1
 fi
+
+echo "Invalidating CloudFront distribution ${dist_id}"
+aws cloudfront create-invalidation \
+  --distribution-id "${dist_id}" \
+  --paths "/*" \
+  --query 'Invalidation.Id' \
+  --output text
 
 echo "Web-admin deployed to s3://${bucket}/${prefix}/"

@@ -4,7 +4,7 @@ resource "aws_iot_topic_rule" "rfid_validator" {
   name        = replace("${local.name_prefix}_${each.key}", "-", "_")
   description = each.value.description
   enabled     = true
-  sql         = "SELECT * FROM '${each.value.topic}'"
+  sql         = coalesce(each.value.sql, "SELECT * FROM '${each.value.topic}'")
   sql_version = "2016-03-23"
 
   lambda {

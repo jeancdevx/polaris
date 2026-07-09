@@ -19,6 +19,7 @@ data "aws_iam_policy_document" "device" {
       "${local.iot_arn_prefix}:topic/parking/rfid/exit/*",
       "${local.iot_arn_prefix}:topic/parking/rfid/entry/proximity",
       "${local.iot_arn_prefix}:topic/parking/sensors/occupancy/*",
+      "${local.iot_arn_prefix}:topic/parking/commands/servo/*",
       "${local.iot_arn_prefix}:topic/parking/commands/servo/*/status",
       "${local.iot_arn_prefix}:topic/parking/commands/display/*/status"
     ]
@@ -31,6 +32,7 @@ data "aws_iam_policy_document" "device" {
     ]
     resources = [
       "${local.iot_arn_prefix}:topicfilter/parking/commands/servo/*",
+      "${local.iot_arn_prefix}:topicfilter/parking/commands/servo/*/status",
       "${local.iot_arn_prefix}:topicfilter/parking/commands/display/*",
       "${local.iot_arn_prefix}:topicfilter/parking/commands/led/*"
     ]
@@ -43,6 +45,7 @@ data "aws_iam_policy_document" "device" {
     ]
     resources = [
       "${local.iot_arn_prefix}:topic/parking/commands/servo/*",
+      "${local.iot_arn_prefix}:topic/parking/commands/servo/*/status",
       "${local.iot_arn_prefix}:topic/parking/commands/display/*",
       "${local.iot_arn_prefix}:topic/parking/commands/led/*"
     ]

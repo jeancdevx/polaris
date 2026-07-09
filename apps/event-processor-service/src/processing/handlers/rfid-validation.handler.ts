@@ -6,6 +6,7 @@ import type { RfidValidationEvent } from '@polaris/kafka'
 
 import { VehicleEntryHandler } from './vehicle-entry.handler.js'
 import { VehicleExitHandler } from './vehicle-exit.handler.js'
+import { WalkInSessionHandler } from './walk-in-session.handler.js'
 
 @Injectable()
 export class RfidValidationHandler {
@@ -13,7 +14,8 @@ export class RfidValidationHandler {
 
   constructor(
     private readonly vehicleEntryHandler: VehicleEntryHandler,
-    private readonly vehicleExitHandler: VehicleExitHandler
+    private readonly vehicleExitHandler: VehicleExitHandler,
+    private readonly walkInSessionHandler: WalkInSessionHandler
   ) {}
 
   async handle(event: RfidValidationEvent): Promise<void> {
@@ -24,12 +26,22 @@ export class RfidValidationHandler {
       return
     }
 
+    const accessType =
+      event.accessType ?? (event.parkingSpotId ? 'reserved' : 'walk_in')
+
+    if (accessType === 'walk_in') {
+      await this.walkInSessionHandler.handle(event)
+      return
+    }
+
     if (!event.userId || !event.parkingSpotId) {
       this.logger.warn(
         `RFID validation missing userId or parkingSpotId for ${event.rfidUid}`
       )
       return
     }
+
+    const vehiclePlate = event.vehiclePlate ?? 'RFID'
 
     if (event.readerLocation === 'entry') {
       await this.vehicleEntryHandler.handle({
@@ -39,7 +51,7 @@ export class RfidValidationHandler {
         eventId: randomUUID(),
         userId: event.userId,
         parkingSpotId: event.parkingSpotId,
-        vehiclePlate: 'RFID',
+        vehiclePlate,
         reservationId: event.reservationId,
         gate: 'entry'
       })
@@ -53,7 +65,7 @@ export class RfidValidationHandler {
       eventId: randomUUID(),
       userId: event.userId,
       parkingSpotId: event.parkingSpotId,
-      vehiclePlate: 'RFID',
+      vehiclePlate,
       reservationId: event.reservationId,
       gate: 'exit'
     })

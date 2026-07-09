@@ -1,7 +1,7 @@
 import {
-  createEntryDeniedEvent,
+  createAccessDeniedEvent,
   createRfidValidatedEvent,
-  type EntryDenialReason,
+  type AccessDenialReason,
   type RfidValidationResult
 } from '@polaris/domain'
 import {
@@ -43,8 +43,8 @@ export class KafkaRfidPublisher {
     })
 
     if (!input.result.valid && input.result.reason) {
-      const denialReason = input.result.reason as EntryDenialReason
-      const denied = createEntryDeniedEvent({
+      const denialReason = input.result.reason as AccessDenialReason
+      const denied = createAccessDeniedEvent({
         rfidUid: input.scan.rfidUid,
         gate: input.scan.readerLocation,
         reason: denialReason,

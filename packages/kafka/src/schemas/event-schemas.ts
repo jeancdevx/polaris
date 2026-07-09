@@ -80,10 +80,13 @@ export type RfidValidationEvent = KafkaEventEnvelope &
     deviceId: string
     valid: boolean
     reason?: string
+    accessType?: 'reserved' | 'walk_in'
+    sessionId?: string
     userId?: string
     reservationId?: string
     parkingSpotId?: string
     userType?: string
+    vehiclePlate?: string
   }>
 
 export type AuditEvent = KafkaEventEnvelope &
@@ -273,10 +276,16 @@ export const parseRfidValidationEvent = (raw: unknown): RfidValidationEvent =>
       deviceId: requireStringField(record, 'deviceId'),
       valid: record.valid,
       reason: optionalStringField(record, 'reason'),
+      accessType:
+        record.accessType === 'reserved' || record.accessType === 'walk_in'
+          ? record.accessType
+          : undefined,
+      sessionId: optionalStringField(record, 'sessionId'),
       userId: optionalStringField(record, 'userId'),
       reservationId: optionalStringField(record, 'reservationId'),
       parkingSpotId: optionalStringField(record, 'parkingSpotId'),
-      userType: optionalStringField(record, 'userType')
+      userType: optionalStringField(record, 'userType'),
+      vehiclePlate: optionalStringField(record, 'vehiclePlate')
     }
   })
 

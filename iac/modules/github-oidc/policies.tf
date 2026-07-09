@@ -75,6 +75,26 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
+    sid    = "RdsReadForBootstrap"
+    effect = "Allow"
+    actions = [
+      "rds:DescribeDBClusters"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "SecretsReadForBootstrap"
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue"
+    ]
+    resources = [
+      "arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:rds!cluster-*"
+    ]
+  }
+
+  statement {
     sid     = "PassBootstrapTaskRoles"
     effect  = "Allow"
     actions = ["iam:PassRole"]

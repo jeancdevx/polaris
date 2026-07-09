@@ -8,6 +8,7 @@ import { RfidValidationHandler } from './handlers/rfid-validation.handler.js'
 import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
 import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
+import { WalkInSessionHandler } from './handlers/walk-in-session.handler.js'
 
 import { EventDispatcherService } from './event-dispatcher.service.js'
 import { eventProcessorConfig } from './event-processor.config.js'
@@ -36,6 +37,7 @@ import { ParkingRepository } from './parking/parking.repository.js'
     ReservationCreatedHandler,
     ReservationCancelledHandler,
     RfidValidationHandler,
+    WalkInSessionHandler,
     EntryProximityHandler,
     EventDispatcherService,
     KafkaConsumerService

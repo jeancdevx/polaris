@@ -28,7 +28,6 @@ resource "aws_secretsmanager_secret" "db_bootstrap_env" {
 resource "aws_secretsmanager_secret_version" "db_bootstrap_env" {
   secret_id = aws_secretsmanager_secret.db_bootstrap_env.id
   secret_string = jsonencode({
-    DATABASE_URL             = local.database_url
     REDIS_URL                = var.redis_url
     BOOTSTRAP_ADMIN_PASSWORD = local.bootstrap_admin_password
   })
@@ -54,13 +53,20 @@ resource "aws_ecs_task_definition" "db_bootstrap" {
         { name = "AWS_REGION", value = var.aws_region },
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
         { name = "BOOTSTRAP_ADMIN_EMAIL", value = var.bootstrap_admin_email },
-        { name = "BOOTSTRAP_ADMIN_USER_ID", value = var.bootstrap_admin_user_id }
+        { name = "BOOTSTRAP_ADMIN_USER_ID", value = var.bootstrap_admin_user_id },
+        { name = "DB_HOST", value = var.rds_cluster_endpoint },
+        { name = "DB_PORT", value = tostring(var.rds_cluster_port) },
+        { name = "DB_NAME", value = var.rds_database_name }
       ]
 
       secrets = [
         {
-          name      = "DATABASE_URL"
-          valueFrom = "${aws_secretsmanager_secret.db_bootstrap_env.arn}:DATABASE_URL::"
+          name      = "DB_USERNAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:username::"
+        },
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${var.rds_master_user_secret_arn}:password::"
         },
         {
           name      = "REDIS_URL"

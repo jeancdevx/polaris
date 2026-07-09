@@ -93,6 +93,13 @@ jobs:
           echo "revision=$REV" >> "$GITHUB_OUTPUT"
           echo "Registered ${FAMILY}:${REV} with image ${IMAGE}"
 
+      - name: Resolve database URL from RDS
+        id: db_url
+        run: |
+          DATABASE_URL="$(bash scripts/build-database-url-from-rds.sh "${NAME_PREFIX}")"
+          echo "::add-mask::$DATABASE_URL"
+          echo "url=$DATABASE_URL" >> "$GITHUB_OUTPUT"
+
       - name: Run db-reset ECS task
         id: run
         run: |
@@ -107,9 +114,10 @@ jobs:
             --output text)
 
           OVERRIDES=$(jq -n \
+            --arg url "${{ steps.db_url.outputs.url }}" \
             --arg cmd0 "node" \
             --arg cmd1 "dist/reset.js" \
-            '{containerOverrides:[{name:"db-bootstrap",command:[$cmd0,$cmd1]}]}')
+            '{containerOverrides:[{name:"db-bootstrap",command:[$cmd0,$cmd1],environment:[{name:"DATABASE_URL",value:$url}]}]}')
 
           TASK_ARN=$(aws ecs run-task \
             --cluster "${NAME_PREFIX}-cluster" \

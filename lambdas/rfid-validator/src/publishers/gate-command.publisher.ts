@@ -5,11 +5,16 @@ import {
 
 import type { RfidScanEvent } from '../iot-event.js'
 import type { RfidValidatorEnv } from '../read-env.js'
+import {
+  displayMessageForAllowed,
+  displayMessageForDenied
+} from './display-messages.js'
 
 export type GateCommandContext = Readonly<{
   scan: RfidScanEvent
-  userName?: string
+  accessType?: 'reserved' | 'walk_in'
   parkingSpotId?: string
+  reason?: string
 }>
 
 export class GateCommandPublisher {
@@ -32,29 +37,20 @@ export class GateCommandPublisher {
       return false
     }
 
-    if (context.scan.readerLocation === 'entry') {
-      await this.publish(
-        `parking/commands/display/${this.env.entryDisplayDeviceId}`,
-        {
-          line1: context.userName
-            ? `Bienvenido ${context.userName.split(' ')[0]}`
-            : 'Bienvenido',
-          line2: context.parkingSpotId
-            ? `Plaza ${context.parkingSpotId.replace('spot-', '')} reservada`
-            : 'Acceso autorizado',
-          backlight: true
-        }
-      )
+    const display = displayMessageForAllowed({
+      readerLocation: context.scan.readerLocation,
+      accessType: context.accessType,
+      parkingSpotId: context.parkingSpotId
+    })
 
-      await this.publish(
-        `parking/commands/servo/${this.env.entryServoDeviceId}`,
-        { action: 'open', angle: 90 }
-      )
+    await this.publishDisplay(display)
 
-      return true
-    }
+    const servoId =
+      context.scan.readerLocation === 'entry'
+        ? this.env.entryServoDeviceId
+        : this.env.exitServoDeviceId
 
-    await this.publish(`parking/commands/servo/${this.env.exitServoDeviceId}`, {
+    await this.publish(`parking/commands/servo/${servoId}`, {
       action: 'open',
       angle: 90
     })
@@ -63,20 +59,27 @@ export class GateCommandPublisher {
   }
 
   async publishDenied(context: GateCommandContext): Promise<boolean> {
-    if (!this.client || context.scan.readerLocation !== 'entry') {
+    if (!this.client) {
       return false
     }
 
+    const display = displayMessageForDenied(context.reason)
+    await this.publishDisplay(display)
+    return true
+  }
+
+  private async publishDisplay(display: {
+    line1: string
+    line2: string
+  }): Promise<void> {
     await this.publish(
       `parking/commands/display/${this.env.entryDisplayDeviceId}`,
       {
-        line1: 'Acceso denegado',
-        line2: 'Sin reserva activa',
+        line1: display.line1,
+        line2: display.line2,
         backlight: true
       }
     )
-
-    return true
   }
 
   private async publish(

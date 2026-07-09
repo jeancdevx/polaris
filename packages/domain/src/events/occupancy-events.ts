@@ -37,3 +37,31 @@ export const createProximityDetectedEvent = (input: {
       distanceCm: input.distanceCm
     }
   })
+
+export type EntryProximityTelemetryEventName =
+  | 'proximity_detected'
+  | 'proximity_timeout'
+  | 'passage_in_progress'
+  | 'passage_stalled'
+  | 'exit_barrier_timeout'
+
+export const createEntryProximityTelemetryEvent = (input: {
+  deviceId: string
+  event: EntryProximityTelemetryEventName
+  distanceCm?: number
+  gateState?: string
+  occurredAt?: Date
+}): DomainEvent =>
+  createDomainEvent({
+    eventName: KAFKA_TOPICS.SENSOR_PROXIMITY,
+    aggregateId: input.deviceId,
+    occurredAt: input.occurredAt,
+    payload: {
+      deviceId: input.deviceId,
+      event: input.event,
+      ...(input.distanceCm !== undefined
+        ? { distanceCm: input.distanceCm }
+        : {}),
+      ...(input.gateState !== undefined ? { gateState: input.gateState } : {})
+    }
+  })

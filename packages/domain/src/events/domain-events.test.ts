@@ -66,10 +66,10 @@ describe('Domain events', () => {
     const occupancy = createOccupancyChangedEvent({
       spotId: 'spot-05',
       status: 'occupied',
-      deviceId: 'spots-zone-a'
+      deviceId: 'actuators-01'
     })
     const proximity = createProximityDetectedEvent({
-      deviceId: 'entry-gate-01',
+      deviceId: 'entry-io-01',
       distanceCm: 8
     })
     expect(occupancy.eventName).toBe(KAFKA_TOPICS.SENSOR_OCCUPANCY)
@@ -81,7 +81,7 @@ describe('Domain events', () => {
     const validated = createRfidValidatedEvent({
       rfidUid: 'A3:BF:22:01',
       readerLocation: 'entry',
-      deviceId: 'entry-gate-01',
+      deviceId: 'entry-io-01',
       result: { valid: true, userId: 'usr-12345' }
     })
     const denied = createEntryDeniedEvent({

@@ -57,7 +57,6 @@ bool publishServoCommand(const char* servoId, const char* action, int angle) {
 
 void closeEntryGateSafe(const char* reason) {
   publishServoCommand(POLARIS_ENTRY_SERVO_ID, "close", polaris::hw::kServoClosedAngle);
-  gEntryGateOpenAssumed = false;
   gProximityActive = false;
   gClearedSinceMs = 0;
   gPassageStalledPublished = false;
@@ -65,31 +64,65 @@ void closeEntryGateSafe(const char* reason) {
   Serial.printf("[entry_io] Entry gate close requested (%s)\n", reason);
 }
 
-void openEntryGate() {
-  publishServoCommand(POLARIS_ENTRY_SERVO_ID, "open", polaris::hw::kServoOpenAngle);
-  gEntryGateOpenAssumed = true;
-  gGateOpenedMs = millis();
-  gClearedSinceMs = 0;
-  gPassageStalledPublished = false;
-  Serial.println("[entry_io] Entry gate open requested");
-}
-
-void openExitGate() {
-  publishServoCommand(POLARIS_EXIT_SERVO_ID, "open", polaris::hw::kServoOpenAngle);
-  gExitGateOpenAssumed = true;
-  gExitGateOpenedMs = millis();
-  Serial.println("[entry_io] Exit gate open requested");
-}
-
 void closeExitGate(const char* reason) {
   publishServoCommand(POLARIS_EXIT_SERVO_ID, "close", polaris::hw::kServoClosedAngle);
-  gExitGateOpenAssumed = false;
   Serial.printf("[entry_io] Exit gate close requested (%s)\n", reason);
+}
+
+void publishExitBarrierTimeout() {
+  if (gClient == nullptr || !gClient->isMqttConnected()) {
+    return;
+  }
+
+  JsonDocument doc;
+  doc["deviceId"] = POLARIS_DEVICE_ID;
+  doc["event"] = "exit_barrier_timeout";
+  doc["timestamp"] = polaris::time::nowEpochMs();
+  gClient->publishJson(polaris::mqtt::kRfidEntryProximityTopic, doc);
+}
+
+void handleServoStatus(const char* servoId, JsonDocument& doc) {
+  const char* status = doc["status"] | "";
+  const bool isOpen = strcmp(status, "open") == 0;
+
+  if (strstr(servoId, POLARIS_ENTRY_SERVO_ID) != nullptr) {
+    gEntryGateOpenAssumed = isOpen;
+    if (isOpen) {
+      gGateOpenedMs = millis();
+      gClearedSinceMs = 0;
+      gPassageStalledPublished = false;
+      Serial.println("[entry_io] Entry gate reported open");
+      return;
+    }
+
+    gProximityActive = false;
+    Serial.println("[entry_io] Entry gate reported closed");
+    return;
+  }
+
+  if (strstr(servoId, POLARIS_EXIT_SERVO_ID) != nullptr) {
+    gExitGateOpenAssumed = isOpen;
+    if (isOpen) {
+      gExitGateOpenedMs = millis();
+      Serial.println("[entry_io] Exit gate reported open");
+      return;
+    }
+
+    Serial.println("[entry_io] Exit gate reported closed");
+  }
 }
 
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   JsonDocument doc;
   if (deserializeJson(doc, reinterpret_cast<const char*>(payload), length)) {
+    return;
+  }
+
+  if (strstr(topic, "/servo/") != nullptr && strstr(topic, "/status") != nullptr) {
+    const char* servoId = strstr(topic, "/servo/") + 7;
+    char servoKey[32];
+    snprintf(servoKey, sizeof(servoKey), "%.*s", (int)strcspn(servoId, "/"), servoId);
+    handleServoStatus(servoKey, doc);
     return;
   }
 
@@ -116,6 +149,8 @@ WifiMqttConfig makeConfig() {
 
 void subscribeCommands(WifiMqttClient& client) {
   client.subscribe(polaris::mqtt::displayCommandTopic(POLARIS_ENTRY_DISPLAY_ID).c_str());
+  client.subscribe(polaris::mqtt::servoStatusTopic(POLARIS_ENTRY_SERVO_ID).c_str());
+  client.subscribe(polaris::mqtt::servoStatusTopic(POLARIS_EXIT_SERVO_ID).c_str());
 }
 
 void publishProximity(int distanceCm) {
@@ -264,6 +299,7 @@ void handleExitGate(unsigned long nowMs) {
   const unsigned long openMs = nowMs - gExitGateOpenedMs;
 
   if (openMs >= polaris::hw::kExitMaxOpenMs) {
+    publishExitBarrierTimeout();
     closeExitGate("exit_max_open_timeout");
     return;
   }
@@ -282,7 +318,6 @@ void handleEntryRfid() {
 
   gProximityActive = false;
   publishRfidScan(uid, "entry");
-  openEntryGate();
 }
 
 void handleExitRfid() {
@@ -292,7 +327,6 @@ void handleExitRfid() {
   }
 
   publishRfidScan(uid, "exit");
-  openExitGate();
 }
 
 void ensureMqtt() {

@@ -1,18 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common'
 
 import type {
+  EntryProximityTelemetryEvent,
   KafkaMessageContext,
   OccupancyChangedEvent,
   ParsedKafkaEvent,
   ReservationCancelledEvent,
   ReservationCreatedEvent,
+  RfidValidationEvent,
   VehicleEntryEvent,
   VehicleExitEvent
 } from '@polaris/kafka'
 import { KAFKA_TOPICS, type KafkaTopic } from '@polaris/shared-types'
 
+import { EntryProximityHandler } from './handlers/entry-proximity.handler.js'
 import { ReservationCancelledHandler } from './handlers/reservation-cancelled.handler.js'
 import { ReservationCreatedHandler } from './handlers/reservation-created.handler.js'
+import { RfidValidationHandler } from './handlers/rfid-validation.handler.js'
 import { SensorOccupancyHandler } from './handlers/sensor-occupancy.handler.js'
 import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
@@ -27,7 +31,9 @@ export class EventDispatcherService {
     private readonly vehicleExitHandler: VehicleExitHandler,
     private readonly sensorOccupancyHandler: SensorOccupancyHandler,
     private readonly reservationCreatedHandler: ReservationCreatedHandler,
-    private readonly reservationCancelledHandler: ReservationCancelledHandler
+    private readonly reservationCancelledHandler: ReservationCancelledHandler,
+    private readonly rfidValidationHandler: RfidValidationHandler,
+    private readonly entryProximityHandler: EntryProximityHandler
   ) {}
 
   async dispatch(
@@ -44,6 +50,14 @@ export class EventDispatcherService {
       case KAFKA_TOPICS.SENSOR_OCCUPANCY:
         await this.sensorOccupancyHandler.handle(event as OccupancyChangedEvent)
         break
+      case KAFKA_TOPICS.SENSOR_PROXIMITY:
+        await this.entryProximityHandler.handle(
+          event as EntryProximityTelemetryEvent
+        )
+        break
+      case KAFKA_TOPICS.RFID_VALIDATION:
+        await this.rfidValidationHandler.handle(event as RfidValidationEvent)
+        break
       case KAFKA_TOPICS.RESERVATION_CREATED:
         await this.reservationCreatedHandler.handle(
           event as ReservationCreatedEvent
@@ -53,6 +67,9 @@ export class EventDispatcherService {
         await this.reservationCancelledHandler.handle(
           event as ReservationCancelledEvent
         )
+        break
+      case KAFKA_TOPICS.AUDIT_EVENTS:
+        this.logger.debug(`Audit event consumed on ${context.topic}`)
         break
       default:
         this.logger.debug(`No handler for topic ${context.topic}`)

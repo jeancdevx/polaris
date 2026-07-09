@@ -28,7 +28,8 @@
     "@polaris/shared-utils": "workspace:*",
     "redis": "6.0.0",
     "reflect-metadata": "0.2.2",
-    "rxjs": "7.8.2"
+    "rxjs": "7.8.2",
+    "typeorm": "1.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "11.0.23",

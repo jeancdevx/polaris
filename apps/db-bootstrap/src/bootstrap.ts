@@ -2,18 +2,13 @@ import { runBootstrapIfNeeded } from '@polaris/database'
 
 runBootstrapIfNeeded()
   .then(result => {
-    if (result.skipped) {
-      process.stdout.write(
-        `Bootstrap skipped: ${result.reason ?? 'no changes needed'}\n`
-      )
-      return
-    }
-
-    const parts = ['Bootstrap completed']
+    const parts = result.skipped
+      ? [`Bootstrap skipped: ${result.reason ?? 'no changes needed'}`]
+      : ['Bootstrap completed']
 
     if (result.seed) {
       parts.push(
-        `seeded ${result.seed.users} users, ${result.seed.parkingSpots} spots`
+        `seed synced ${result.seed.users} users, ${result.seed.parkingSpots} spots, ${result.seed.rfidTags} RFID tags`
       )
     }
 

@@ -86,17 +86,26 @@ export const runBootstrapIfNeeded = async (
   )(cognitoConfig)
 
   if (userCount > 0 && hasAdminInDb && hasAdminInCognito) {
+    const seed = await runSeedFn()
+    await syncParkingRedisFn()
+
     return {
       skipped: true,
-      reason: 'database and Cognito admin already provisioned'
+      reason: 'database and Cognito admin already provisioned',
+      seed,
+      redisSynced: true
     }
   }
 
   if (userCount > 0 && hasAdminInDb && !hasAdminInCognito) {
+    const seed = await runSeedFn()
+    await syncParkingRedisFn()
     const cognitoAdminCreated = await ensureCognitoAdmin(cognitoConfig, deps)
 
     return {
       skipped: false,
+      seed,
+      redisSynced: true,
       cognitoAdminCreated
     }
   }

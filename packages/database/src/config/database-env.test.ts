@@ -35,6 +35,8 @@ describe('readDatabaseEnv', () => {
     delete process.env.DB_USERNAME
     delete process.env.DB_PASSWORD
 
-    expect(() => readDatabaseEnv()).toThrow('DATABASE_URL is not set')
+    expect(() => readDatabaseEnv()).toThrow(
+      'Database connection is not configured'
+    )
   })
 })

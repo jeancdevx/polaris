@@ -4,14 +4,15 @@ Persistencia PostgreSQL con TypeORM para Polaris.
 
 ## Tablas
 
-| Tabla           | Descripción                                    |
-| --------------- | ---------------------------------------------- |
-| `users`         | Usuarios registrados y admins                  |
-| `parking_spots` | 10 plazas (spot-01 … spot-10)                  |
-| `reservations`  | Reservas con ciclo de vida completo            |
-| `rfid_tags`     | Tags RFID vinculados a usuarios                |
-| `audit_logs`    | Eventos de auditoría                           |
-| `sensor_data`   | Telemetría local (complementa DynamoDB en AWS) |
+| Tabla              | Descripción                                    |
+| ------------------ | ---------------------------------------------- |
+| `users`            | Usuarios registrados y admins                  |
+| `parking_spots`    | 10 plazas (spot-01 … spot-10)                  |
+| `reservations`     | Reservas con ciclo de vida completo            |
+| `rfid_tags`        | Tags RFID vinculados a usuarios                |
+| `parking_sessions` | Sesiones walk-in (entrada/salida sin reserva)  |
+| `audit_logs`       | Eventos de auditoría                           |
+| `sensor_data`      | Telemetría local (complementa DynamoDB en AWS) |
 
 Las entidades usan **EntitySchema** (sin clases de dominio) — la capa ORM es
 independiente de `@polaris/domain`.
@@ -68,12 +69,13 @@ pnpm db:reset:dev
 
 Carga idempotente:
 
-| Recurso      | Cantidad | Detalle                                             |
-| ------------ | -------- | --------------------------------------------------- |
-| Plazas       | 10       | `spot-01` … `spot-10`, estado `free`                |
-| Admin        | 1        | `usr-admin01`, `admin@polaris.local`                |
-| Usuario test | 1        | `usr-12345`, `juan@example.com`, RFID `A3:BF:22:01` |
-| RFID tags    | 2        | Uno por cada usuario seed                           |
+| Recurso      | Cantidad | Detalle                                                      |
+| ------------ | -------- | ------------------------------------------------------------ |
+| Plazas       | 10       | `spot-01` … `spot-10`, estado `free`                         |
+| Admin        | 1        | `usr-admin01`, `admin@polaris.local`, RFID `A1:B2:C3:D4`     |
+| Usuario test | 1        | `usr-12345`, `juan@example.com`, RFID `A3:BF:22:01`          |
+| Visitante    | 1        | `usr-visitor01`, `visitor@polaris.local`, RFID `B1:CE:33:02` |
+| RFID tags    | 3        | Uno por cada usuario seed                                    |
 
 Los datos de usuario se validan con `@polaris/domain` antes de persistir.
 

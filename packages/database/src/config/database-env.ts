@@ -11,7 +11,9 @@ const buildDatabaseUrlFromParts = (): string => {
   const password = process.env.DB_PASSWORD
 
   if (!host || !databaseName || !username || password == null) {
-    throw new Error('DATABASE_URL is not set')
+    throw new Error(
+      'Database connection is not configured (set DATABASE_URL or DB_HOST, DB_NAME, DB_USERNAME, and DB_PASSWORD)'
+    )
   }
 
   return `postgresql://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/${databaseName}?uselibpqcompat=true&sslmode=require`

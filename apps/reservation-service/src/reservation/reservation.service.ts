@@ -93,7 +93,7 @@ export class ReservationService {
         await this.markSpotReservedInRedis(
           client,
           spotId.value,
-          userId,
+          row.userId,
           row.reservationId
         )
 
@@ -102,11 +102,26 @@ export class ReservationService {
         )
 
         const reservationDto = mapReservationRow(row)
-        await this.reservationEventPublisher.publishCreated(reservationDto)
+
+        try {
+          await this.reservationEventPublisher.publishCreated(reservationDto)
+        } catch (publishError) {
+          this.logger.error(
+            `Reservation ${row.reservationId} persisted but Kafka publish failed`,
+            publishError
+          )
+        }
 
         return reservationDto
       } finally {
-        await client.del(lockKey)
+        try {
+          await client.del(lockKey)
+        } catch (releaseError) {
+          this.logger.warn(
+            `Failed to release reservation lock ${lockKey}`,
+            releaseError
+          )
+        }
       }
     } catch (error) {
       throw this.mapDomainError(error)
@@ -158,7 +173,15 @@ export class ReservationService {
       this.logger.log(`Reservation ${updatedRow.reservationId} cancelled`)
 
       const reservationDto = mapReservationRow(updatedRow)
-      await this.reservationEventPublisher.publishCancelled(reservationDto)
+
+      try {
+        await this.reservationEventPublisher.publishCancelled(reservationDto)
+      } catch (publishError) {
+        this.logger.error(
+          `Reservation ${updatedRow.reservationId} cancelled but Kafka publish failed`,
+          publishError
+        )
+      }
 
       return reservationDto
     } catch (error) {

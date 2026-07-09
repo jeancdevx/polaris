@@ -52,12 +52,12 @@ export class SensorOccupancyHandler {
       })
 
       if (
-        result.previousStatus === 'free' &&
+        result.previousStatus === 'reserved' &&
         result.spot.status === 'occupied' &&
         !result.spot.userId
       ) {
         await this.auditLogRepository.insert({
-          eventType: 'anomaly_unregistered_occupancy',
+          eventType: 'anomaly_reserved_occupancy_without_user',
           parkingSpotId: event.spotId,
           metadata: {
             deviceId: event.deviceId,

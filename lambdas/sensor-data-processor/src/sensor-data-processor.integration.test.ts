@@ -84,7 +84,7 @@ describe('sensor-data-processor integration', () => {
 
     const brokers = [kafkaBrokerAddress(kafka)]
     const reading: OccupancyChangedIoTEvent = {
-      deviceId: 'spots-zone-a',
+      deviceId: 'actuators-01',
       spotId: 'spot-01',
       status: 'occupied',
       sensorType: 'fc-51',
@@ -163,7 +163,7 @@ describe('sensor-data-processor integration', () => {
 
     expect(event.spotId).toBe('spot-01')
     expect(event.status).toBe('occupied')
-    expect(event.deviceId).toBe('spots-zone-a')
+    expect(event.deviceId).toBe('actuators-01')
 
     await disconnectConsumer(consumer)
     await deps.kafkaPublisher.disconnect()

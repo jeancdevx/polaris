@@ -5,7 +5,7 @@ import { parseOccupancyChangedIoTEvent } from './iot-event.js'
 describe('parseOccupancyChangedIoTEvent', () => {
   it('parses a direct IoT occupancy payload', () => {
     const reading = parseOccupancyChangedIoTEvent({
-      deviceId: 'spots-zone-a',
+      deviceId: 'actuators-01',
       spotId: 'spot-05',
       event: 'occupancy_changed',
       status: 'occupied',
@@ -13,7 +13,7 @@ describe('parseOccupancyChangedIoTEvent', () => {
       timestamp: 1_717_001_000_000
     })
 
-    expect(reading.deviceId).toBe('spots-zone-a')
+    expect(reading.deviceId).toBe('actuators-01')
     expect(reading.spotId).toBe('spot-05')
     expect(reading.status).toBe('occupied')
     expect(reading.sensorType).toBe('fc-51')
@@ -23,7 +23,7 @@ describe('parseOccupancyChangedIoTEvent', () => {
   it('unwraps nested IoT rule payloads', () => {
     const reading = parseOccupancyChangedIoTEvent({
       payload: {
-        deviceId: 'spots-zone-b',
+        deviceId: 'actuators-01',
         spotId: 'spot-07',
         status: 'free',
         sensor_type: 'fc-51',
@@ -38,7 +38,7 @@ describe('parseOccupancyChangedIoTEvent', () => {
   it('rejects reserved status from devices', () => {
     expect(() =>
       parseOccupancyChangedIoTEvent({
-        deviceId: 'spots-zone-a',
+        deviceId: 'actuators-01',
         spotId: 'spot-01',
         status: 'reserved',
         sensorType: 'fc-51',

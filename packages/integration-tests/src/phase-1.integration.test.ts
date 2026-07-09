@@ -4,6 +4,7 @@ import { logLevel } from 'kafkajs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { KAFKA_TOPICS } from '@polaris/shared-types'
+import { parkingSpotKey } from '@polaris/shared-utils'
 
 import {
   applyIntegrationEnv,
@@ -65,13 +66,13 @@ describe('Phase 1 — integration (testcontainers)', () => {
       await client.connect()
 
       try {
-        await client.hSet('parking:spot:03', {
+        await client.hSet(parkingSpotKey('03'), {
           status: 'reserved',
           userId: 'usr-12345',
           reservationId: 'res-001'
         })
 
-        const occupancy = await client.hGetAll('parking:spot:03')
+        const occupancy = await client.hGetAll(parkingSpotKey('03'))
         expect(occupancy).toEqual({
           status: 'reserved',
           userId: 'usr-12345',

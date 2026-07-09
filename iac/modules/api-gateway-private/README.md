@@ -9,10 +9,14 @@ endpoint). En staging/prod el único entrypoint público es CloudFront
 
 ## Rutas
 
-| Ruta                     | Auth                  | Backend                            |
-| ------------------------ | --------------------- | ---------------------------------- |
-| `ANY /admin/{proxy+}`    | Cognito JWT           | ALB → `admin-service` (`/admin/*`) |
-| `ANY /internal/{proxy+}` | Ninguna (uso interno) | ALB → servicios internos           |
+| Ruta                                        | Auth                  | Backend                            |
+| ------------------------------------------- | --------------------- | ---------------------------------- |
+| `GET/POST/PUT/PATCH/DELETE /admin/{proxy+}` | Cognito JWT           | ALB → `admin-service` (`/admin/*`) |
+| `ANY /internal/{proxy+}`                    | Ninguna (uso interno) | ALB → servicios internos           |
+
+`OPTIONS` no tiene ruta explícita: API Gateway responde el preflight CORS
+automáticamente. Evitar `ANY` en `/admin` porque el JWT bloquearía `OPTIONS`
+(401 en preflight → error CORS en el navegador).
 
 En staging/prod, el WAF del edge **bloquea `/internal`** en el dominio público;
 esas rutas siguen disponibles en dev vía `execute-api` o desde la VPC.

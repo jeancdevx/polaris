@@ -1,15 +1,10 @@
 import {
   connectRedis,
   disconnectRedis,
+  PARKING_STATS_KEYS,
+  parkingSpotKey,
   type PolarisRedisClient
 } from '@polaris/shared-utils'
-
-const PARKING_SPOT_KEY_PREFIX = 'parking:spot:'
-
-export const PARKING_STATS_KEYS = {
-  totalAvailable: 'parking:stats:total_available',
-  totalReserved: 'parking:stats:total_reserved'
-} as const
 
 export class ParkingRedisStore {
   constructor(private readonly redisUrl: string) {}
@@ -18,7 +13,7 @@ export class ParkingRedisStore {
     const client = await connectRedis(this.redisUrl)
 
     try {
-      const spotKey = `${PARKING_SPOT_KEY_PREFIX}${spotId}`
+      const spotKey = parkingSpotKey(spotId)
 
       await client
         .multi()

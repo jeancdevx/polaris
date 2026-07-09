@@ -28,7 +28,13 @@ rds_engine_version          = "18.3"
 rds_reader_count            = 2
 rds_writer_instance_class   = "db.r6g.xlarge"
 rds_backup_retention_period = 30
-rds_deletion_protection     = true
+
+# Alinear con prod.tfvars al hacer teardown (evita que CI reactive protecciones).
+rds_deletion_protection              = false
+ecs_enable_deletion_protection       = false
+cognito_deletion_protection          = false
+dynamodb_deletion_protection_enabled = false
+s3_force_destroy                     = true
 
 redis_capacity_mode              = "provisioned"
 redis_engine_version             = "7.1"
@@ -63,8 +69,8 @@ s3_lifecycle_glacier_transition_days = 90
 
 secrets_manager_rds_rotation_days = 30
 
-base_domain    = "galaxymorph.com"
-hosted_zone_id = "Z0437101YIMTM4WCJEKJ"
+base_domain    = "nevadolg.com"
+hosted_zone_id = "Z05508811M0ZDY4TTSR4A"
 
 github_repository = "jeancdevx/polaris"
 

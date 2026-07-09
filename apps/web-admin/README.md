@@ -22,15 +22,18 @@ gestión de usuarios, auditoría, alertas y métricas (REST vía BFF →
 bash scripts/web-admin-env-dev.sh
 ```
 
-Genera `apps/web-admin/.env.local` desde outputs de Terraform y define
-`ADMIN_API_URL=http://127.0.0.1:3004` para el proxy BFF.
+Genera `apps/web-admin/.env.local` desde outputs de Terraform.
+`NEXT_PUBLIC_ADMIN_API_URL` apunta al API Gateway **admin** en AWS.
+
+```bash
+pnpm web-admin:env:dev
+```
 
 ## Desarrollo
 
-En dos terminales:
+Una sola terminal (REST admin vía API GW en AWS):
 
 ```bash
-pnpm dev --filter admin-service   # REST en :3004
 pnpm --filter web-admin dev       # UI en :3000
 ```
 
@@ -49,17 +52,46 @@ Abrir `http://localhost:3000/dashboard`.
 ## Build
 
 ```bash
-pnpm --filter web-admin build
+pnpm --filter web-admin build        # servidor Next (local)
+pnpm --filter web-admin build:static # export estático → out/ (S3 + CloudFront)
 pnpm --filter web-admin start
 ```
 
+### Deploy estático (S3 + CloudFront)
+
+En **staging/prod** la UI se sirve desde CloudFront + S3 (`web-admin/` en el
+bucket assets). El build usa `output: 'export'`; las llamadas REST van directo
+al API Gateway admin desde el navegador (`NEXT_PUBLIC_ADMIN_API_URL`), no hay
+BFF en producción.
+
+Variables de entorno del build (ver `.env.example`):
+
+| Variable                                          | Uso                                                       |
+| ------------------------------------------------- | --------------------------------------------------------- |
+| `NEXT_PUBLIC_ADMIN_API_URL`                       | API Gateway admin (CORS debe incluir el origen de la web) |
+| `NEXT_PUBLIC_APPSYNC_*` / `NEXT_PUBLIC_COGNITO_*` | Ocupación en vivo                                         |
+
+CI: workflows `deploy-web-admin-staging.yml` (manual) y
+`deploy-web-admin-production.yml` (rama `production`) cuando cambia
+`apps/web-admin/**`. Configura en los GitHub Environments **staging** y
+**prod**:
+
+- `NEXT_PUBLIC_ADMIN_API_URL`, `NEXT_PUBLIC_APPSYNC_GRAPHQL_ENDPOINT`,
+  `NEXT_PUBLIC_COGNITO_USER_POOL_ID`, `NEXT_PUBLIC_COGNITO_CLIENT_ID`
+- `WEB_ADMIN_S3_BUCKET` (opcional; default `polaris-assets-{env}-{account}`)
+- `WEB_CLOUDFRONT_DISTRIBUTION_ID` (output Terraform
+  `web_cloudfront_distribution_id`)
+
+En **dev** la UI corre en local (`pnpm --filter web-admin dev`); el deploy
+estático requiere infra **staging** o **prod** con módulo `edge`.
+
 ## Arquitectura
 
-| Capa                 | Uso                                                                           |
-| -------------------- | ----------------------------------------------------------------------------- |
-| AppSync + Cognito    | Ocupación (`Query.availability`, `Subscription.onOccupancyChanged`)           |
-| `/api/admin/*` (BFF) | Proxy server-side hacia `ADMIN_API_URL` con `Authorization: Bearer` (idToken) |
-| `admin-service`      | `/admin/users`, `/admin/audit`, `/admin/metrics`                              |
+| Capa              | Uso                                                                              |
+| ----------------- | -------------------------------------------------------------------------------- |
+| AppSync + Cognito | Ocupación (`Query.availability`, `Subscription.onOccupancyChanged`)              |
+| API Gateway admin | REST directo desde el browser (`/admin/users`, `/admin/audit`, `/admin/metrics`) |
+| `admin-service`   | Backend detrás del API Gateway privado                                           |
 
 ## Añadir componentes shadcn
 

@@ -543,6 +543,21 @@ output "admin_public_url" {
   value       = module.edge.admin_public_url
 }
 
+output "web_admin_assets_bucket_name" {
+  description = "S3 bucket for web-admin static assets"
+  value       = module.s3.assets_bucket_name
+}
+
+output "web_admin_s3_prefix" {
+  description = "S3 prefix for web-admin static files"
+  value       = "web-admin"
+}
+
+output "web_cloudfront_distribution_id" {
+  description = "CloudFront distribution ID for web-admin (GitHub var WEB_CLOUDFRONT_DISTRIBUTION_ID)"
+  value       = module.edge.web_cloudfront_distribution_id
+}
+
 output "graphql_public_url" {
   description = "AppSync GraphQL URL via custom domain"
   value       = module.edge.graphql_public_url

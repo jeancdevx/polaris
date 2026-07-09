@@ -246,13 +246,61 @@ pnpm appsync:smoke:dev
 pnpm appsync:subscription:smoke:dev
 ```
 
-## Web admin (7.3)
+## Web admin + mobile (dev AWS, sin local backend)
 
-Next.js + AppSync (Cognito grupo `admin`):
+APIs en `execute-api` (dev no tiene módulo `edge`). Tras `terraform apply` con CORS
+y throttling corregidos:
 
 ```bash
-pnpm web-admin:env:dev
-pnpm web-admin:dev
+# Regenerar env desde Terraform
+pnpm web-admin:env:dev    # ADMIN_API_URL → api_gateway_private_endpoint
+pnpm mobile:env:dev       # EXPO_PUBLIC_API_URL → api_gateway_endpoint
+
+# Web: UI en localhost, datos en AWS
+pnpm --filter web-admin dev   # http://localhost:3000
+
+# Móvil: bundler local, APIs en AWS
+pnpm mobile:dev
+```
+
+Usuario admin: credenciales del `db-bootstrap` (Cognito grupo `admin`).
+
+### 429 Too Many Requests en `/health`
+
+El stage HTTP API tenía `ThrottlingRateLimit=0` (default del provider Terraform) →
+bloquea **todo** el tráfico. Fix en `iac/modules/api-gateway*/api.tf`:
+`throttling_burst_limit=5000`, `throttling_rate_limit=10000`.
+
+Hotfix inmediato (sin apply) para **cada** HTTP API (pública + admin):
+
+```bash
+aws apigatewayv2 update-stage --api-id <API_ID> --stage-name '$default' \
+  --region us-east-2 \
+  --default-route-settings '{"ThrottlingBurstLimit":5000,"ThrottlingRateLimit":10000,"DetailedMetricsEnabled":true}'
+```
+
+### CORS en web-admin local (`OPTIONS` → 401)
+
+Si el navegador bloquea `/admin/*` con *preflight doesn't pass access control check*,
+la ruta `ANY /admin/{proxy+}` con JWT estaba capturando `OPTIONS` (sin `Authorization`)
+antes de que API Gateway respondiera CORS.
+
+Fix en `iac/modules/api-gateway-private/routes-admin.tf`: rutas por método
+(`GET`, `POST`, …) sin `ANY`. Tras el cambio:
+
+```bash
+cd iac/environments/dev
+terraform apply -var-file=dev.tfvars
+```
+
+Verificación rápida (debe devolver **204** o **200**, no 401):
+
+```bash
+curl -sS -D - -o /dev/null -X OPTIONS \
+  "$(terraform output -raw api_gateway_private_endpoint)/admin/metrics" \
+  -H 'Origin: http://localhost:3000' \
+  -H 'Access-Control-Request-Method: GET' \
+  -H 'Access-Control-Request-Headers: authorization'
 ```
 
 ## Smoke test MSK (2.13)

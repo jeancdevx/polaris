@@ -30,9 +30,9 @@ import {
   type ReservationConfig
 } from './reservation.config.js'
 import {
-  PARKING_LOCK_KEY_PREFIX,
-  PARKING_SPOT_KEY_PREFIX,
-  PARKING_STATS_KEYS
+  PARKING_STATS_KEYS,
+  parkingLockKey,
+  parkingSpotKey
 } from './reservation.constants.js'
 import { mapReservationRow } from './reservation.mapper.js'
 import { ReservationRepository } from './reservation.repository.js'
@@ -65,7 +65,7 @@ export class ReservationService {
       )
 
       const client = await this.redisService.getClient()
-      const lockKey = `${PARKING_LOCK_KEY_PREFIX}${spotId.value}`
+      const lockKey = parkingLockKey(spotId.value)
       const lockAcquired = await client.set(lockKey, userId, {
         NX: true,
         EX: config.lockTtlSeconds
@@ -93,7 +93,7 @@ export class ReservationService {
         await this.markSpotReservedInRedis(
           client,
           spotId.value,
-          userId,
+          row.userId,
           row.reservationId
         )
 
@@ -102,11 +102,26 @@ export class ReservationService {
         )
 
         const reservationDto = mapReservationRow(row)
-        await this.reservationEventPublisher.publishCreated(reservationDto)
+
+        try {
+          await this.reservationEventPublisher.publishCreated(reservationDto)
+        } catch (publishError) {
+          this.logger.error(
+            `Reservation ${row.reservationId} persisted but Kafka publish failed`,
+            publishError
+          )
+        }
 
         return reservationDto
       } finally {
-        await client.del(lockKey)
+        try {
+          await client.del(lockKey)
+        } catch (releaseError) {
+          this.logger.warn(
+            `Failed to release reservation lock ${lockKey}`,
+            releaseError
+          )
+        }
       }
     } catch (error) {
       throw this.mapDomainError(error)
@@ -158,7 +173,15 @@ export class ReservationService {
       this.logger.log(`Reservation ${updatedRow.reservationId} cancelled`)
 
       const reservationDto = mapReservationRow(updatedRow)
-      await this.reservationEventPublisher.publishCancelled(reservationDto)
+
+      try {
+        await this.reservationEventPublisher.publishCancelled(reservationDto)
+      } catch (publishError) {
+        this.logger.error(
+          `Reservation ${updatedRow.reservationId} cancelled but Kafka publish failed`,
+          publishError
+        )
+      }
 
       return reservationDto
     } catch (error) {
@@ -170,10 +193,7 @@ export class ReservationService {
     client: PolarisRedisClient,
     spotId: string
   ): Promise<void> {
-    const status = await client.hGet(
-      `${PARKING_SPOT_KEY_PREFIX}${spotId}`,
-      'status'
-    )
+    const status = await client.hGet(parkingSpotKey(spotId), 'status')
 
     if (status && status !== 'free') {
       throw new ConflictException('Parking spot is not available')
@@ -186,7 +206,7 @@ export class ReservationService {
     userId: string,
     reservationId: string
   ): Promise<void> {
-    const spotKey = `${PARKING_SPOT_KEY_PREFIX}${spotId}`
+    const spotKey = parkingSpotKey(spotId)
 
     await client
       .multi()
@@ -204,7 +224,7 @@ export class ReservationService {
     client: PolarisRedisClient,
     spotId: string
   ): Promise<void> {
-    const spotKey = `${PARKING_SPOT_KEY_PREFIX}${spotId}`
+    const spotKey = parkingSpotKey(spotId)
 
     await client
       .multi()

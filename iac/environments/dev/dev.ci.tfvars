@@ -18,11 +18,10 @@ enable_vpc_endpoints = true
 
 alb_logs_prefix = "api-service"
 
-api_service_desired_count = 1
-
-admin_service_desired_count = 1
-
-reservation_service_desired_count = 2
+api_service_desired_count             = 1
+admin_service_desired_count           = 1
+reservation_service_desired_count     = 2
+event_processor_service_desired_count = 1
 
 rds_capacity_mode           = "serverless"
 rds_serverless_min_capacity = 0.5

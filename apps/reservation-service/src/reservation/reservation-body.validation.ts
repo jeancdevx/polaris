@@ -110,18 +110,17 @@ export const parseUserIdHeader = (userId: string | undefined): string => {
   return userId.trim()
 }
 
-/** Prefer X-User-Id (ALB direct / API GW mapping); fall back to Cognito idToken claim. */
 export const parseUserIdentity = (
   userIdHeader: string | undefined,
   authorization: string | undefined
 ): string => {
-  if (userIdHeader?.trim()) {
-    return userIdHeader.trim()
-  }
-
   const fromJwt = parseUserIdFromJwt(authorization)
   if (fromJwt) {
     return fromJwt
+  }
+
+  if (userIdHeader?.trim()) {
+    return userIdHeader.trim()
   }
 
   throw new BadRequestException('X-User-Id header is required')

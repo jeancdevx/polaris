@@ -4,82 +4,74 @@
 #include "hardware_config.h"
 #include "lcd_display.h"
 #include "mqtt_topics.h"
-#include "pins_entry.h"
+#include "pins_entry_io.h"
 #include "polaris_config.h"
 #include "polaris_time.h"
 #include "rfid_reader.h"
 #include "role_info.h"
-#include "servo_barrier.h"
 #include "ultrasonic_sensor.h"
 #include "wifi_mqtt.h"
+
+// Este firmware corre en el ESP32 #1:
+// - Lee proximidad (HC-SR04) y RFID (RC522)
+// - Controla LCD I2C
+// - Publica comandos de servo hacia el ESP32 actuators (ESP32 #2)
 
 namespace {
 
 WifiMqttClient* gClient = nullptr;
-RfidReader gRfid(polaris::pins::entry::kRfidSs, polaris::pins::entry::kRfidRst);
-UltrasonicSensor gUltrasonic(polaris::pins::entry::kUltrasonicTrig,
-                             polaris::pins::entry::kUltrasonicEcho);
-ServoBarrier gServo(polaris::pins::entry::kServo);
-LcdDisplay gLcd(polaris::pins::entry::kLcdAddress, 16, 2);
+RfidReader gRfid(polaris::pins::entry_io::kRfidSs, polaris::pins::entry_io::kRfidRst);
+UltrasonicSensor gUltrasonic(polaris::pins::entry_io::kUltrasonicTrig,
+                             polaris::pins::entry_io::kUltrasonicEcho);
+LcdDisplay gLcd(polaris::pins::entry_io::kLcdAddress, 16, 2);
 
-bool gBarrierOpen = false;
+bool gGateOpenAssumed = false;
 bool gProximityActive = false;
 unsigned long gProximitySinceMs = 0;
 unsigned long gLastUltrasonicMs = 0;
 unsigned long gClearedSinceMs = 0;
 unsigned long gLastSafetyBlockMs = 0;
-unsigned long gBarrierOpenedMs = 0;
+unsigned long gGateOpenedMs = 0;
 unsigned long gLastPassageTelemetryMs = 0;
 bool gPassageStalledPublished = false;
 int gLastDistanceCm = 999;
 
-void publishServoStatus(const char* status, const char* reason) {
+bool publishServoCommand(const char* servoId, const char* action, int angle) {
   if (gClient == nullptr || !gClient->isMqttConnected()) {
-    return;
+    return false;
   }
 
   JsonDocument doc;
-  doc["deviceId"] = POLARIS_ENTRY_SERVO_ID;
-  doc["status"] = status;
-  doc["close_reason"] = reason;
+  doc["deviceId"] = servoId;
+  doc["action"] = action;
+  doc["angle"] = angle;
   doc["timestamp"] = polaris::time::nowEpochMs();
-  gClient->publishJson(polaris::mqtt::servoStatusTopic(POLARIS_ENTRY_SERVO_ID).c_str(), doc);
+
+  return gClient->publishJson(polaris::mqtt::servoCommandTopic(servoId).c_str(), doc);
 }
 
-void closeBarrierSafe(const char* reason) {
-  gServo.close();
-  gBarrierOpen = false;
+void closeGateSafe(const char* reason) {
+  publishServoCommand(POLARIS_ENTRY_SERVO_ID, "close", polaris::hw::kServoClosedAngle);
+  gGateOpenAssumed = false;
   gProximityActive = false;
   gClearedSinceMs = 0;
   gPassageStalledPublished = false;
   gLcd.showIdle();
-  publishServoStatus("closed", reason);
-  Serial.printf("[entry] Barrier closed (%s)\n", reason);
+  Serial.printf("[entry_io] Gate close requested (%s)\n", reason);
 }
 
-void openBarrier() {
-  gServo.open();
-  gBarrierOpen = true;
-  gBarrierOpenedMs = millis();
+void openGate() {
+  publishServoCommand(POLARIS_ENTRY_SERVO_ID, "open", polaris::hw::kServoOpenAngle);
+  gGateOpenAssumed = true;
+  gGateOpenedMs = millis();
   gClearedSinceMs = 0;
   gPassageStalledPublished = false;
-  Serial.println("[entry] Barrier opened");
+  Serial.println("[entry_io] Gate open requested");
 }
 
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   JsonDocument doc;
   if (deserializeJson(doc, reinterpret_cast<const char*>(payload), length)) {
-    return;
-  }
-
-  if (strstr(topic, "/servo/") != nullptr) {
-    const char* action = doc["action"] | "";
-    const int angle = doc["angle"] | polaris::hw::kServoOpenAngle;
-    if (strcmp(action, "open") == 0 || angle >= polaris::hw::kServoOpenAngle) {
-      openBarrier();
-    } else {
-      closeBarrierSafe("remote_command");
-    }
     return;
   }
 
@@ -105,7 +97,6 @@ WifiMqttConfig makeConfig() {
 }
 
 void subscribeCommands(WifiMqttClient& client) {
-  client.subscribe(polaris::mqtt::servoCommandTopic(POLARIS_ENTRY_SERVO_ID).c_str());
   client.subscribe(polaris::mqtt::displayCommandTopic(POLARIS_ENTRY_DISPLAY_ID).c_str());
 }
 
@@ -146,7 +137,7 @@ void publishRfidScan(const String& uid) {
   doc["reader_location"] = "entry";
   doc["timestamp"] = polaris::time::nowEpochMs();
   gClient->publishJson(polaris::mqtt::rfidEntryTopic(POLARIS_DEVICE_ID).c_str(), doc);
-  Serial.printf("[entry] RFID published uid=%s\n", uid.c_str());
+  Serial.printf("[entry_io] RFID published uid=%s\n", uid.c_str());
 }
 
 void publishPassageTelemetry(int distanceCm) {
@@ -158,7 +149,7 @@ void publishPassageTelemetry(int distanceCm) {
   doc["deviceId"] = POLARIS_DEVICE_ID;
   doc["event"] = "passage_in_progress";
   doc["distance_cm"] = distanceCm;
-  doc["barrier_state"] = "open";
+  doc["gate_state"] = gGateOpenAssumed ? "open" : "closed";
   doc["timestamp"] = polaris::time::nowEpochMs();
   gClient->publishJson(polaris::mqtt::kRfidEntryProximityTopic, doc);
 }
@@ -189,25 +180,25 @@ void handleUltrasonic(unsigned long nowMs) {
     gLastSafetyBlockMs = nowMs;
   }
 
-  if (!gBarrierOpen && distance < polaris::hw::kApproachCm) {
+  if (!gGateOpenAssumed && distance < polaris::hw::kApproachCm) {
     if (!gProximityActive) {
       gProximityActive = true;
       gProximitySinceMs = nowMs;
       publishProximity(distance);
       gLcd.showProximityPrompt();
-      Serial.printf("[entry] Proximity detected %d cm\n", distance);
+      Serial.printf("[entry_io] Proximity detected %d cm\n", distance);
     }
   }
 
-  if (gProximityActive && !gBarrierOpen &&
+  if (gProximityActive && !gGateOpenAssumed &&
       (nowMs - gProximitySinceMs) >= polaris::hw::kProximityTimeoutMs) {
     publishProximityTimeout();
     gProximityActive = false;
     gLcd.showIdle();
-    Serial.println("[entry] Proximity timeout");
+    Serial.println("[entry_io] Proximity timeout");
   }
 
-  if (!gBarrierOpen) {
+  if (!gGateOpenAssumed) {
     return;
   }
 
@@ -217,10 +208,10 @@ void handleUltrasonic(unsigned long nowMs) {
   }
 
   if (!gPassageStalledPublished && distance < polaris::hw::kApproachCm &&
-      (nowMs - gBarrierOpenedMs) >= polaris::hw::kBarrierMaxOpenMs) {
+      (nowMs - gGateOpenedMs) >= polaris::hw::kBarrierMaxOpenMs) {
     gPassageStalledPublished = true;
     publishPassageStalled();
-    Serial.println("[entry] Passage stalled alert");
+    Serial.println("[entry_io] Passage stalled alert");
   }
 
   if (distance > polaris::hw::kClearedCm) {
@@ -235,13 +226,11 @@ void handleUltrasonic(unsigned long nowMs) {
     return;
   }
 
-  const bool clearedLongEnough =
-      (nowMs - gClearedSinceMs) >= polaris::hw::kClearedHoldMs;
-  const bool safetyClear =
-      (nowMs - gLastSafetyBlockMs) >= polaris::hw::kClearedHoldMs;
+  const bool clearedLongEnough = (nowMs - gClearedSinceMs) >= polaris::hw::kClearedHoldMs;
+  const bool safetyClear = (nowMs - gLastSafetyBlockMs) >= polaris::hw::kClearedHoldMs;
 
   if (clearedLongEnough && safetyClear) {
-    closeBarrierSafe("ultrasonic_cleared");
+    closeGateSafe("ultrasonic_cleared");
   }
 }
 
@@ -253,6 +242,9 @@ void handleRfid() {
 
   gProximityActive = false;
   publishRfidScan(uid);
+
+  // En la entrada, al leer RFID también pedimos apertura.
+  openGate();
 }
 
 void ensureMqtt() {
@@ -281,8 +273,7 @@ void setup() {
 
   gRfid.begin();
   gUltrasonic.begin();
-  gServo.begin();
-  gLcd.begin(polaris::pins::entry::kLcdSda, polaris::pins::entry::kLcdScl);
+  gLcd.begin(polaris::pins::entry_io::kLcdSda, polaris::pins::entry_io::kLcdScl);
 
   static WifiMqttClient client(makeConfig());
   gClient = &client;
@@ -294,7 +285,7 @@ void setup() {
     }
   }
 
-  Serial.println("[entry] Ready — HC-SR04 + RC522 + servo + LCD");
+  Serial.println("[entry_io] Ready — RC522 + LCD I2C + HC-SR04 (servo via MQTT)");
 }
 
 void loop() {
@@ -303,3 +294,4 @@ void loop() {
   handleRfid();
   delay(5);
 }
+

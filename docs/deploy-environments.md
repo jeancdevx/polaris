@@ -261,6 +261,27 @@ El rol OIDC solo acepta jobs con
 2. Merge a `develop` con cambios en `iac/**` → `iac-apply-dev.yml`.
 3. Merge con cambios en apps → `deploy-dev.yml`.
 
+### 2.5 Clientes locales contra APIs en AWS (dev)
+
+En **dev** no hay módulo `edge` (sin CloudFront para web-admin). La UI y el móvil
+corren en tu máquina, pero pueden usar backends reales en AWS:
+
+| Cliente | Comando | Qué apunta a AWS |
+| ------- | ------- | ---------------- |
+| **web-admin** | `pnpm web-admin:env:dev` + `pnpm --filter web-admin dev` | Admin API (`execute-api`), AppSync, Cognito |
+| **mobile** | `pnpm mobile:env:dev` + `pnpm --filter mobile dev` | API pública (`execute-api`) |
+
+```bash
+pnpm web-admin:env:dev   # genera apps/web-admin/.env.local desde outputs Terraform
+pnpm --filter web-admin dev   # http://localhost:3000
+```
+
+El API Gateway admin en dev tiene CORS para `http://localhost:3000`, así que el
+browser llama directo a `NEXT_PUBLIC_ADMIN_API_URL` (sin BFF en local).
+
+**Qué no pruebas en local:** el deploy estático S3 + CloudFront de web-admin. Eso
+solo existe en **staging** y **prod** (módulo `edge`).
+
 ---
 
 ## Fase 3 — Entorno **staging** (opcional)
@@ -313,12 +334,14 @@ corriendo.
 1. Push imágenes ECR con tag `staging` (o el que definas).
 2. Migraciones/seed — ejecutar task `db-bootstrap` manualmente en ECS (no hay
    workflow automático aún).
-3. Subir estáticos web-admin al bucket S3 (`web-admin/` prefix).
+3. Deploy web-admin — workflow **`deploy-web-admin-staging.yml`** (manual,
+   `workflow_dispatch`) tras configurar variables en GitHub environment `staging`.
 4. Verificar URLs:
 
    ```bash
    terraform output api_public_url
    terraform output admin_api_public_url
+   terraform output admin_public_url
    ```
 
 ---
@@ -416,8 +439,8 @@ apliques en la cuenta. Si ya existía por dev, en prod usa
 | 1 | Push imágenes a ECR (`polaris-prod-*`) |
 | 2 | `ecs update-service --force-new-deployment` o merge a `production` con `deploy-production.yml` |
 | 3 | DB: `db-bootstrap-production.yml` (push a `production` con cambios en database, o `workflow_dispatch`) |
-| 4 | Subir build estático de web-admin al bucket assets (`web-admin/`) |
-| 5 | Probar URLs públicas (outputs `api_public_url`, etc.) |
+| 4 | Web-admin: merge a `production` con cambios en `apps/web-admin/**` → `deploy-web-admin-production.yml` (o `workflow_dispatch`) |
+| 5 | Probar URLs públicas (outputs `api_public_url`, `admin_public_url`, etc.) |
 | 6 | Configurar clientes (mobile `EXPO_PUBLIC_API_URL`, web-admin env) |
 
 ### 4.4 Flujo día a día (prod)
@@ -428,6 +451,75 @@ apliques en la cuenta. Si ya existía por dev, en prod usa
 3. Cambios en apps → `deploy-production.yml`.
 4. Cambios en `packages/database/**` o `apps/db-bootstrap/**` →
    `db-bootstrap-production.yml` (con approval en environment `prod`).
+5. Cambios en `apps/web-admin/**` → `deploy-web-admin-production.yml`.
+
+---
+
+## Promoción de cambios: develop → staging → production
+
+Modelo de ramas del repo (ver [`ci-cd.md`](./ci-cd.md)):
+
+| Rama | Entorno AWS | Deploy automático (apps) | IaC apply automático | Web-admin CloudFront |
+| ---- | ----------- | ------------------------ | -------------------- | -------------------- |
+| `develop` | **dev** | `deploy-dev.yml` | `iac-apply-dev.yml` | ❌ (UI en local) |
+| — | **staging** | manual | manual (sin workflow aún) | `deploy-web-admin-staging.yml` (manual) |
+| `production` | **prod** | `deploy-production.yml` | `iac-apply-production.yml` | `deploy-web-admin-production.yml` |
+
+### Flujo recomendado
+
+```text
+feature/*  →  PR  →  develop  →  (validar en dev AWS + UI local)  →  staging  →  production
+```
+
+1. **Un solo camino de integración:** todo entra por PR a `develop`. No commitees
+   directo a `production`.
+2. **Validar en dev:** merge a `develop` despliega microservicios en dev AWS.
+   Prueba web (`localhost:3000`) y móvil contra APIs dev.
+3. **Pre-prod en staging (opcional):** cuando dev esté OK, `terraform apply` en
+   staging + workflow manual de web-admin staging. Staging replica prod (edge,
+   dominios `staging-*`, sizing parecido).
+4. **Promover a prod:** merge `develop` → `production` (PR). Prod recibe el
+   **mismo código** ya validado, no parches sueltos en prod.
+5. **Evitar commits atrasados o de más:**
+   - Antes del merge a `production`, la rama `production` debe incluir todo lo de
+     `develop` (`git merge develop` en la PR o merge directo develop → production).
+   - Resuelve conflictos en la PR, no en prod a mano.
+   - No uses cherry-pick aislado hacia `production` salvo hotfixes documentados;
+     después del hotfix, mergea `production` de vuelta a `develop` para no
+     diverger.
+6. **Orden cuando cambian infra + apps + web:**
+   1. Merge IaC → `terraform apply` del entorno destino.
+   2. Deploy ECS (`deploy-*.yml`).
+   3. DB bootstrap si hubo cambios en schema/seed.
+   4. Deploy web-admin (build con URLs de **ese** entorno).
+
+### Staging sin rama CI (estado actual)
+
+Hoy **staging no tiene** `iac-apply-staging.yml` ni `deploy-staging.yml`. Opciones:
+
+| Enfoque | Cuándo usarlo |
+| ------- | ------------- |
+| **A — Manual** | Apply Terraform staging local + workflows manuales; merge a `production` solo cuando staging esté validado |
+| **B — Rama `staging`** | Crear rama + workflows espejo de prod (futuro) para promoción automática intermedia |
+
+Para una cuenta pequeña, **A** suele bastar: dev AWS + UI local para el día a día,
+staging solo en ventanas pre-release, prod como único permanente.
+
+---
+
+## Web-admin: deploy estático (staging / prod)
+
+La UI en **staging** y **prod** se sirve desde **CloudFront + S3** (módulo
+`edge`, prefix `web-admin/` en el bucket assets). El build usa `output: 'export'`;
+las llamadas REST van directo al API Gateway admin desde el browser
+(`NEXT_PUBLIC_ADMIN_API_URL`).
+
+| Workflow | Environment GitHub | Cuándo |
+| -------- | ------------------ | ------ |
+| `deploy-web-admin-staging.yml` | `staging` | Manual (`workflow_dispatch`) |
+| `deploy-web-admin-production.yml` | `prod` | Push a `production` (cambios en `apps/web-admin/**`) + manual |
+
+**No hay** workflow de web-admin para dev: en dev usas `pnpm --filter web-admin dev`.
 
 ---
 
@@ -504,6 +596,34 @@ Por cada **GitHub Environment** (`dev`, `staging`, `prod`) que uses:
 | `AWS_REGION` | `us-east-2` | Todos los workflows AWS |
 | `TF_STATE_BUCKET` | output bootstrap `state_bucket_name` | Init Terraform en GHA |
 
+### Variables web-admin (solo `staging` y `prod`)
+
+Configura en **Settings → Environments → staging / prod → Variables** (no son
+secrets: van al bundle del browser o son IDs de infra).
+
+| Variable | Origen (Terraform del entorno) | Usado por |
+| -------- | ------------------------------ | --------- |
+| `NEXT_PUBLIC_ADMIN_API_URL` | `terraform output -raw admin_api_public_url` | `deploy-web-admin.yml` |
+| `NEXT_PUBLIC_APPSYNC_GRAPHQL_ENDPOINT` | `terraform output -raw graphql_public_url` | idem |
+| `NEXT_PUBLIC_COGNITO_USER_POOL_ID` | `terraform output -raw cognito_user_pool_id` | idem |
+| `NEXT_PUBLIC_COGNITO_CLIENT_ID` | `terraform output -raw cognito_app_client_id` | idem |
+| `WEB_CLOUDFRONT_DISTRIBUTION_ID` | `terraform output -raw web_cloudfront_distribution_id` | invalidación CloudFront |
+| `WEB_ADMIN_S3_BUCKET` | opcional; default `polaris-assets-{env}-{account}` | sync S3 |
+
+**Secrets vs variables:** los `NEXT_PUBLIC_*` son **variables** (públicas en el
+build estático). Solo credenciales sensibles van en **secrets** (p. ej.
+`AWS_DEPLOY_ROLE_ARN`). No pongas URLs ni IDs de CloudFront en secrets salvo que
+quieras ocultarlos en logs (no aporta seguridad real para URLs públicas).
+
+Deploy manual local (solo si ya tienes credenciales AWS y el entorno aplicado):
+
+```bash
+export NEXT_PUBLIC_ADMIN_API_URL="https://staging-admin-api.galaxymorph.com"
+export NEXT_PUBLIC_APPSYNC_GRAPHQL_ENDPOINT="https://staging-graphql.galaxymorph.com/graphql"
+# ... resto de NEXT_PUBLIC_* y WEB_CLOUDFRONT_DISTRIBUTION_ID
+bash scripts/deploy-web-admin.sh staging   # o prod
+```
+
 ### Lo que NO va en GitHub
 
 | Dato | Dónde |
@@ -560,7 +680,8 @@ basta para MSK/RDS; hace falta destroy del stack)
 
 - [ ] Igual que prod pero `staging.tfvars` + key `env/staging/...`
 - [ ] Apply solo local (sin workflow apply automático)
-- [ ] GitHub environment `staging` si planeas CI
+- [ ] GitHub environment `staging` con secrets + variables (incl. web-admin)
+- [ ] Workflow `deploy-web-admin-staging.yml` probado (manual)
 
 ### Prod
 
@@ -568,7 +689,8 @@ basta para MSK/RDS; hace falta destroy del stack)
 - [ ] `prod.ci.tfvars` alineado (mismos flags que local)
 - [ ] `terraform apply` local
 - [ ] GitHub environment `prod` + reviewers + branch `production`
-- [ ] Docker push + db-bootstrap + S3 web-admin
+- [ ] Variables web-admin en environment `prod`
+- [ ] Docker push + db-bootstrap + deploy web-admin (`deploy-web-admin-production.yml`)
 - [ ] Probar URLs edge
 - [ ] (Opcional) Atlantis + webhook
 

@@ -41,10 +41,16 @@ describe('reservation body validation', () => {
     expect(parseUserIdFromJwt(`Bearer ${sampleIdToken}`)).toBe('usr-12345')
   })
 
-  it('prefers X-User-Id header over JWT claim', () => {
+  it('prefers JWT preferred_username over X-User-Id header', () => {
     expect(
       parseUserIdentity('usr-from-header', `Bearer ${sampleIdToken}`)
-    ).toBe('usr-from-header')
+    ).toBe('usr-12345')
+  })
+
+  it('falls back to X-User-Id when JWT claim is missing', () => {
+    expect(parseUserIdentity('usr-from-header', undefined)).toBe(
+      'usr-from-header'
+    )
   })
 
   it('falls back to JWT when X-User-Id is missing', () => {

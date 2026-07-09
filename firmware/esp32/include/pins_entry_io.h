@@ -1,9 +1,9 @@
 #pragma once
 
-// ESP32 entrada — HC-SR04, RC522 (SPI), SG90, LCD I2C
-// Ajusta si tu cableado difiere.
+// ESP32 entrada IO — RC522 (SPI), LCD I2C, HC-SR04.
+// Este ESP32 NO controla servos ni FC-51 (eso va en `actuators`).
 
-namespace polaris::pins::entry {
+namespace polaris::pins::entry_io {
 
 // RC522 SPI
 constexpr int kRfidSs = 5;
@@ -16,12 +16,10 @@ constexpr int kRfidMosi = 23;
 constexpr int kUltrasonicTrig = 17;
 constexpr int kUltrasonicEcho = 16;
 
-// SG90 barrera entrada
-constexpr int kServo = 13;
-
 // LCD 16x2 I2C (PCF8574 — dirección 0x27 o 0x3F)
 constexpr int kLcdSda = 21;
 constexpr int kLcdScl = 22;
 constexpr uint8_t kLcdAddress = 0x27;
 
-}  // namespace polaris::pins::entry
+}  // namespace polaris::pins::entry_io
+

@@ -1,1 +1,1 @@
-export const PARKING_SPOT_KEY_PREFIX = 'parking:spot:'
+export { PARKING_SPOT_KEY_PREFIX, parkingSpotKey } from '@polaris/shared-utils'

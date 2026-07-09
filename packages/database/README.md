@@ -51,6 +51,21 @@ Requiere migraciones aplicadas y Postgres local en marcha.
 pnpm db:seed
 ```
 
+## Reset dev (solo datos de prueba)
+
+Vacía tablas de aplicación, vuelve a cargar el seed y sincroniza Redis (incluye
+borrar claves legacy `parking:*` y `{parking}:*`):
+
+```bash
+# Local (Postgres + Redis en docker-compose)
+pnpm --filter @polaris/database reset:dev
+
+# AWS dev (task ECS en la VPC)
+pnpm db:reset:dev
+
+# O GitHub Actions → DB reset dev → confirm: reset-dev
+```
+
 Carga idempotente:
 
 | Recurso      | Cantidad | Detalle                                             |

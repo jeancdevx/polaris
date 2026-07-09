@@ -21,6 +21,7 @@
     "migration:show": "tsx src/cli/migrate-show.ts",
     "seed": "tsx src/cli/seed.ts",
     "seed:redis": "tsx src/cli/sync-redis.ts",
+    "reset:dev": "tsx src/cli/reset-dev.ts",
     "bootstrap": "tsx src/cli/bootstrap.ts",
     "test": "vitest run"
   },

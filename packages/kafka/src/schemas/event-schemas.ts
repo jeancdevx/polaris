@@ -60,6 +60,19 @@ export type ProximityDetectedEvent = KafkaEventEnvelope &
     distanceCm: number
   }>
 
+export type EntryProximityTelemetryEvent = KafkaEventEnvelope &
+  Readonly<{
+    deviceId: string
+    event:
+      | 'proximity_detected'
+      | 'proximity_timeout'
+      | 'passage_in_progress'
+      | 'passage_stalled'
+      | 'exit_barrier_timeout'
+    distanceCm?: number
+    gateState?: string
+  }>
+
 export type RfidValidationEvent = KafkaEventEnvelope &
   Readonly<{
     rfidUid: string
@@ -183,23 +196,59 @@ export const parseOccupancyChangedEvent = (
 export const parseProximityDetectedEvent = (
   raw: unknown
 ): ProximityDetectedEvent =>
+  parseEntryProximityTelemetryEvent(raw) as ProximityDetectedEvent
+
+const parseEntryProximityEventName = (
+  value: unknown
+): EntryProximityTelemetryEvent['event'] => {
+  if (
+    value === 'proximity_detected' ||
+    value === 'proximity_timeout' ||
+    value === 'passage_in_progress' ||
+    value === 'passage_stalled' ||
+    value === 'exit_barrier_timeout'
+  ) {
+    return value
+  }
+
+  throw kafkaMessageError(
+    'INVALID_FIELD',
+    'event is not a supported proximity telemetry value'
+  )
+}
+
+export const parseEntryProximityTelemetryEvent = (
+  raw: unknown
+): EntryProximityTelemetryEvent =>
   parseWithFields(raw, (record, envelope) => {
-    if (record.event !== 'proximity_detected') {
+    const event = parseEntryProximityEventName(record.event)
+    const distanceCm =
+      typeof record.distanceCm === 'number'
+        ? record.distanceCm
+        : typeof record.distance_cm === 'number'
+          ? record.distance_cm
+          : undefined
+
+    if (event === 'proximity_detected' && distanceCm === undefined) {
       throw kafkaMessageError(
         'INVALID_FIELD',
-        'event must be proximity_detected'
+        'distanceCm is required for proximity_detected'
       )
     }
 
-    if (typeof record.distanceCm !== 'number') {
-      throw kafkaMessageError('INVALID_FIELD', 'distanceCm must be a number')
-    }
+    const gateState =
+      typeof record.gateState === 'string'
+        ? record.gateState
+        : typeof record.gate_state === 'string'
+          ? record.gate_state
+          : undefined
 
     return {
       ...envelope,
       deviceId: requireStringField(record, 'deviceId'),
-      event: 'proximity_detected',
-      distanceCm: record.distanceCm
+      event,
+      ...(distanceCm !== undefined ? { distanceCm } : {}),
+      ...(gateState !== undefined ? { gateState } : {})
     }
   })
 

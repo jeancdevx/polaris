@@ -5,6 +5,7 @@ import { loadLocalEnv } from '@polaris/shared-utils'
 import { entitySchemas } from '../entities/index.js'
 
 import { InitialSchema1740350000000 } from '../migrations/1740350000000-InitialSchema.js'
+import { ParkingSessions1740350000001 } from '../migrations/1740350000001-ParkingSessions.js'
 
 import { readDatabaseEnv } from './database-env.js'
 
@@ -17,7 +18,7 @@ export const createDataSourceOptions = (): DataSourceOptions => {
     type: 'postgres',
     url: env.url,
     entities: [...entitySchemas],
-    migrations: [InitialSchema1740350000000],
+    migrations: [InitialSchema1740350000000, ParkingSessions1740350000001],
     migrationsTableName: 'typeorm_migrations',
     synchronize: false,
     logging: env.logging

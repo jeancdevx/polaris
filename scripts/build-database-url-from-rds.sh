@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Builds a PostgreSQL connection URL from the Aurora master user secret.
+# Builds a PostgreSQL connection URL from Aurora cluster endpoint + master user secret.
 # Usage: build-database-url-from-rds.sh <name-prefix> [database-name]
 
 name_prefix="${1:?name prefix required (e.g. polaris-dev)}"
@@ -9,15 +9,20 @@ db_name="${2:-parking_db}"
 
 cluster_id="${name_prefix}-aurora"
 
-rds_secret_arn="$(aws rds describe-db-clusters \
+cluster_json="$(aws rds describe-db-clusters \
   --db-cluster-identifier "$cluster_id" \
-  --query 'DBClusters[0].MasterUserSecret.SecretArn' \
-  --output text)"
+  --query 'DBClusters[0]' \
+  --output json)"
 
-if [ -z "$rds_secret_arn" ] || [ "$rds_secret_arn" = "None" ]; then
-  echo "Could not resolve RDS master secret for cluster ${cluster_id}" >&2
-  exit 1
-fi
+rds_secret_arn="$(node -e "
+const cluster = JSON.parse(process.argv[1]);
+const secretArn = cluster?.MasterUserSecret?.SecretArn;
+if (!secretArn) {
+  console.error('Could not resolve RDS master secret for cluster ${cluster_id}');
+  process.exit(1);
+}
+process.stdout.write(secretArn);
+" "$cluster_json")"
 
 rds_creds="$(aws secretsmanager get-secret-value \
   --secret-id "$rds_secret_arn" \
@@ -25,23 +30,27 @@ rds_creds="$(aws secretsmanager get-secret-value \
   --output text)"
 
 node -e "
-const credentials = JSON.parse(process.argv[1]);
-const databaseName = credentials.dbname || process.argv[2];
-const username = encodeURIComponent(credentials.username);
-const password = encodeURIComponent(credentials.password);
-const host = credentials.host;
-const port = credentials.port || 5432;
+const cluster = JSON.parse(process.argv[1]);
+const credentials = JSON.parse(process.argv[2]);
+const databaseName = process.argv[3];
 
-if (!host || !credentials.username || credentials.password == null) {
-  console.error('RDS master secret is missing host, username, or password');
+const host = cluster.Endpoint;
+const port = cluster.Port || 5432;
+const username = credentials.username;
+const password = credentials.password;
+
+if (!host || !username || password == null) {
+  console.error(
+    'RDS connection details are incomplete (cluster endpoint or master secret username/password missing)'
+  );
   process.exit(1);
 }
 
 process.stdout.write(
   'postgresql://' +
-    username +
+    encodeURIComponent(username) +
     ':' +
-    password +
+    encodeURIComponent(password) +
     '@' +
     host +
     ':' +
@@ -50,4 +59,4 @@ process.stdout.write(
     databaseName +
     '?uselibpqcompat=true&sslmode=require'
 );
-" "$rds_creds" "$db_name"
+" "$cluster_json" "$rds_creds" "$db_name"

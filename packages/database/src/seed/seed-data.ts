@@ -68,7 +68,21 @@ export const buildSeedData = (): SeedData => {
     createdAt: SEED_TIMESTAMP
   })
 
-  const users = [toUserRow(admin, 'admin'), toUserRow(testUser, 'user')]
+  const visitor = createUser({
+    userId: createUserId('usr-visitor01'),
+    name: 'Visitante Demo',
+    email: createEmail('visitor@polaris.local'),
+    vehiclePlate: createVehiclePlate('VIS-0001'),
+    rfidUid: createRfidUid('B1:CE:33:02'),
+    userType: 'visitor',
+    createdAt: SEED_TIMESTAMP
+  })
+
+  const users = [
+    toUserRow(admin, 'admin'),
+    toUserRow(testUser, 'user'),
+    toUserRow(visitor, 'user')
+  ]
 
   const parkingSpots = allSpotIds().map(spotId => {
     const spot = createFreeParkingSpot(spotId)
@@ -95,6 +109,15 @@ export const buildSeedData = (): SeedData => {
         rfidUid: testUser.rfidUid,
         userId: testUser.userId,
         vehiclePlate: testUser.vehiclePlate,
+        createdAt: SEED_TIMESTAMP
+      })
+    ),
+    toRfidTagRow(
+      createRfidTag({
+        rfidUid: visitor.rfidUid,
+        userId: visitor.userId,
+        vehiclePlate: visitor.vehiclePlate,
+        userType: 'visitor',
         createdAt: SEED_TIMESTAMP
       })
     )

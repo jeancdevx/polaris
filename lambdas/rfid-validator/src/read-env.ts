@@ -1,3 +1,5 @@
+import { normalizeIotDataEndpoint } from '@polaris/shared-utils'
+
 export type RfidLookupMode = 'dynamodb' | 'rds' | 'dynamodb_with_rds_fallback'
 
 export type RfidValidatorEnv = Readonly<{
@@ -29,7 +31,9 @@ export const readRfidValidatorEnv = (): RfidValidatorEnv => ({
   lookupMode: readLookupMode(),
   rfidValidationsTableName: process.env.RFID_VALIDATIONS_TABLE_NAME,
   gateCommandsEnabled: process.env.GATE_COMMANDS_ENABLED === 'true',
-  iotDataEndpoint: process.env.IOT_DATA_ENDPOINT,
+  iotDataEndpoint: process.env.IOT_DATA_ENDPOINT
+    ? normalizeIotDataEndpoint(process.env.IOT_DATA_ENDPOINT)
+    : undefined,
   entryDisplayDeviceId: process.env.ENTRY_DISPLAY_DEVICE_ID ?? 'entry-lcd',
   entryServoDeviceId: process.env.ENTRY_SERVO_DEVICE_ID ?? 'entry-servo',
   exitServoDeviceId: process.env.EXIT_SERVO_DEVICE_ID ?? 'exit-servo',

@@ -10,11 +10,13 @@ const defaultCognitoConfig = {
   adminPassword: 'secret'
 }
 
+const seedResult = { users: 3, parkingSpots: 10, rfidTags: 3 }
+
 describe('runBootstrapIfNeeded', () => {
-  it('skips when database and Cognito admin already exist', async () => {
+  it('syncs seed and redis when database and Cognito admin already exist', async () => {
     const runMigrationsFn = vi.fn().mockResolvedValue(undefined)
-    const runSeedFn = vi.fn()
-    const syncParkingRedisFn = vi.fn()
+    const runSeedFn = vi.fn().mockResolvedValue(seedResult)
+    const syncParkingRedisFn = vi.fn().mockResolvedValue(undefined)
     const provisionCognitoAdminFn = vi.fn()
 
     const result = await runBootstrapIfNeeded({
@@ -24,22 +26,23 @@ describe('runBootstrapIfNeeded', () => {
       readCognitoAdminConfigFn: vi.fn().mockReturnValue(defaultCognitoConfig),
       getBootstrapStateFn: vi
         .fn()
-        .mockResolvedValue({ userCount: 2, hasAdminInDb: true }),
+        .mockResolvedValue({ userCount: 3, hasAdminInDb: true }),
       cognitoAdminExistsFn: vi.fn().mockResolvedValue(true),
       provisionCognitoAdminFn
     })
 
     expect(result.skipped).toBe(true)
+    expect(result.seed).toEqual(seedResult)
+    expect(result.redisSynced).toBe(true)
     expect(runMigrationsFn).toHaveBeenCalledOnce()
-    expect(runSeedFn).not.toHaveBeenCalled()
-    expect(syncParkingRedisFn).not.toHaveBeenCalled()
+    expect(runSeedFn).toHaveBeenCalledOnce()
+    expect(syncParkingRedisFn).toHaveBeenCalledOnce()
     expect(provisionCognitoAdminFn).not.toHaveBeenCalled()
   })
 
   it('runs full bootstrap on an empty database', async () => {
-    const seed = { users: 2, parkingSpots: 10, rfidTags: 2 }
     const runMigrationsFn = vi.fn().mockResolvedValue(undefined)
-    const runSeedFn = vi.fn().mockResolvedValue(seed)
+    const runSeedFn = vi.fn().mockResolvedValue(seedResult)
     const syncParkingRedisFn = vi.fn().mockResolvedValue({
       spotsSynced: 10,
       totalAvailable: 10,
@@ -61,7 +64,7 @@ describe('runBootstrapIfNeeded', () => {
     })
 
     expect(result.skipped).toBe(false)
-    expect(result.seed).toEqual(seed)
+    expect(result.seed).toEqual(seedResult)
     expect(result.redisSynced).toBe(true)
     expect(result.cognitoAdminCreated).toBe(true)
     expect(runSeedFn).toHaveBeenCalledOnce()
@@ -69,23 +72,29 @@ describe('runBootstrapIfNeeded', () => {
     expect(provisionCognitoAdminFn).toHaveBeenCalledOnce()
   })
 
-  it('creates Cognito admin when RDS already has admin user', async () => {
+  it('creates Cognito admin and syncs seed when RDS already has admin user', async () => {
+    const runSeedFn = vi.fn().mockResolvedValue(seedResult)
+    const syncParkingRedisFn = vi.fn().mockResolvedValue(undefined)
     const provisionCognitoAdminFn = vi.fn().mockResolvedValue(undefined)
 
     const result = await runBootstrapIfNeeded({
       runMigrationsFn: vi.fn().mockResolvedValue(undefined),
-      runSeedFn: vi.fn(),
-      syncParkingRedisFn: vi.fn(),
+      runSeedFn,
+      syncParkingRedisFn,
       readCognitoAdminConfigFn: vi.fn().mockReturnValue(defaultCognitoConfig),
       getBootstrapStateFn: vi
         .fn()
-        .mockResolvedValue({ userCount: 2, hasAdminInDb: true }),
+        .mockResolvedValue({ userCount: 3, hasAdminInDb: true }),
       cognitoAdminExistsFn: vi.fn().mockResolvedValue(false),
       provisionCognitoAdminFn
     })
 
     expect(result.skipped).toBe(false)
+    expect(result.seed).toEqual(seedResult)
+    expect(result.redisSynced).toBe(true)
     expect(result.cognitoAdminCreated).toBe(true)
+    expect(runSeedFn).toHaveBeenCalledOnce()
+    expect(syncParkingRedisFn).toHaveBeenCalledOnce()
     expect(provisionCognitoAdminFn).toHaveBeenCalledOnce()
   })
 })

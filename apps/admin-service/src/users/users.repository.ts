@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common'
+import { ConflictException, Injectable } from '@nestjs/common'
+import type { EntityManager } from 'typeorm'
 
 import type {
   ParkingSpotRow,
@@ -10,6 +11,7 @@ import type {
 import type { UserType } from '@polaris/shared-types'
 
 import { DatabaseService } from '../infrastructure/database.service.js'
+import { releasedRfidUidForUser } from './release-rfid-uid.js'
 
 export type InsertAdminUserInput = Readonly<{
   userId: string
@@ -19,6 +21,7 @@ export type InsertAdminUserInput = Readonly<{
   rfidUid: string
   userType: UserType
   role: UserRole
+  reclaimRfidFromUserId?: string
 }>
 
 export type UpdateAdminUserInput = Readonly<{
@@ -73,6 +76,15 @@ export class UsersRepository {
     const now = new Date()
 
     return dataSource.transaction(async manager => {
+      if (input.reclaimRfidFromUserId) {
+        await this.reclaimVisitorRfidInTransaction(
+          manager,
+          input.reclaimRfidFromUserId,
+          input.rfidUid,
+          now
+        )
+      }
+
       const userRepository = manager.getRepository<UserRow>('User')
       const rfidRepository = manager.getRepository<RfidTagRow>('RfidTag')
 
@@ -167,10 +179,6 @@ export class UsersRepository {
     return dataSource.transaction(async manager => {
       const userRepository = manager.getRepository<UserRow>('User')
       const rfidRepository = manager.getRepository<RfidTagRow>('RfidTag')
-      const reservationRepository =
-        manager.getRepository<ReservationRow>('Reservation')
-      const spotRepository =
-        manager.getRepository<ParkingSpotRow>('ParkingSpot')
 
       const existing = await userRepository.findOne({ where: { userId } })
       if (!existing) {
@@ -180,6 +188,8 @@ export class UsersRepository {
       if (!existing.isActive) {
         return existing
       }
+
+      await this.cancelActiveReservationsForUser(manager, userId, now)
 
       const deactivated: UserRow = {
         ...existing,
@@ -193,37 +203,88 @@ export class UsersRepository {
         { isActive: false }
       )
 
-      const activeReservations = await reservationRepository.find({
-        where: { userId, status: 'active' }
-      })
-
-      for (const reservation of activeReservations) {
-        await reservationRepository.update(
-          { reservationId: reservation.reservationId, status: 'active' },
-          {
-            status: 'cancelled',
-            cancelledAt: now
-          }
-        )
-
-        const spot = await spotRepository.findOne({
-          where: { spotId: reservation.parkingSpotId }
-        })
-
-        if (spot?.status === 'reserved') {
-          await spotRepository.update(
-            { spotId: reservation.parkingSpotId },
-            {
-              status: 'free',
-              reservationId: undefined,
-              userId: undefined,
-              occupiedSince: undefined
-            }
-          )
-        }
-      }
-
       return deactivated
     })
+  }
+
+  private async reclaimVisitorRfidInTransaction(
+    manager: EntityManager,
+    visitorUserId: string,
+    rfidUid: string,
+    now: Date
+  ): Promise<void> {
+    const userRepository = manager.getRepository<UserRow>('User')
+    const visitor = await userRepository.findOne({
+      where: { userId: visitorUserId }
+    })
+
+    if (!visitor) {
+      throw new ConflictException(
+        `Visitor user ${visitorUserId} was not found for RFID reclaim`
+      )
+    }
+
+    if (visitor.userType !== 'visitor') {
+      throw new ConflictException(
+        `RFID ${rfidUid} is assigned to a non-visitor user`
+      )
+    }
+
+    if (visitor.rfidUid !== rfidUid) {
+      throw new ConflictException(
+        `RFID ${rfidUid} does not match visitor ${visitorUserId}`
+      )
+    }
+
+    await this.cancelActiveReservationsForUser(manager, visitorUserId, now)
+
+    await userRepository.update(
+      { userId: visitorUserId },
+      {
+        isActive: false,
+        rfidUid: releasedRfidUidForUser(visitorUserId),
+        updatedAt: now
+      }
+    )
+  }
+
+  private async cancelActiveReservationsForUser(
+    manager: EntityManager,
+    userId: string,
+    now: Date
+  ): Promise<void> {
+    const reservationRepository =
+      manager.getRepository<ReservationRow>('Reservation')
+    const spotRepository = manager.getRepository<ParkingSpotRow>('ParkingSpot')
+
+    const activeReservations = await reservationRepository.find({
+      where: { userId, status: 'active' }
+    })
+
+    for (const reservation of activeReservations) {
+      await reservationRepository.update(
+        { reservationId: reservation.reservationId, status: 'active' },
+        {
+          status: 'cancelled',
+          cancelledAt: now
+        }
+      )
+
+      const spot = await spotRepository.findOne({
+        where: { spotId: reservation.parkingSpotId }
+      })
+
+      if (spot?.status === 'reserved') {
+        await spotRepository.update(
+          { spotId: reservation.parkingSpotId },
+          {
+            status: 'free',
+            reservationId: undefined,
+            userId: undefined,
+            occupiedSince: undefined
+          }
+        )
+      }
+    }
   }
 }

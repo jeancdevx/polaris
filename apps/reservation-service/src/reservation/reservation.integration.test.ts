@@ -188,6 +188,7 @@ describe('reservation integration', () => {
       )
 
       expect(spotHash.status).toBe('reserved')
+      expect(spotHash.userId).toBe('usr-12345')
       expect(spotHash.reservationId).toBe(created.reservationId)
     } finally {
       await redisClient.quit()

@@ -341,7 +341,7 @@ pnpm kafka:smoke:msk:dev
 
 | Clave Terraform | `deviceId`     | Rol        |
 | --------------- | -------------- | ---------- |
-| `entry-io-01`   | `entry-io-01`  | RFID + LCD + HC-SR04 |
+| `entry-io-01`   | `entry-io-01`  | 2× RFID + LCD + HC-SR04 |
 | `actuators-01`  | `actuators-01` | Servos + FC-51 ×10 |
 | `leds-zone-a`   | `leds-zone-a`  | RGB plazas 1–5 |
 | `leds-zone-b`   | `leds-zone-b`  | RGB plazas 6–10 |

@@ -82,16 +82,12 @@ jobs:
           echo "revision=$REV" >> "$GITHUB_OUTPUT"
           echo "Registered ${FAMILY}:${REV} with image ${IMAGE}"
 
-      - name: Resolve database URL from RDS
-        id: db_url
-        run: |
-          DATABASE_URL="$(bash scripts/build-database-url-from-rds.sh "${NAME_PREFIX}")"
-          echo "::add-mask::$DATABASE_URL"
-          echo "url=$DATABASE_URL" >> "$GITHUB_OUTPUT"
-
       - name: Run db-bootstrap ECS task
         id: run
         run: |
+          DATABASE_URL="$(bash scripts/build-database-url-from-rds.sh "${NAME_PREFIX}")"
+          echo "::add-mask::$DATABASE_URL"
+
           SUBNETS=$(aws ec2 describe-subnets \
             --filters "Name=tag:Name,Values=${NAME_PREFIX}-private-*" \
             --query 'Subnets[*].SubnetId' \
@@ -103,7 +99,7 @@ jobs:
             --output text)
 
           OVERRIDES=$(jq -n \
-            --arg url "${{ steps.db_url.outputs.url }}" \
+            --arg url "$DATABASE_URL" \
             '{containerOverrides:[{name:"db-bootstrap",environment:[{name:"DATABASE_URL",value:$url}]}]}')
 
           TASK_ARN=$(aws ecs run-task \

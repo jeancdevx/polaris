@@ -8,8 +8,15 @@ output "device_policy_name" {
   value       = aws_iot_policy.device.name
 }
 
+output "device_ids" {
+  description = "Logical device IDs keyed by device map key (flash + MQTT deviceId)"
+  value = {
+    for key, device in var.devices : key => device.device_id
+  }
+}
+
 output "device_thing_names" {
-  description = "AWS IoT thing names keyed by device map key (e.g. entry-gate-01)"
+  description = "AWS IoT thing names keyed by device map key (e.g. entry-io-01)"
   value = {
     for key, thing in aws_iot_thing.device : key => thing.name
   }
@@ -55,36 +62,36 @@ output "rfid_rule_names" {
 }
 
 output "simulator_certificate_arn" {
-  description = "ARN of the entry-gate device certificate (legacy output name for smoke scripts)"
-  value       = aws_iot_certificate.device[local.entry_gate_device_key].arn
+  description = "ARN of the primary entry device certificate (legacy output name for smoke scripts)"
+  value       = aws_iot_certificate.device[local.primary_device_key].arn
 }
 
 output "simulator_certificate_pem" {
-  description = "PEM-encoded entry-gate certificate (legacy output name for smoke scripts)"
-  value       = aws_iot_certificate.device[local.entry_gate_device_key].certificate_pem
+  description = "PEM-encoded primary entry device certificate (legacy output name for smoke scripts)"
+  value       = aws_iot_certificate.device[local.primary_device_key].certificate_pem
   sensitive   = true
 }
 
 output "simulator_device_id" {
-  description = "Logical device ID for entry-gate (legacy output name for smoke scripts)"
-  value       = var.devices[local.entry_gate_device_key].device_id
+  description = "Logical device ID for primary entry device (legacy output name for smoke scripts)"
+  value       = var.devices[local.primary_device_key].device_id
 }
 
 output "simulator_private_key" {
   description = "PEM-encoded private key for entry-gate (legacy output name for smoke scripts)"
-  value       = aws_iot_certificate.device[local.entry_gate_device_key].private_key
+  value       = aws_iot_certificate.device[local.primary_device_key].private_key
   sensitive   = true
 }
 
 output "simulator_public_key" {
   description = "PEM-encoded public key for entry-gate (legacy output name for smoke scripts)"
-  value       = aws_iot_certificate.device[local.entry_gate_device_key].public_key
+  value       = aws_iot_certificate.device[local.primary_device_key].public_key
   sensitive   = true
 }
 
 output "simulator_thing_name" {
-  description = "AWS IoT thing name for entry-gate (legacy output name for smoke scripts)"
-  value       = aws_iot_thing.device[local.entry_gate_device_key].name
+  description = "AWS IoT thing name for primary entry device (legacy output name for smoke scripts)"
+  value       = aws_iot_thing.device[local.primary_device_key].name
 }
 
 output "topic_patterns" {

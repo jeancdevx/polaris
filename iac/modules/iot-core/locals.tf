@@ -7,4 +7,7 @@ locals {
   iot_arn_prefix = "arn:aws:iot:${local.region}:${local.account_id}"
 
   entry_gate_device_key = "entry-gate-01"
+  entry_io_device_key   = "entry-io-01"
+
+  primary_device_key = contains(keys(var.devices), local.entry_io_device_key) ? local.entry_io_device_key : local.entry_gate_device_key
 }

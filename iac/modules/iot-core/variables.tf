@@ -83,8 +83,11 @@ variable "devices" {
   }
 
   validation {
-    condition     = contains(keys(var.devices), "entry-gate-01")
-    error_message = "devices must include entry-gate-01 for entry gate MQTT and smoke tests."
+    condition = (
+      contains(keys(var.devices), "entry-gate-01") ||
+      contains(keys(var.devices), "entry-io-01")
+    )
+    error_message = "devices must include entry-gate-01 (prod/staging) or entry-io-01 (dev) for smoke tests."
   }
 }
 

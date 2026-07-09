@@ -1,12 +1,12 @@
 #include "rfid_reader.h"
 
-#include <MFRC522.h>
 #include <SPI.h>
 
 #include "hardware_config.h"
 
 namespace {
-MFRC522* gReader = nullptr;
+
+bool gSpiBusStarted = false;
 
 String formatUid(const MFRC522::Uid& uid) {
   char buffer[3 * 10 + 1] = {};
@@ -20,30 +20,29 @@ String formatUid(const MFRC522::Uid& uid) {
   }
   return String(buffer);
 }
+
 }  // namespace
 
-RfidReader::RfidReader(int ssPin, int rstPin) : ssPin_(ssPin), rstPin_(rstPin) {}
+RfidReader::RfidReader(int ssPin, int rstPin) : reader_(rstPin, ssPin) {}
 
-void RfidReader::begin() {
-  SPI.begin(18, 19, 23, ssPin_);
-  static MFRC522 reader(ssPin_, rstPin_);
-  gReader = &reader;
-  gReader->PCD_Init();
+void RfidReader::begin(int sckPin, int misoPin, int mosoPin) {
+  if (!gSpiBusStarted) {
+    SPI.begin(sckPin, misoPin, mosoPin);
+    gSpiBusStarted = true;
+  }
+
+  reader_.PCD_Init();
   Serial.println("[rfid] RC522 initialized");
 }
 
 bool RfidReader::readUid(String& uidOut) {
-  if (gReader == nullptr) {
+  if (!reader_.PICC_IsNewCardPresent() || !reader_.PICC_ReadCardSerial()) {
     return false;
   }
 
-  if (!gReader->PICC_IsNewCardPresent() || !gReader->PICC_ReadCardSerial()) {
-    return false;
-  }
-
-  const String uid = formatUid(gReader->uid);
-  gReader->PICC_HaltA();
-  gReader->PCD_StopCrypto1();
+  const String uid = formatUid(reader_.uid);
+  reader_.PICC_HaltA();
+  reader_.PCD_StopCrypto1();
 
   const unsigned long now = millis();
   if (uid == lastUid_ && (now - lastReadMs_) < polaris::hw::kRfidCooldownMs) {

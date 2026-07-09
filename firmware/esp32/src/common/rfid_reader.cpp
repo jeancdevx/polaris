@@ -23,16 +23,20 @@ String formatUid(const MFRC522::Uid& uid) {
 
 }  // namespace
 
-RfidReader::RfidReader(int ssPin, int rstPin) : reader_(rstPin, ssPin) {}
+// MFRC522 library order: chip select (SS/SDA) first, reset (RST) second.
+RfidReader::RfidReader(int ssPin, int rstPin)
+    : reader_(ssPin, rstPin), ssPin_(ssPin), rstPin_(rstPin) {}
 
 void RfidReader::begin(int sckPin, int misoPin, int mosoPin) {
   if (!gSpiBusStarted) {
-    SPI.begin(sckPin, misoPin, mosoPin);
+    // SS=-1: each MFRC522 instance drives its own chip-select pin.
+    SPI.begin(sckPin, misoPin, mosoPin, -1);
     gSpiBusStarted = true;
   }
 
   reader_.PCD_Init();
-  Serial.println("[rfid] RC522 initialized");
+  Serial.printf("[rfid] RC522 initialized SS=%d RST=%d — ", ssPin_, rstPin_);
+  reader_.PCD_DumpVersionToSerial();
 }
 
 bool RfidReader::readUid(String& uidOut) {

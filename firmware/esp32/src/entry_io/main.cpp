@@ -233,6 +233,14 @@ void handleUltrasonic(unsigned long nowMs) {
   const int distance = gUltrasonic.measureCm();
   gLastDistanceCm = distance;
 
+#if defined(POLARIS_DEBUG_ULTRASONIC)
+  static unsigned long lastDebugMs = 0;
+  if (nowMs - lastDebugMs >= 5000) {
+    lastDebugMs = nowMs;
+    Serial.printf("[entry_io] Ultrasonic distance=%d cm\n", distance);
+  }
+#endif
+
   if (distance < polaris::hw::kSafetyBlockCm) {
     gLastSafetyBlockMs = nowMs;
   }

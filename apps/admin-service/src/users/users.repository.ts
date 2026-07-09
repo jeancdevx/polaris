@@ -90,14 +90,31 @@ export class UsersRepository {
       }
 
       await userRepository.insert(row)
-      await rfidRepository.insert({
-        rfidUid: input.rfidUid,
-        userId: input.userId,
-        userType: input.userType,
-        vehiclePlate: input.vehiclePlate,
-        isActive: true,
-        createdAt: now
+
+      const existingTag = await rfidRepository.findOne({
+        where: { rfidUid: input.rfidUid }
       })
+
+      if (existingTag) {
+        await rfidRepository.update(
+          { rfidUid: input.rfidUid },
+          {
+            userId: input.userId,
+            userType: input.userType,
+            vehiclePlate: input.vehiclePlate,
+            isActive: true
+          }
+        )
+      } else {
+        await rfidRepository.insert({
+          rfidUid: input.rfidUid,
+          userId: input.userId,
+          userType: input.userType,
+          vehiclePlate: input.vehiclePlate,
+          isActive: true,
+          createdAt: now
+        })
+      }
 
       return row
     })

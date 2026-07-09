@@ -52,6 +52,16 @@ export const isValidRfidUid = (uid: string): boolean => {
   return rfidRegex.test(uid)
 }
 
+/** AWS IoT Data endpoint must include scheme for SDK v3 clients. */
+export const normalizeIotDataEndpoint = (endpoint: string): string => {
+  const trimmed = endpoint.trim()
+  if (trimmed.startsWith('https://')) {
+    return trimmed
+  }
+
+  return `https://${trimmed}`
+}
+
 export const sleep = (ms: number): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms))
 }

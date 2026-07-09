@@ -174,7 +174,7 @@ describe('rfid-validator integration', () => {
       const result = await validateRfidScan(
         {
           deviceId: 'entry-io-01',
-          rfidUid: 'A3:BF:22:01',
+          rfidUid: '40:62:BD:DC',
           readerLocation: 'entry',
           occurredAt: new Date('2025-06-19T14:05:00.000Z')
         },
@@ -191,7 +191,7 @@ describe('rfid-validator integration', () => {
 
       expect(validationEvents[0]).toMatchObject({
         eventName: KAFKA_TOPICS.RFID_VALIDATION,
-        rfidUid: 'A3:BF:22:01',
+        rfidUid: '40:62:BD:DC',
         valid: true,
         reservationId: 'res-rfid-001',
         parkingSpotId: 'spot-03'
@@ -208,7 +208,7 @@ describe('rfid-validator integration', () => {
     const result = await validateRfidScan(
       {
         deviceId: 'entry-io-01',
-        rfidUid: 'B1:CE:33:02',
+        rfidUid: 'F2:BE:30:F1',
         readerLocation: 'entry',
         occurredAt: new Date('2025-06-19T14:10:00.000Z')
       },
@@ -228,9 +228,9 @@ describe('rfid-validator integration', () => {
         .findOne({ where: { sessionId: result.sessionId } })
 
       expect(session).toMatchObject({
-        rfidUid: 'B1:CE:33:02',
+        rfidUid: 'F2:BE:30:F1',
         status: 'open',
-        userId: 'usr-visitor01'
+        userId: 'usr-card02'
       })
     } finally {
       await dataSource.destroy()

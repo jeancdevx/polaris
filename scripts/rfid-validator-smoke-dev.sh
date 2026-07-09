@@ -19,7 +19,7 @@ payload="$(cat <<'EOF'
 {
   "deviceId": "entry-io-01",
   "event": "rfid_scan",
-  "rfid_uid": "A3:BF:22:01",
+  "rfid_uid": "40:62:BD:DC",
   "reader_location": "entry",
   "timestamp": "2025-06-19T14:05:00.000Z"
 }

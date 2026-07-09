@@ -75,6 +75,43 @@ describe('UsersService', () => {
     expect(result.temporaryPassword).toBeUndefined()
   })
 
+  it('reclaims an active visitor RFID when registering a new user', async () => {
+    vi.mocked(usersRepository.findByEmail).mockResolvedValue(null)
+    vi.mocked(usersRepository.findByRfidUid).mockResolvedValue({
+      ...sampleRow,
+      userId: 'usr-card02',
+      rfidUid: 'F2:BE:30:F1',
+      userType: 'visitor',
+      email: 'tarjeta-02@polaris.local'
+    })
+    vi.mocked(usersRepository.deactivateUser).mockResolvedValue({
+      ...sampleRow,
+      userId: 'usr-card02',
+      userType: 'visitor',
+      isActive: false
+    })
+    vi.mocked(usersRepository.insertUserWithRfidTag).mockResolvedValue(
+      sampleRow
+    )
+
+    await service.create({
+      name: 'Jane Admin',
+      email: 'jane@example.com',
+      vehiclePlate: 'ABC-999',
+      rfidUid: 'F2:BE:30:F1',
+      userType: 'registered',
+      role: 'user',
+      password: 'PolarisTest1!'
+    })
+
+    expect(usersRepository.deactivateUser).toHaveBeenCalledWith('usr-card02')
+    expect(rfidValidationStore.setActive).toHaveBeenCalledWith(
+      'F2:BE:30:F1',
+      false
+    )
+    expect(usersRepository.insertUserWithRfidTag).toHaveBeenCalledOnce()
+  })
+
   it('rejects duplicate email', async () => {
     vi.mocked(usersRepository.findByEmail).mockResolvedValue(sampleRow)
     vi.mocked(usersRepository.findByRfidUid).mockResolvedValue(null)

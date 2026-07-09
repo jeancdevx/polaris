@@ -18,7 +18,8 @@
     "@polaris/domain": "workspace:*",
     "@polaris/kafka": "workspace:*",
     "@polaris/lambda-core": "workspace:*",
-    "@polaris/shared-types": "workspace:*"
+    "@polaris/shared-types": "workspace:*",
+    "@polaris/shared-utils": "workspace:*"
   },
   "devDependencies": {
     "@polaris/build-config": "workspace:*",

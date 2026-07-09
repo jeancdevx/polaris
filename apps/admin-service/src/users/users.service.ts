@@ -60,7 +60,7 @@ export class UsersService {
   }
 
   async create(body: CreateAdminUserBody): Promise<CreateAdminUserResponse> {
-    await this.assertUniqueIdentity(body.email, body.rfidUid)
+    await this.assertUniqueIdentity(body.email, body.rfidUid, body.userType)
 
     const userId = generateUserId()
     const password = body.password ?? generateTemporaryPassword()
@@ -196,7 +196,8 @@ export class UsersService {
 
   private async assertUniqueIdentity(
     email: string,
-    rfidUid: string
+    rfidUid: string,
+    userType: CreateAdminUserBody['userType']
   ): Promise<void> {
     const [existingEmail, existingRfid] = await Promise.all([
       this.usersRepository.findByEmail(email),
@@ -207,7 +208,21 @@ export class UsersService {
       throw new ConflictException(`Email ${email} is already registered`)
     }
 
-    if (existingRfid) {
+    if (!existingRfid) {
+      return
+    }
+
+    if (
+      userType === 'registered' &&
+      existingRfid.userType === 'visitor' &&
+      existingRfid.isActive
+    ) {
+      await this.usersRepository.deactivateUser(existingRfid.userId)
+      await this.rfidValidationStore.setActive(existingRfid.rfidUid, false)
+      return
+    }
+
+    if (existingRfid.isActive) {
       throw new ConflictException(`RFID ${rfidUid} is already assigned`)
     }
   }

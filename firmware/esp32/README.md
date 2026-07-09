@@ -49,15 +49,27 @@ Editar `include/pins_*.h` según cableado.
 
 ### `entry_io` — 2× RC522 (SPI compartido)
 
-| Señal | Entrada | Salida  | Compartido |
-| ----- | ------- | ------- | ---------- |
-| SCK   | —       | —       | GPIO 18    |
-| MISO  | —       | —       | GPIO 19    |
-| MOSI  | —       | —       | GPIO 23    |
-| SS    | GPIO 5  | GPIO 4  | —          |
-| RST   | GPIO 27 | GPIO 15 | —          |
+| Señal    | Entrada | Salida  | Compartido |
+| -------- | ------- | ------- | ---------- |
+| SCK      | —       | —       | GPIO 18    |
+| MISO     | —       | —       | GPIO 19    |
+| MOSI     | —       | —       | GPIO 23    |
+| SS (SDA) | GPIO 5  | GPIO 4  | —          |
+| RST      | GPIO 27 | GPIO 15 | —          |
+
+La librería MFRC522 usa `MFRC522(SS, RST)` — SS/SDA primero, RST segundo.
 
 HC-SR04: TRIG=17, ECHO=16. LCD I2C: SDA=21, SCL=22.
+
+Si el serial muestra siempre `distance=999 cm`, el sensor no responde: revisar
+alimentación 5 V, GND común con el ESP32, y divisor de tensión en ECHO (el pin
+ECHO del HC-SR04 es 5 V; el ESP32 acepta 3,3 V máx.). Para depurar:
+
+```bash
+pio run -e entry_io_debug -t upload && pio device monitor
+```
+
+Cada 5 s verás `[entry_io] Ultrasonic distance=… cm` en el monitor serial.
 
 FC-51: **LOW** = obstáculo. Sin sensor cableado, usar `INPUT_PULLUP` o no
 alimentar el ESP (pines flotantes → falsas ocupaciones en AWS).

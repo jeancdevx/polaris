@@ -69,13 +69,13 @@ pnpm db:reset:dev
 
 Carga idempotente:
 
-| Recurso      | Cantidad | Detalle                                                      |
-| ------------ | -------- | ------------------------------------------------------------ |
-| Plazas       | 10       | `spot-01` … `spot-10`, estado `free`                         |
-| Admin        | 1        | `usr-admin01`, `admin@polaris.local`, RFID `A1:B2:C3:D4`     |
-| Usuario test | 1        | `usr-12345`, `juan@example.com`, RFID `A3:BF:22:01`          |
-| Visitante    | 1        | `usr-visitor01`, `visitor@polaris.local`, RFID `B1:CE:33:02` |
-| RFID tags    | 3        | Uno por cada usuario seed                                    |
+| Recurso      | Cantidad | Detalle                                                   |
+| ------------ | -------- | --------------------------------------------------------- |
+| Plazas       | 10       | `spot-01` … `spot-10`, estado `free`                      |
+| Admin        | 1        | `usr-admin01`, `admin@polaris.local` (sin tarjeta física) |
+| Usuario test | 1        | `usr-12345`, `juan@example.com`, RFID `40:62:BD:DC`       |
+| Visitantes   | 9        | `usr-card02` … `usr-card10`, una tarjeta física cada uno  |
+| RFID tags    | 10       | Las 10 UIDs físicas del banco de pruebas                  |
 
 Los datos de usuario se validan con `@polaris/domain` antes de persistir.
 

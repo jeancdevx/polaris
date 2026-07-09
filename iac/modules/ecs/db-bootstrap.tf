@@ -28,6 +28,7 @@ resource "aws_secretsmanager_secret" "db_bootstrap_env" {
 resource "aws_secretsmanager_secret_version" "db_bootstrap_env" {
   secret_id = aws_secretsmanager_secret.db_bootstrap_env.id
   secret_string = jsonencode({
+    DATABASE_URL             = local.database_url
     REDIS_URL                = var.redis_url
     BOOTSTRAP_ADMIN_PASSWORD = local.bootstrap_admin_password
   })
@@ -60,6 +61,10 @@ resource "aws_ecs_task_definition" "db_bootstrap" {
       ]
 
       secrets = [
+        {
+          name      = "DATABASE_URL"
+          valueFrom = "${aws_secretsmanager_secret.db_bootstrap_env.arn}:DATABASE_URL::"
+        },
         {
           name      = "DB_USERNAME"
           valueFrom = "${var.rds_master_user_secret_arn}:username::"

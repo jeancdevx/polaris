@@ -18,6 +18,12 @@ import type {
   UserRow
 } from '../entities/index.js'
 
+import {
+  ADMIN_PLACEHOLDER_RFID_UID,
+  JUAN_PHYSICAL_RFID_UID,
+  PHYSICAL_RFID_UIDS
+} from './physical-rfid-uids.js'
+
 const SEED_TIMESTAMP = new Date('2025-06-19T10:00:00.000Z')
 
 const toUserRow = (user: User, role: UserRole): UserRow => ({
@@ -55,7 +61,7 @@ export const buildSeedData = (): SeedData => {
     name: 'Admin Polaris',
     email: createEmail('admin@polaris.local'),
     vehiclePlate: createVehiclePlate('ADM-0001'),
-    rfidUid: createRfidUid('A1:B2:C3:D4'),
+    rfidUid: createRfidUid(ADMIN_PLACEHOLDER_RFID_UID),
     createdAt: SEED_TIMESTAMP
   })
 
@@ -64,24 +70,30 @@ export const buildSeedData = (): SeedData => {
     name: 'Juan Perez',
     email: createEmail('juan@example.com'),
     vehiclePlate: createVehiclePlate('ABC-1234'),
-    rfidUid: createRfidUid('A3:BF:22:01'),
+    rfidUid: createRfidUid(JUAN_PHYSICAL_RFID_UID),
     createdAt: SEED_TIMESTAMP
   })
 
-  const visitor = createUser({
-    userId: createUserId('usr-visitor01'),
-    name: 'Visitante Demo',
-    email: createEmail('visitor@polaris.local'),
-    vehiclePlate: createVehiclePlate('VIS-0001'),
-    rfidUid: createRfidUid('B1:CE:33:02'),
-    userType: 'visitor',
-    createdAt: SEED_TIMESTAMP
+  const visitorUsers = PHYSICAL_RFID_UIDS.filter(
+    uid => uid !== JUAN_PHYSICAL_RFID_UID
+  ).map((uid, index) => {
+    const cardNumber = String(index + 2).padStart(2, '0')
+
+    return createUser({
+      userId: createUserId(`usr-card${cardNumber}`),
+      name: `Tarjeta ${cardNumber}`,
+      email: createEmail(`tarjeta-${cardNumber}@polaris.local`),
+      vehiclePlate: createVehiclePlate(`VIS-${cardNumber}0`),
+      rfidUid: createRfidUid(uid),
+      userType: 'visitor',
+      createdAt: SEED_TIMESTAMP
+    })
   })
 
   const users = [
     toUserRow(admin, 'admin'),
     toUserRow(testUser, 'user'),
-    toUserRow(visitor, 'user')
+    ...visitorUsers.map(user => toUserRow(user, 'user'))
   ]
 
   const parkingSpots = allSpotIds().map(spotId => {
@@ -98,28 +110,22 @@ export const buildSeedData = (): SeedData => {
   const rfidTags = [
     toRfidTagRow(
       createRfidTag({
-        rfidUid: admin.rfidUid,
-        userId: admin.userId,
-        vehiclePlate: admin.vehiclePlate,
-        createdAt: SEED_TIMESTAMP
-      })
-    ),
-    toRfidTagRow(
-      createRfidTag({
         rfidUid: testUser.rfidUid,
         userId: testUser.userId,
         vehiclePlate: testUser.vehiclePlate,
         createdAt: SEED_TIMESTAMP
       })
     ),
-    toRfidTagRow(
-      createRfidTag({
-        rfidUid: visitor.rfidUid,
-        userId: visitor.userId,
-        vehiclePlate: visitor.vehiclePlate,
-        userType: 'visitor',
-        createdAt: SEED_TIMESTAMP
-      })
+    ...visitorUsers.map(user =>
+      toRfidTagRow(
+        createRfidTag({
+          rfidUid: user.rfidUid,
+          userId: user.userId,
+          vehiclePlate: user.vehiclePlate,
+          userType: 'visitor',
+          createdAt: SEED_TIMESTAMP
+        })
+      )
     )
   ]
 

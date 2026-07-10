@@ -4,9 +4,9 @@
 
 enum class RgbMode : uint8_t {
   Off,
-  Free,
-  Occupied,
-  BlinkGreen,
+  Free,       // verde fijo — plaza libre
+  Occupied,   // rojo fijo — plaza ocupada
+  BlinkBlue,  // azul parpadeante — plaza reservada
 };
 
 class RgbLed {
@@ -26,4 +26,5 @@ class RgbLed {
   unsigned long lastBlinkMs_ = 0;
 
   void writeRaw(bool r, bool g, bool b) const;
+  void applyModeColors(bool on) const;
 };

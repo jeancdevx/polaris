@@ -27,6 +27,10 @@ namespace {
 WifiMqttClient* gClient = nullptr;
 RgbLed* gLeds[polaris::pins::leds::kSpotCount] = {};
 unsigned long gLastBlinkTick = 0;
+unsigned long gLastSyncRequestMs = 0;
+bool gCloudStateReceived = false;
+
+constexpr unsigned long kSyncRetryMs = 30'000;
 
 String spotIdFromNumber(int spotNumber) {
   char buffer[12];
@@ -55,6 +59,31 @@ RgbLed* findLedBySpotNumber(int spotNumber) {
   return gLeds[spotNumber - POLARIS_SPOT_FIRST];
 }
 
+const char* spotIdFromTopic(const char* topic) {
+  const char* ledPrefix = strstr(topic, "/led/");
+  if (ledPrefix == nullptr) {
+    return "";
+  }
+  return ledPrefix + 5;
+}
+
+bool applyLedCommand(const char* spot, const char* mode) {
+  int spotNumber = 0;
+  if (sscanf(spot, "spot-%d", &spotNumber) != 1) {
+    return false;
+  }
+
+  RgbLed* led = findLedBySpotNumber(spotNumber);
+  if (led == nullptr) {
+    return false;
+  }
+
+  led->setMode(modeFromString(mode));
+  gCloudStateReceived = true;
+  Serial.printf("[leds] cloud %s -> %s\n", spot, mode);
+  return true;
+}
+
 void publishLedSyncRequest() {
   if (gClient == nullptr || !gClient->isMqttConnected()) {
     return;
@@ -68,44 +97,35 @@ void publishLedSyncRequest() {
   doc["timestamp"] = polaris::time::nowEpochMs();
 
   if (gClient->publishJson(polaris::mqtt::kLedSyncRequestTopic, doc)) {
+    gLastSyncRequestMs = millis();
     Serial.printf(
-        "[leds] LED sync requested for spots %d..%d\n",
+        "[leds] cloud sync requested spots %d..%d\n",
         POLARIS_SPOT_FIRST,
         POLARIS_SPOT_LAST);
   }
 }
 
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
-  JsonDocument doc;
-  if (deserializeJson(doc, reinterpret_cast<const char*>(payload), length)) {
+  if (strstr(topic, "/led/") == nullptr) {
     return;
   }
 
-  if (strstr(topic, "/led/") == nullptr) {
+  JsonDocument doc;
+  if (deserializeJson(doc, reinterpret_cast<const char*>(payload), length)) {
+    Serial.printf("[leds] cloud JSON parse failed topic=%s len=%u\n", topic, length);
     return;
   }
 
   const char* mode = doc["mode"] | "free";
   const char* spot = doc["spotId"] | "";
   if (spot[0] == '\0') {
-    const char* ledPrefix = strstr(topic, "/led/");
-    if (ledPrefix != nullptr) {
-      spot = ledPrefix + 5;
-    }
+    spot = spotIdFromTopic(topic);
   }
   if (spot[0] == '\0') {
     return;
   }
 
-  int spotNumber = 0;
-  if (sscanf(spot, "spot-%d", &spotNumber) != 1) {
-    return;
-  }
-
-  if (RgbLed* led = findLedBySpotNumber(spotNumber)) {
-    led->setMode(modeFromString(mode));
-    Serial.printf("[leds] LED command %s -> %s\n", spot, mode);
-  }
+  applyLedCommand(spot, mode);
 }
 
 WifiMqttConfig makeConfig() {
@@ -140,8 +160,15 @@ void ensureMqtt() {
         publishLedSyncRequest();
       }
     }
+    return;
   }
+
   gClient->loop();
+
+  if (!gCloudStateReceived &&
+      millis() - gLastSyncRequestMs >= kSyncRetryMs) {
+    publishLedSyncRequest();
+  }
 }
 
 }  // namespace
@@ -192,7 +219,7 @@ void setup() {
     }
   }
 
-  Serial.println("[leds] Ready — RGB only (commands via MQTT)");
+  Serial.println("[leds] Ready — cloud LED commands via parking/commands/led/*");
 }
 
 void loop() {
@@ -208,4 +235,3 @@ void loop() {
 
   delay(5);
 }
-

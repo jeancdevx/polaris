@@ -112,7 +112,8 @@ describe('sensor-data-processor integration', () => {
       ...createProcessSensorReadingDependencies({
         sensorReadingsTableName: 'test-SensorReadings',
         sensorReadingsTtlDays: 0,
-        kafkaClientId: 'sensor-data-processor-integration'
+        kafkaClientId: 'sensor-data-processor-integration',
+        ledCommandsEnabled: false
       }),
       sensorReadings,
       kafkaPublisher: new KafkaOccupancyPublisher(

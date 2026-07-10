@@ -21,6 +21,7 @@ import {
   type SensorDataProcessorResponse
 } from './process-sensor-reading.js'
 import { readSensorDataProcessorEnv } from './read-env.js'
+import { detectSensorIoTEventKind } from './route-sensor-iot-event.js'
 
 let occupancyDependencies = createProcessSensorReadingDependencies(
   readSensorDataProcessorEnv()
@@ -47,7 +48,9 @@ export const handler: Handler<
 > = instrumentLambdaHandler(
   { serviceName: 'sensor-data-processor' },
   async (event, _context, logger) => {
-    try {
+    const kind = detectSensorIoTEventKind(event)
+
+    if (kind === 'occupancy') {
       const reading = parseOccupancyChangedIoTEvent(event)
       const result = await processSensorReading(reading, occupancyDependencies)
 
@@ -56,43 +59,42 @@ export const handler: Handler<
         status: result.status,
         deviceId: result.deviceId,
         dynamoPersisted: result.dynamoPersisted,
-        kafkaPublished: result.kafkaPublished,
-        ledCommandPublished: result.ledCommandPublished
+        kafkaPublished: result.kafkaPublished
       })
 
       return result
-    } catch {
-      try {
-        const syncRequest = parseLedSyncRequestIoTEvent(event)
-        const result = await processLedSyncRequest(
-          syncRequest,
-          ledSyncDependencies
-        )
-
-        logger.info('LED sync request processed', {
-          deviceId: result.deviceId,
-          spotFirst: result.spotFirst,
-          spotLast: result.spotLast,
-          spotsSynced: result.spotsSynced,
-          ledCommandsPublished: result.ledCommandsPublished
-        })
-
-        return result
-      } catch {
-        const telemetry = parseEntryProximityIoTEvent(event)
-        const result = await processEntryProximityTelemetry(
-          telemetry,
-          proximityDependencies
-        )
-
-        logger.info('Entry proximity telemetry processed', {
-          deviceId: result.deviceId,
-          event: result.event,
-          kafkaPublished: result.kafkaPublished
-        })
-
-        return result
-      }
     }
+
+    if (kind === 'led_sync') {
+      const syncRequest = parseLedSyncRequestIoTEvent(event)
+      const result = await processLedSyncRequest(
+        syncRequest,
+        ledSyncDependencies
+      )
+
+      logger.info('LED sync request processed', {
+        deviceId: result.deviceId,
+        spotFirst: result.spotFirst,
+        spotLast: result.spotLast,
+        spotsSynced: result.spotsSynced,
+        ledCommandsPublished: result.ledCommandsPublished
+      })
+
+      return result
+    }
+
+    const telemetry = parseEntryProximityIoTEvent(event)
+    const result = await processEntryProximityTelemetry(
+      telemetry,
+      proximityDependencies
+    )
+
+    logger.info('Entry proximity telemetry processed', {
+      deviceId: result.deviceId,
+      event: result.event,
+      kafkaPublished: result.kafkaPublished
+    })
+
+    return result
   }
 )

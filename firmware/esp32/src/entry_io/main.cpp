@@ -30,6 +30,7 @@ LcdDisplay gLcd(polaris::pins::entry_io::kLcdAddress, 16, 2);
 
 bool gEntryGateOpenAssumed = false;
 bool gExitGateOpenAssumed = false;
+bool gExitPassageArmed = false;
 unsigned long gExitGateOpenedMs = 0;
 bool gProximityActive = false;
 unsigned long gProximitySinceMs = 0;
@@ -64,6 +65,7 @@ void closeEntryGateSafe(const char* reason) {
 }
 
 void closeExitGate(const char* reason) {
+  gExitPassageArmed = false;
   gExitGateOpenAssumed = false;
   gExitGateOpenedMs = 0;
   publishServoCommand(POLARIS_EXIT_SERVO_ID, "close");
@@ -104,11 +106,18 @@ void handleServoStatus(const char* servoId, JsonDocument& doc) {
   if (strstr(servoId, POLARIS_EXIT_SERVO_ID) != nullptr) {
     gExitGateOpenAssumed = isOpen;
     if (isOpen) {
-      gExitGateOpenedMs = millis();
-      Serial.println("[entry_io] Exit gate reported open");
+      if (gExitPassageArmed) {
+        gExitGateOpenedMs = millis();
+        Serial.println("[entry_io] Exit gate reported open (passage armed)");
+      } else {
+        gExitGateOpenAssumed = false;
+        Serial.println("[entry_io] Exit gate open ignored (no RFID passage armed)");
+      }
       return;
     }
 
+    gExitPassageArmed = false;
+    gExitGateOpenedMs = 0;
     Serial.println("[entry_io] Exit gate reported closed");
   }
 }
@@ -308,7 +317,7 @@ void handleUltrasonic(unsigned long nowMs) {
 }
 
 void handleExitGate(unsigned long nowMs) {
-  if (!gExitGateOpenAssumed) {
+  if (!gExitPassageArmed || !gExitGateOpenAssumed) {
     return;
   }
 
@@ -350,7 +359,7 @@ void handleExitRfid() {
     return;
   }
 
-  // Clear stale auto-close timer before the lambda issues a new open command.
+  gExitPassageArmed = true;
   gExitGateOpenAssumed = false;
   gExitGateOpenedMs = 0;
 

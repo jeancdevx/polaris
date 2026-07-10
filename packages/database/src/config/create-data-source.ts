@@ -21,7 +21,10 @@ export const createDataSourceOptions = (): DataSourceOptions => {
     migrations: [InitialSchema1740350000000, ParkingSessions1740350000001],
     migrationsTableName: 'typeorm_migrations',
     synchronize: false,
-    logging: env.logging
+    logging: env.logging,
+    extra: {
+      connectionTimeoutMillis: 10_000
+    }
   }
 }
 

@@ -21,7 +21,8 @@ data "aws_iam_policy_document" "device" {
       "${local.iot_arn_prefix}:topic/parking/sensors/occupancy/*",
       "${local.iot_arn_prefix}:topic/parking/commands/servo/*",
       "${local.iot_arn_prefix}:topic/parking/commands/servo/*/status",
-      "${local.iot_arn_prefix}:topic/parking/commands/display/*/status"
+      "${local.iot_arn_prefix}:topic/parking/commands/display/*/status",
+      "${local.iot_arn_prefix}:topic/parking/devices/leds/sync-request"
     ]
   }
 

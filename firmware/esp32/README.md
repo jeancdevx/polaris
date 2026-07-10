@@ -55,7 +55,11 @@ Editar `include/pins_*.h` según cableado.
 | MISO     | —       | —       | GPIO 19    |
 | MOSI     | —       | —       | GPIO 23    |
 | SS (SDA) | GPIO 5  | GPIO 4  | —          |
-| RST      | GPIO 27 | GPIO 15 | —          |
+| RST      | GPIO 27 | GPIO 26 | —          |
+
+**Importante:** no uses GPIO 15 como RST del lector de salida — es pin de
+_strapping_ en el ESP32 y el RC522 suele reportar `Firmware Version: 0x0` /
+`Communication failure` aunque el cableado SPI esté bien.
 
 La librería MFRC522 usa `MFRC522(SS, RST)` — SS/SDA primero, RST segundo.
 

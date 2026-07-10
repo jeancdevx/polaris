@@ -2,7 +2,6 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb'
 
 import type { RfidTagRow } from '@polaris/database'
-import { createDataSource } from '@polaris/database'
 import {
   createRfidUid,
   createUserId,
@@ -11,6 +10,8 @@ import {
   restoreRfidTag,
   type RfidTag
 } from '@polaris/domain'
+
+import { getLambdaDataSource } from '../database/lambda-data-source.js'
 
 import type { RfidLookupMode } from '../read-env.js'
 
@@ -123,28 +124,22 @@ export class RfidLookupRepository {
   }
 
   private async findInRds(rfidUid: string): Promise<RfidLookupResult | null> {
-    const dataSource = createDataSource()
-    await dataSource.initialize()
+    const dataSource = await getLambdaDataSource()
+    const row = await dataSource
+      .getRepository<RfidTagRow>('RfidTag')
+      .findOne({ where: { rfidUid } })
 
-    try {
-      const row = await dataSource
-        .getRepository<RfidTagRow>('RfidTag')
-        .findOne({ where: { rfidUid } })
-
-      if (!row) {
-        return null
-      }
-
-      const tag = mapRfidTagRow(row)
-
-      if (!isRfidTagValid(tag)) {
-        return null
-      }
-
-      return { tag, source: 'rds' }
-    } finally {
-      await dataSource.destroy()
+    if (!row) {
+      return null
     }
+
+    const tag = mapRfidTagRow(row)
+
+    if (!isRfidTagValid(tag)) {
+      return null
+    }
+
+    return { tag, source: 'rds' }
   }
 }
 

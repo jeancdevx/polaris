@@ -51,8 +51,7 @@ export class GateCommandPublisher {
         : this.env.exitServoDeviceId
 
     await this.publish(`parking/commands/servo/${servoId}`, {
-      action: 'open',
-      angle: 90
+      action: 'open'
     })
 
     return true

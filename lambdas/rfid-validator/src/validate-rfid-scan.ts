@@ -222,8 +222,6 @@ const finalizeValidation = async (
     lookupSource?: 'dynamodb' | 'rds'
   }
 ): Promise<RfidValidatorResponse> => {
-  await deps.kafkaPublisher.publishValidation({ scan, result })
-
   const gateCommandsPublished = result.valid
     ? await deps.gateCommands.publishAllowed({
         scan,
@@ -231,6 +229,14 @@ const finalizeValidation = async (
         parkingSpotId: result.parkingSpotId
       })
     : await deps.gateCommands.publishDenied({ scan, reason: result.reason })
+
+  let kafkaPublished = false
+  try {
+    await deps.kafkaPublisher.publishValidation({ scan, result })
+    kafkaPublished = true
+  } catch {
+    // Gate commands are time-critical; Kafka audit can be retried operationally.
+  }
 
   return {
     valid: result.valid,
@@ -244,6 +250,6 @@ const finalizeValidation = async (
     vehiclePlate: result.vehiclePlate,
     lookupSource: result.lookupSource,
     gateCommandsPublished,
-    kafkaPublished: true
+    kafkaPublished
   }
 }

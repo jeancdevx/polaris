@@ -12,6 +12,7 @@ import {
   type Producer
 } from '@polaris/kafka'
 import { KAFKA_TOPICS } from '@polaris/shared-types'
+import { sleep } from '@polaris/shared-utils'
 
 import type { RfidScanEvent } from '../iot-event.js'
 
@@ -23,6 +24,8 @@ export type PublishRfidValidationInput = Readonly<{
 export class KafkaRfidPublisher {
   private producer: Producer | undefined
   private connectPromise: Promise<Producer> | undefined
+
+  private static readonly connectTimeoutMs = 8_000
 
   constructor(private readonly clientId: string) {}
 
@@ -69,14 +72,28 @@ export class KafkaRfidPublisher {
 
   private getProducer(): Promise<Producer> {
     if (!this.connectPromise) {
-      this.connectPromise = createProducer(
-        createKafka({ clientId: this.clientId }),
-        {
-          allowAutoTopicCreation: false
-        }
-      )
+      this.connectPromise = this.connectProducerWithTimeout()
     }
 
     return this.connectPromise
+  }
+
+  private async connectProducerWithTimeout(): Promise<Producer> {
+    try {
+      const producer = await Promise.race([
+        createProducer(createKafka({ clientId: this.clientId }), {
+          allowAutoTopicCreation: false
+        }),
+        sleep(KafkaRfidPublisher.connectTimeoutMs).then(() => {
+          throw new Error('Kafka producer connect timed out')
+        })
+      ])
+
+      this.producer = producer
+      return producer
+    } catch (error) {
+      this.connectPromise = undefined
+      throw error
+    }
   }
 }

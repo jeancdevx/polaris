@@ -1,17 +1,13 @@
 import type { ParkingSpotRow } from '@polaris/database'
-import { createDataSource } from '@polaris/database'
+
+import { getLambdaDataSource } from '../database/lambda-data-source.js'
 
 export class ParkingCapacityRepository {
   async countFreeSpots(): Promise<number> {
-    const dataSource = createDataSource()
-    await dataSource.initialize()
+    const dataSource = await getLambdaDataSource()
 
-    try {
-      return dataSource.getRepository<ParkingSpotRow>('ParkingSpot').count({
-        where: { status: 'free' }
-      })
-    } finally {
-      await dataSource.destroy()
-    }
+    return dataSource.getRepository<ParkingSpotRow>('ParkingSpot').count({
+      where: { status: 'free' }
+    })
   }
 }

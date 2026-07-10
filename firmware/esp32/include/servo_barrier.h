@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <ESP32Servo.h>
 
 class ServoBarrier {
  public:
@@ -17,4 +18,5 @@ class ServoBarrier {
   int pin_;
   int angle_ = 0;
   bool attached_ = false;
+  Servo servo_;
 };

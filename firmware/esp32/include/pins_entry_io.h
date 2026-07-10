@@ -16,7 +16,7 @@ constexpr int kRfidEntryRst = 27;
 
 // RC522 salida (barrera de egreso) — SS/RST propios, mismo bus SPI
 constexpr int kRfidExitSs = 4;
-constexpr int kRfidExitRst = 15;
+constexpr int kRfidExitRst = 26;
 
 // HC-SR04 (solo entrada) — GPIO 16/17 no disponibles en esta placa
 constexpr int kUltrasonicTrig = 33;

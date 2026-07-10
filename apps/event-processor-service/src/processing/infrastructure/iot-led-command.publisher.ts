@@ -52,7 +52,7 @@ export class IotLedCommandPublisher {
       })
     )
 
-    this.logger.debug(`LED command ${parkingSpotId} -> ${mode}`)
+    this.logger.log(`LED cloud command ${parkingSpotId} -> ${mode}`)
     return true
   }
 

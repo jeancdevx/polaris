@@ -7,7 +7,7 @@ export const ledModeForStatus = (status: ParkingSpotStatus): LedSpotMode => {
     case 'occupied':
       return 'occupied'
     case 'reserved':
-      return 'blink_green'
+      return 'blink_blue'
     default:
       return 'free'
   }

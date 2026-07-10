@@ -10,7 +10,12 @@ import {
   type EventProcessorConfig
 } from '../event-processor.config.js'
 
-export type LedSpotMode = 'free' | 'occupied' | 'blink_green' | 'off'
+export type LedSpotMode =
+  | 'free'
+  | 'occupied'
+  | 'blink_blue'
+  | 'blink_green'
+  | 'off'
 
 @Injectable()
 export class IotLedCommandPublisher {

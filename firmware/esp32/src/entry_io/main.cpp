@@ -349,6 +349,7 @@ void handleExitRfid() {
     return;
   }
 
+  Serial.printf("[entry_io] RFID exit detected uid=%s\n", uid.c_str());
   publishRfidScan(uid, "exit");
 }
 
@@ -379,11 +380,19 @@ void setup() {
   gRfidEntry.begin(polaris::pins::entry_io::kRfidSck,
                    polaris::pins::entry_io::kRfidMiso,
                    polaris::pins::entry_io::kRfidMosi);
+  delay(100);
   gRfidExit.begin(polaris::pins::entry_io::kRfidSck,
                   polaris::pins::entry_io::kRfidMiso,
                   polaris::pins::entry_io::kRfidMosi);
   gUltrasonic.begin();
   gLcd.begin(polaris::pins::entry_io::kLcdSda, polaris::pins::entry_io::kLcdScl);
+
+  Serial.printf("[entry_io] RFID entry reader: %s\n",
+                gRfidEntry.isHealthy() ? "OK" : "FALLO");
+  Serial.printf("[entry_io] RFID exit reader: %s (SS=%d RST=%d)\n",
+                gRfidExit.isHealthy() ? "OK" : "FALLO — revise cableado",
+                polaris::pins::entry_io::kRfidExitSs,
+                polaris::pins::entry_io::kRfidExitRst);
 
   static WifiMqttClient client(makeConfig());
   gClient = &client;
@@ -407,8 +416,8 @@ void loop() {
   const unsigned long nowMs = millis();
   ensureMqtt();
   handleUltrasonic(nowMs);
-  handleEntryRfid();
   handleExitRfid();
+  handleEntryRfid();
   handleExitGate(nowMs);
   delay(5);
 }

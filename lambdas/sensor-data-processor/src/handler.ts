@@ -4,11 +4,17 @@ import { instrumentLambdaHandler } from '@polaris/lambda-core'
 
 import { parseEntryProximityIoTEvent } from './entry-proximity-iot-event.js'
 import { parseOccupancyChangedIoTEvent } from './iot-event.js'
+import { parseLedSyncRequestIoTEvent } from './led-sync-iot-event.js'
 import {
   createProcessEntryProximityDependencies,
   processEntryProximityTelemetry,
   type EntryProximityProcessorResponse
 } from './process-entry-proximity.js'
+import {
+  createProcessLedSyncDependencies,
+  processLedSyncRequest,
+  type LedSyncProcessorResponse
+} from './process-led-sync.js'
 import {
   createProcessSensorReadingDependencies,
   processSensorReading,
@@ -22,16 +28,22 @@ let occupancyDependencies = createProcessSensorReadingDependencies(
 let proximityDependencies = createProcessEntryProximityDependencies(
   readSensorDataProcessorEnv()
 )
+let ledSyncDependencies = createProcessLedSyncDependencies(
+  readSensorDataProcessorEnv()
+)
 
 export const resetSensorDataProcessorDependenciesForTests = (): void => {
   const env = readSensorDataProcessorEnv()
   occupancyDependencies = createProcessSensorReadingDependencies(env)
   proximityDependencies = createProcessEntryProximityDependencies(env)
+  ledSyncDependencies = createProcessLedSyncDependencies(env)
 }
 
 export const handler: Handler<
   unknown,
-  SensorDataProcessorResponse | EntryProximityProcessorResponse
+  | SensorDataProcessorResponse
+  | EntryProximityProcessorResponse
+  | LedSyncProcessorResponse
 > = instrumentLambdaHandler(
   { serviceName: 'sensor-data-processor' },
   async (event, _context, logger) => {
@@ -44,24 +56,43 @@ export const handler: Handler<
         status: result.status,
         deviceId: result.deviceId,
         dynamoPersisted: result.dynamoPersisted,
-        kafkaPublished: result.kafkaPublished
+        kafkaPublished: result.kafkaPublished,
+        ledCommandPublished: result.ledCommandPublished
       })
 
       return result
     } catch {
-      const telemetry = parseEntryProximityIoTEvent(event)
-      const result = await processEntryProximityTelemetry(
-        telemetry,
-        proximityDependencies
-      )
+      try {
+        const syncRequest = parseLedSyncRequestIoTEvent(event)
+        const result = await processLedSyncRequest(
+          syncRequest,
+          ledSyncDependencies
+        )
 
-      logger.info('Entry proximity telemetry processed', {
-        deviceId: result.deviceId,
-        event: result.event,
-        kafkaPublished: result.kafkaPublished
-      })
+        logger.info('LED sync request processed', {
+          deviceId: result.deviceId,
+          spotFirst: result.spotFirst,
+          spotLast: result.spotLast,
+          spotsSynced: result.spotsSynced,
+          ledCommandsPublished: result.ledCommandsPublished
+        })
 
-      return result
+        return result
+      } catch {
+        const telemetry = parseEntryProximityIoTEvent(event)
+        const result = await processEntryProximityTelemetry(
+          telemetry,
+          proximityDependencies
+        )
+
+        logger.info('Entry proximity telemetry processed', {
+          deviceId: result.deviceId,
+          event: result.event,
+          kafkaPublished: result.kafkaPublished
+        })
+
+        return result
+      }
     }
   }
 )

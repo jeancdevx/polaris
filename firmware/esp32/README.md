@@ -59,17 +59,42 @@ Editar `include/pins_*.h` según cableado.
 
 La librería MFRC522 usa `MFRC522(SS, RST)` — SS/SDA primero, RST segundo.
 
-HC-SR04: TRIG=17, ECHO=16. LCD I2C: SDA=21, SCL=22.
+HC-SR04: **TRIG=GPIO 33**, **ECHO=GPIO 32** (GPIO 16/17 no usables en esta
+placa). LCD I2C: SDA=21, SCL=22.
 
-Si el serial muestra siempre `distance=999 cm`, el sensor no responde: revisar
-alimentación 5 V, GND común con el ESP32, y divisor de tensión en ECHO (el pin
-ECHO del HC-SR04 es 5 V; el ESP32 acepta 3,3 V máx.). Para depurar:
+Si el serial muestra siempre `distance=999 cm` y `echo_us=0`, el ESP32 no recibe
+pulso en ECHO: revisar cableado TRIG/ECHO, alimentación **5 V** en VCC del
+HC-SR04, GND común con el ESP32, y divisor de tensión en ECHO (salida 5 V → 3,3
+V en GPIO 32). Para depurar:
 
 ```bash
 pio run -e entry_io_debug -t upload && pio device monitor
 ```
 
-Cada 5 s verás `[entry_io] Ultrasonic distance=… cm` en el monitor serial.
+Cada 5 s verás `[entry_io] Ultrasonic TRIG=… ECHO=… echo_us=… distance=… cm`.
+
+**Flujo entrada:** HC-SR04 detecta vehículo → LCD pide tarjeta → solo entonces
+el RC522 de entrada publica el RFID → Lambda valida → MQTT abre servo en
+`actuators`. Pasar la tarjeta sin proximidad imprime
+`Entry RFID ignored — acerque vehiculo primero`.
+
+### `actuators` — servos + FC-51
+
+| Señal         | GPIO |
+| ------------- | ---- |
+| Servo entrada | 13   |
+| Servo salida  | 12   |
+
+Los servos **solo se mueven** al recibir MQTT
+`parking/commands/servo/{entry-servo|exit-servo}` con `"action":"open"` o
+`"close"` (publicado por la Lambda tras validar RFID).
+
+Si al flashear **se levantan solos**, suele ser uno de estos casos:
+
+1. **Ángulos invertidos** en tu montaje mecánico — añade en `platformio.ini`
+   bajo `[env:actuators]` la flag `-D POLARIS_SERVO_INVERT=1` y recompila.
+2. **Mensaje MQTT basura** — el firmware ignora `open` durante 4 s tras boot y
+   exige `"action"` explícito (ya no abre por defecto con `angle=90`).
 
 FC-51: **LOW** = obstáculo. Sin sensor cableado, usar `INPUT_PULLUP` o no
 alimentar el ESP (pines flotantes → falsas ocupaciones en AWS).

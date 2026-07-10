@@ -54,6 +54,7 @@ Fc51Spot gSpots[polaris::pins::actuators::kFc51Count] = {
 };
 
 unsigned long gLastZonePollMs = 0;
+unsigned long gBootMs = 0;
 
 String spotIdFromNumber(int spotNumber) {
   char buffer[12];
@@ -76,18 +77,37 @@ void publishServoStatus(const char* servoId, const char* status, const char* rea
 
 void handleServoCommand(const char* servoId, ServoBarrier& servo, JsonDocument& doc) {
   const char* action = doc["action"] | "";
-  const int angle = doc["angle"] | polaris::hw::kServoOpenAngle;
 
-  if (strcmp(action, "open") == 0 || angle >= polaris::hw::kServoOpenAngle) {
-    servo.open();
+  if (strcmp(action, "open") == 0) {
+    if (millis() - gBootMs < polaris::hw::kServoBootGraceMs) {
+      Serial.printf("[actuators] Ignored open for %s during boot grace\n", servoId);
+      return;
+    }
+
+    const int angle = doc["angle"] | polaris::hw::kServoOpenAngle;
+    servo.setAngle(angle);
     publishServoStatus(servoId, "open", "command");
-    Serial.printf("[actuators] Servo %s opened\n", servoId);
+    Serial.printf("[actuators] Servo %s opened (angle=%d)\n", servoId, angle);
     return;
   }
 
-  servo.close();
-  publishServoStatus(servoId, "closed", "command");
-  Serial.printf("[actuators] Servo %s closed\n", servoId);
+  if (strcmp(action, "close") == 0) {
+    const int angle = doc["angle"] | polaris::hw::kServoClosedAngle;
+    servo.setAngle(angle);
+    publishServoStatus(servoId, "closed", "command");
+    Serial.printf("[actuators] Servo %s closed (angle=%d)\n", servoId, angle);
+    return;
+  }
+
+  Serial.printf("[actuators] Ignored servo command for %s (action=%s)\n", servoId, action);
+}
+
+void forceServosClosedOnBoot(const char* reason) {
+  gEntryServo.close();
+  gExitServo.close();
+  publishServoStatus(POLARIS_ENTRY_SERVO_ID, "closed", reason);
+  publishServoStatus(POLARIS_EXIT_SERVO_ID, "closed", reason);
+  Serial.printf("[actuators] Servos forced closed (%s)\n", reason);
 }
 
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
@@ -126,6 +146,7 @@ WifiMqttConfig makeConfig() {
 void subscribeCommands(WifiMqttClient& client) {
   client.subscribe(polaris::mqtt::servoCommandTopic(POLARIS_ENTRY_SERVO_ID).c_str());
   client.subscribe(polaris::mqtt::servoCommandTopic(POLARIS_EXIT_SERVO_ID).c_str());
+  forceServosClosedOnBoot("mqtt_connected");
 }
 
 bool publishOccupancy(int spotNumber, bool occupied) {
@@ -195,11 +216,13 @@ void ensureMqtt() {
 void setup() {
   Serial.begin(115200);
   delay(500);
+  gBootMs = millis();
 
   Serial.printf("\nPolaris ESP32 — role=%s deviceId=%s\n", kRoleName, POLARIS_DEVICE_ID);
 
   gEntryServo.begin();
   gExitServo.begin();
+  forceServosClosedOnBoot("setup");
 
   for (auto& spot : gSpots) {
     spot.sensor.begin();
@@ -216,6 +239,10 @@ void setup() {
   }
 
   Serial.println("[actuators] Ready — 2× servo + FC-51 occupancy (spots 1..10)");
+  Serial.printf("[actuators] Servo closed=%d open=%d boot_grace=%lums\n",
+                polaris::hw::kServoClosedAngle,
+                polaris::hw::kServoOpenAngle,
+                polaris::hw::kServoBootGraceMs);
 }
 
 void loop() {

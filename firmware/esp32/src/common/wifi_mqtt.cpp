@@ -108,7 +108,7 @@ bool WifiMqttClient::subscribe(const char* topic) {
     return false;
   }
 
-  const bool ok = mqtt_.subscribe(topic);
+  const bool ok = mqtt_.subscribe(topic, 1);
   Serial.printf("[mqtt] Subscribe %s -> %s\n", topic, ok ? "ok" : "fail");
   return ok;
 }

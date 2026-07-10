@@ -27,19 +27,63 @@ String formatUid(const MFRC522::Uid& uid) {
 RfidReader::RfidReader(int ssPin, int rstPin)
     : reader_(ssPin, rstPin), ssPin_(ssPin), rstPin_(rstPin) {}
 
+void RfidReader::preparePins() {
+  pinMode(ssPin_, OUTPUT);
+  digitalWrite(ssPin_, HIGH);
+  pinMode(rstPin_, OUTPUT);
+  digitalWrite(rstPin_, HIGH);
+}
+
+void RfidReader::softReset() {
+  digitalWrite(rstPin_, LOW);
+  delay(50);
+  digitalWrite(rstPin_, HIGH);
+  delay(50);
+}
+
+bool RfidReader::probeChip() {
+  const byte version = reader_.PCD_ReadRegister(reader_.VersionReg);
+  return version != 0x00 && version != 0xFF;
+}
+
 void RfidReader::begin(int sckPin, int misoPin, int mosoPin) {
+  preparePins();
+
   if (!gSpiBusStarted) {
     // SS=-1: each MFRC522 instance drives its own chip-select pin.
     SPI.begin(sckPin, misoPin, mosoPin, -1);
     gSpiBusStarted = true;
+    delay(10);
   }
 
+  softReset();
   reader_.PCD_Init();
+  delay(20);
+
+  healthy_ = probeChip();
+  if (!healthy_) {
+    softReset();
+    reader_.PCD_Init();
+    delay(20);
+    healthy_ = probeChip();
+  }
+
   Serial.printf("[rfid] RC522 initialized SS=%d RST=%d — ", ssPin_, rstPin_);
   reader_.PCD_DumpVersionToSerial();
+
+  if (!healthy_) {
+    Serial.printf(
+        "[rfid] WARNING: RC522 SS=%d no responde (version 0x00/0xFF). "
+        "Revise cableado SCK/MISO/MOSI/SDA/RST y alimentacion 3.3V.\n",
+        ssPin_);
+  }
 }
 
 bool RfidReader::readUid(String& uidOut) {
+  if (!healthy_) {
+    return false;
+  }
+
   if (!reader_.PICC_IsNewCardPresent() || !reader_.PICC_ReadCardSerial()) {
     return false;
   }

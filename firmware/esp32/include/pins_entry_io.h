@@ -18,9 +18,9 @@ constexpr int kRfidEntryRst = 27;
 constexpr int kRfidExitSs = 4;
 constexpr int kRfidExitRst = 15;
 
-// HC-SR04 (solo entrada)
-constexpr int kUltrasonicTrig = 17;
-constexpr int kUltrasonicEcho = 16;
+// HC-SR04 (solo entrada) — GPIO 16/17 no disponibles en esta placa
+constexpr int kUltrasonicTrig = 33;
+constexpr int kUltrasonicEcho = 32;
 
 // LCD 16x2 I2C (PCF8574 — dirección 0x27 o 0x3F)
 constexpr int kLcdSda = 21;

@@ -13,9 +13,17 @@ constexpr unsigned long kProximityTimeoutMs = 30'000;
 constexpr unsigned long kBarrierMaxOpenMs = 120'000;
 constexpr unsigned long kPassageTelemetryMs = 1'000;
 
-// SG90
+// SG90 — si la barrera se levanta al arrancar, compilar actuators con
+// -D POLARIS_SERVO_INVERT=1 en platformio.ini
+#if defined(POLARIS_SERVO_INVERT)
+constexpr int kServoClosedAngle = 90;
+constexpr int kServoOpenAngle = 0;
+#else
 constexpr int kServoClosedAngle = 0;
 constexpr int kServoOpenAngle = 90;
+#endif
+
+constexpr unsigned long kServoBootGraceMs = 4'000;
 
 // Exit gate heuristic (no ultrasonic)
 constexpr unsigned long kExitMinOpenMs = 2'000;

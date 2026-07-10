@@ -2,7 +2,7 @@
 
 Fc51Sensor::Fc51Sensor(int pin) : pin_(pin) {}
 
-void Fc51Sensor::begin() { pinMode(pin_, INPUT); }
+void Fc51Sensor::begin() { pinMode(pin_, INPUT_PULLUP); }
 
 bool Fc51Sensor::readObstacle() const {
   // FC-51: LOW = obstáculo detectado

@@ -1,19 +1,13 @@
 #include "servo_barrier.h"
 
-#include <ESP32Servo.h>
-
 #include "hardware_config.h"
-
-namespace {
-Servo gServo;
-}
 
 ServoBarrier::ServoBarrier(int pin) : pin_(pin) {}
 
 void ServoBarrier::begin() {
   if (!attached_) {
-    gServo.setPeriodHertz(50);
-    gServo.attach(pin_, 500, 2400);
+    servo_.setPeriodHertz(50);
+    servo_.attach(pin_, 500, 2400);
     attached_ = true;
   }
   close();
@@ -28,7 +22,7 @@ void ServoBarrier::setAngle(int angle) {
     begin();
   }
   angle_ = angle;
-  gServo.write(angle_);
+  servo_.write(angle_);
 }
 
 bool ServoBarrier::isOpen() const {

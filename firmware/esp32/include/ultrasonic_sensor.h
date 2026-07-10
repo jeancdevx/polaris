@@ -7,7 +7,7 @@ class UltrasonicSensor {
   UltrasonicSensor(int trigPin, int echoPin);
 
   void begin();
-  int measureCm();
+  int measureCm(unsigned long* echoMicros = nullptr);
 
  private:
   int trigPin_;

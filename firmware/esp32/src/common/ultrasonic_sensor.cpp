@@ -5,10 +5,11 @@ UltrasonicSensor::UltrasonicSensor(int trigPin, int echoPin)
 
 void UltrasonicSensor::begin() {
   pinMode(trigPin_, OUTPUT);
-  pinMode(echoPin_, INPUT);
+  digitalWrite(trigPin_, LOW);
+  pinMode(echoPin_, INPUT_PULLDOWN);
 }
 
-int UltrasonicSensor::measureCm() {
+int UltrasonicSensor::measureCm(unsigned long* echoMicros) {
   digitalWrite(trigPin_, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin_, HIGH);
@@ -16,6 +17,10 @@ int UltrasonicSensor::measureCm() {
   digitalWrite(trigPin_, LOW);
 
   const unsigned long duration = pulseIn(echoPin_, HIGH, 30'000);
+  if (echoMicros != nullptr) {
+    *echoMicros = duration;
+  }
+
   if (duration == 0) {
     return 999;
   }

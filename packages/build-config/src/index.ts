@@ -35,9 +35,16 @@ export const createLambdaBuildConfig = (
     format: 'esm',
     entryFileNames: 'index.js',
     sourcemap: false,
-    minify: true
+    minify: false,
+    inlineDynamicImports: true
   },
   platform: 'node',
-  treeshake: true,
+  treeshake: {
+    moduleSideEffects: id =>
+      id.includes('node_modules/@smithy') ||
+      id.includes('node_modules/@aws-crypto') ||
+      id.includes('node_modules/@aws-sdk') ||
+      id.includes('node_modules/@aws-lambda-powertools')
+  },
   external: [/^@aws-sdk\//]
 })

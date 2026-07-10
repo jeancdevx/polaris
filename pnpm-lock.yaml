@@ -611,9 +611,6 @@ importers:
       '@aws-crypto/sha256-js':
         specifier: 5.2.0
         version: 5.2.0
-      '@aws-sdk/credential-provider-node':
-        specifier: 3.972.58
-        version: 3.972.58
       '@polaris/lambda-core':
         specifier: workspace:*
         version: link:../../packages/lambda-core
@@ -626,6 +623,9 @@ importers:
       '@smithy/signature-v4':
         specifier: 5.5.2
         version: 5.5.2
+      '@smithy/types':
+        specifier: 4.12.0
+        version: 4.12.0
     devDependencies:
       '@polaris/build-config':
         specifier: workspace:*
@@ -4440,6 +4440,10 @@ packages:
   '@smithy/types@3.7.2':
     resolution: {integrity: sha512-bNwBYYmN8Eh9RyjS1p2gW6MIhSO2rl7X9QeLM8iTdcGRP+eDiIWDt66c9IysCc22gefKszZv+ubV9qZc7hdESg==}
     engines: {node: '>=16.0.0'}
+
+  '@smithy/types@4.12.0':
+    resolution: {integrity: sha512-9YcuJVTOBDjg9LWo23Qp0lTQ3D7fQsQtwle0jVfpbUHy9qBwCEgKuVH4FqFB3VYu0nwdHKiEMA+oXz7oV8X1kw==}
+    engines: {node: '>=18.0.0'}
 
   '@smithy/types@4.15.0':
     resolution: {integrity: sha512-Z5TAOxygoFvybJV3igo5SloFflSokHx2hu1eFA+DxDTcn+FtKxUSui+rbTRG1pAafMA888Z3MVvCWUuvCrTXjg==}
@@ -13627,6 +13631,10 @@ snapshots:
       tslib: 2.8.1
 
   '@smithy/types@3.7.2':
+    dependencies:
+      tslib: 2.8.1
+
+  '@smithy/types@4.12.0':
     dependencies:
       tslib: 2.8.1
 

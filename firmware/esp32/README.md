@@ -75,7 +75,8 @@ Cada 5 s verás `[entry_io] Ultrasonic TRIG=… ECHO=… echo_us=… distance=�
 
 **Flujo entrada:** HC-SR04 detecta vehículo → LCD pide tarjeta → solo entonces
 el RC522 de entrada publica el RFID → Lambda valida → MQTT abre servo en
-`actuators`. Pasar la tarjeta sin proximidad imprime
+`actuators`. Monitorea **entry_io** (no actuators) para ver proximidad/RFID.
+Pasare la tarjeta sin proximidad imprime
 `Entry RFID ignored — acerque vehiculo primero`.
 
 ### `actuators` — servos + FC-51
@@ -89,12 +90,12 @@ Los servos **solo se mueven** al recibir MQTT
 `parking/commands/servo/{entry-servo|exit-servo}` con `"action":"open"` o
 `"close"` (publicado por la Lambda tras validar RFID).
 
-Si al flashear **se levantan solos**, suele ser uno de estos casos:
+Si al flashear **se levantan solos**, el montaje suele invertir 0°/90°. En
+`[env:actuators]` ya va `-D POLARIS_SERVO_INVERT=1` (closed=90°, open=0°). Si en
+tu banco fuera al revés, quita esa flag y recompila.
 
-1. **Ángulos invertidos** en tu montaje mecánico — añade en `platformio.ini`
-   bajo `[env:actuators]` la flag `-D POLARIS_SERVO_INVERT=1` y recompila.
-2. **Mensaje MQTT basura** — el firmware ignora `open` durante 4 s tras boot y
-   exige `"action"` explícito (ya no abre por defecto con `angle=90`).
+El firmware ignora MQTT `open` durante 4 s tras boot y exige `"action"`
+explícito.
 
 FC-51: **LOW** = obstáculo. Sin sensor cableado, usar `INPUT_PULLUP` o no
 alimentar el ESP (pines flotantes → falsas ocupaciones en AWS).

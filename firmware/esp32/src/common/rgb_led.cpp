@@ -17,10 +17,11 @@ void RgbLed::writeRaw(bool r, bool g, bool b) const {
   digitalWrite(bPin_, b ? HIGH : LOW);
 }
 
-void RgbLed::setMode(RgbMode mode) {
-  mode_ = mode;
-  blinkOn_ = true;
-  lastBlinkMs_ = millis();
+void RgbLed::applyModeColors(bool on) const {
+  if (!on) {
+    writeRaw(false, false, false);
+    return;
+  }
 
   switch (mode_) {
     case RgbMode::Off:
@@ -32,14 +33,21 @@ void RgbLed::setMode(RgbMode mode) {
     case RgbMode::Occupied:
       writeRaw(true, false, false);
       break;
-    case RgbMode::BlinkGreen:
-      writeRaw(false, true, false);
+    case RgbMode::BlinkBlue:
+      writeRaw(false, false, true);
       break;
   }
 }
 
+void RgbLed::setMode(RgbMode mode) {
+  mode_ = mode;
+  blinkOn_ = true;
+  lastBlinkMs_ = millis();
+  applyModeColors(true);
+}
+
 void RgbLed::update(unsigned long nowMs) {
-  if (mode_ != RgbMode::BlinkGreen) {
+  if (mode_ != RgbMode::BlinkBlue) {
     return;
   }
 
@@ -49,5 +57,5 @@ void RgbLed::update(unsigned long nowMs) {
 
   lastBlinkMs_ = nowMs;
   blinkOn_ = !blinkOn_;
-  writeRaw(false, blinkOn_, false);
+  applyModeColors(blinkOn_);
 }

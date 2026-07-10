@@ -6,6 +6,6 @@ describe('ledModeForStatus', () => {
   it('maps parking spot status to LED modes', () => {
     expect(ledModeForStatus('free')).toBe('free')
     expect(ledModeForStatus('occupied')).toBe('occupied')
-    expect(ledModeForStatus('reserved')).toBe('blink_green')
+    expect(ledModeForStatus('reserved')).toBe('blink_blue')
   })
 })

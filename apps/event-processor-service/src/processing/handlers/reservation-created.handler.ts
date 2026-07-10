@@ -28,7 +28,7 @@ export class ReservationCreatedHandler {
       expiresAt: event.expiresAt
     })
 
-    await this.ledCommands.publishSpotMode(event.parkingSpotId, 'blink_green')
+    await this.ledCommands.publishSpotMode(event.parkingSpotId, 'blink_blue')
 
     this.logger.log(
       `Reservation created forwarded for ${event.parkingSpotId} (${event.reservationId})`

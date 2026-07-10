@@ -34,4 +34,6 @@ inline String ledCommandTopic(const char* spotId) {
   return String("parking/commands/led/") + spotId;
 }
 
+constexpr const char* kLedSyncRequestTopic = "parking/devices/leds/sync-request";
+
 }  // namespace polaris::mqtt

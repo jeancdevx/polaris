@@ -15,6 +15,7 @@ class RgbLed {
 
   void begin();
   void setMode(RgbMode mode);
+  RgbMode mode() const;
   void update(unsigned long nowMs);
 
  private:

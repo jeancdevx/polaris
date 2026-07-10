@@ -12,11 +12,13 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.1075.0",
+    "@aws-sdk/client-iot-data-plane": "3.1075.0",
     "@aws-sdk/lib-dynamodb": "3.1075.0",
     "@polaris/domain": "workspace:*",
     "@polaris/kafka": "workspace:*",
     "@polaris/lambda-core": "workspace:*",
-    "@polaris/shared-types": "workspace:*"
+    "@polaris/shared-types": "workspace:*",
+    "@polaris/shared-utils": "workspace:*"
   },
   "devDependencies": {
     "@polaris/build-config": "workspace:*",

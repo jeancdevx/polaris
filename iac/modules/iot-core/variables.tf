@@ -40,6 +40,10 @@ variable "sensor_occupancy_rules" {
       description = "Route HC-SR04 entry proximity telemetry to sensor-data-processor"
       topic       = "parking/rfid/entry/proximity"
     }
+    led_sync_request = {
+      description = "Route LED sync requests from zone ESP32s to sensor-data-processor"
+      topic       = "parking/devices/leds/sync-request"
+    }
   }
 }
 

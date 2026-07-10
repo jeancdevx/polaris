@@ -19,9 +19,9 @@ export class LedStateSyncService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     try {
       const synced = await this.syncAllFromDatabase()
-      this.logger.log(`LED state sync published for ${synced} parking spots`)
+      this.logger.log(`LED cloud sync published for ${synced} parking spots`)
     } catch (error) {
-      this.logger.warn('LED state sync skipped on startup', error)
+      this.logger.error('LED cloud sync failed on startup', error)
     }
   }
 
@@ -31,13 +31,20 @@ export class LedStateSyncService implements OnModuleInit {
       .getRepository<ParkingSpotRow>('ParkingSpot')
       .find({ order: { spotId: 'ASC' } })
 
+    let published = 0
+
     for (const row of rows) {
-      await this.ledCommands.publishSpotMode(
+      const ok = await this.ledCommands.publishSpotMode(
         row.spotId,
         ledModeForStatus(row.status as ParkingSpotStatus)
       )
+
+      if (ok) {
+        published += 1
+        this.logger.log(`LED cloud sync ${row.spotId} -> ${row.status}`)
+      }
     }
 
-    return rows.length
+    return published
   }
 }

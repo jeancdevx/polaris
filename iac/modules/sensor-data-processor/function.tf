@@ -10,16 +10,26 @@ resource "aws_lambda_function" "main" {
   source_code_hash = data.archive_file.lambda_package.output_base64sha256
 
   environment {
-    variables = {
-      SENSOR_READINGS_TABLE_NAME   = var.sensor_readings_table_name
-      SENSOR_READINGS_TTL_DAYS     = tostring(var.sensor_readings_ttl_days)
-      KAFKA_BROKERS                = var.bootstrap_brokers
-      KAFKA_AUTH_MODE              = "iam"
-      KAFKA_CLIENT_ID              = local.function_name
-      POWERTOOLS_LOG_LEVEL         = var.powertools_log_level
-      POWERTOOLS_METRICS_NAMESPACE = "Polaris"
-      POWERTOOLS_SERVICE_NAME      = local.function_name
-    }
+    variables = merge(
+      {
+        SENSOR_READINGS_TABLE_NAME   = var.sensor_readings_table_name
+        SENSOR_READINGS_TTL_DAYS     = tostring(var.sensor_readings_ttl_days)
+        KAFKA_BROKERS                = var.bootstrap_brokers
+        KAFKA_AUTH_MODE              = "iam"
+        KAFKA_CLIENT_ID              = local.function_name
+        POWERTOOLS_LOG_LEVEL         = var.powertools_log_level
+        POWERTOOLS_METRICS_NAMESPACE = "Polaris"
+        POWERTOOLS_SERVICE_NAME      = local.function_name
+        LED_COMMANDS_ENABLED         = tostring(var.led_commands_enabled)
+      },
+      var.redis_url != null ? { REDIS_URL = var.redis_url } : {},
+      var.led_commands_enabled ? {
+        IOT_DATA_ENDPOINT = coalesce(
+          var.iot_data_endpoint,
+          data.aws_iot_endpoint.data_ats.endpoint_address
+        )
+      } : {}
+    )
   }
 
   tracing_config {

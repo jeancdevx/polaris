@@ -104,18 +104,19 @@ void handleServoStatus(const char* servoId, JsonDocument& doc) {
   }
 
   if (strstr(servoId, POLARIS_EXIT_SERVO_ID) != nullptr) {
-    gExitGateOpenAssumed = isOpen;
     if (isOpen) {
-      if (gExitPassageArmed) {
-        gExitGateOpenedMs = millis();
-        Serial.println("[entry_io] Exit gate reported open (passage armed)");
-      } else {
-        gExitGateOpenAssumed = false;
+      if (!gExitPassageArmed) {
         Serial.println("[entry_io] Exit gate open ignored (no RFID passage armed)");
+        return;
       }
+
+      gExitGateOpenedMs = millis();
+      gExitGateOpenAssumed = true;
+      Serial.println("[entry_io] Exit gate reported open (passage armed)");
       return;
     }
 
+    gExitGateOpenAssumed = false;
     gExitPassageArmed = false;
     gExitGateOpenedMs = 0;
     Serial.println("[entry_io] Exit gate reported closed");
@@ -317,7 +318,7 @@ void handleUltrasonic(unsigned long nowMs) {
 }
 
 void handleExitGate(unsigned long nowMs) {
-  if (!gExitPassageArmed || !gExitGateOpenAssumed) {
+  if (!gExitPassageArmed || !gExitGateOpenAssumed || gExitGateOpenedMs == 0) {
     return;
   }
 
@@ -356,6 +357,13 @@ void handleEntryRfid() {
 void handleExitRfid() {
   String uid;
   if (!gRfidExit.readUid(uid)) {
+    return;
+  }
+
+  if (gExitPassageArmed && gExitGateOpenAssumed) {
+    Serial.printf(
+        "[entry_io] Exit RFID ignored — passage in progress uid=%s\n",
+        uid.c_str());
     return;
   }
 

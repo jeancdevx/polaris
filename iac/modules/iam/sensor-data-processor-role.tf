@@ -32,6 +32,16 @@ data "aws_iam_policy_document" "sensor_data_processor_data" {
       "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.name_prefix}-SensorReadings"
     ]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iot:Publish"
+    ]
+    resources = [
+      "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/led/*"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "sensor_data_processor_execution" {

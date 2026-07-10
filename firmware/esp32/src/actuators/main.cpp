@@ -168,6 +168,12 @@ bool publishOccupancy(int spotNumber, bool occupied) {
   return ok;
 }
 
+void republishAllSpotStates() {
+  for (const auto& spot : gSpots) {
+    publishOccupancy(spot.spotNumber, spot.confirmedOccupied);
+  }
+}
+
 void updateSpot(Fc51Spot& spot, unsigned long nowMs) {
   const bool obstacle = spot.sensor.readObstacle();
 
@@ -204,6 +210,7 @@ void ensureMqtt() {
       polaris::time::syncFromNtp();
       if (gClient->connectMqtt()) {
         subscribeCommands(*gClient);
+        republishAllSpotStates();
       }
     }
   }
@@ -234,6 +241,7 @@ void setup() {
     polaris::time::syncFromNtp();
     if (client.connectMqtt()) {
       subscribeCommands(client);
+      republishAllSpotStates();
     }
   }
 

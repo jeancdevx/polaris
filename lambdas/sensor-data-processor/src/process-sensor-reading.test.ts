@@ -13,7 +13,9 @@ import type { SensorDataProcessorEnv } from './read-env.js'
 const baseEnv: SensorDataProcessorEnv = {
   sensorReadingsTableName: 'polaris-dev-SensorReadings',
   sensorReadingsTtlDays: 90,
-  kafkaClientId: 'sensor-data-processor-test'
+  kafkaClientId: 'sensor-data-processor-test',
+  ledCommandsEnabled: true,
+  iotDataEndpoint: 'example.iot.us-east-2.amazonaws.com'
 }
 
 const occupancyReading: OccupancyChangedIoTEvent = {
@@ -46,7 +48,7 @@ const buildDeps = (
 })
 
 describe('processSensorReading', () => {
-  it('persists to DynamoDB and publishes to Kafka', async () => {
+  it('persists to DynamoDB and publishes occupancy to Kafka', async () => {
     const deps = buildDeps()
 
     const result = await processSensorReading(occupancyReading, deps)

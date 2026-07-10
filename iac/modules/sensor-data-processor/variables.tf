@@ -86,3 +86,21 @@ variable "timeout_seconds" {
   type        = number
   default     = 60
 }
+
+variable "led_commands_enabled" {
+  description = "Publish MQTT LED commands when occupancy changes or on sync-request"
+  type        = bool
+  default     = true
+}
+
+variable "redis_url" {
+  description = "Redis URL for LED sync-request handling"
+  type        = string
+  default     = null
+}
+
+variable "iot_data_endpoint" {
+  description = "AWS IoT data endpoint for LED command publishing"
+  type        = string
+  default     = null
+}

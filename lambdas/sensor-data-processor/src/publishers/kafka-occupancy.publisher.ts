@@ -10,7 +10,14 @@ import { KAFKA_TOPICS } from '@polaris/shared-types'
 
 import type { OccupancyChangedIoTEvent } from '../iot-event.js'
 
+const sleep = (ms: number): Promise<void> =>
+  new Promise(resolve => {
+    setTimeout(resolve, ms)
+  })
+
 export class KafkaOccupancyPublisher {
+  private static readonly connectTimeoutMs = 8_000
+
   private producer: Producer | undefined
   private connectPromise: Promise<Producer> | undefined
 
@@ -45,12 +52,16 @@ export class KafkaOccupancyPublisher {
 
   private getProducer(): Promise<Producer> {
     if (!this.connectPromise) {
-      this.connectPromise = createProducer(
-        createKafka({ clientId: this.clientId }),
-        {
+      this.connectPromise = Promise.race([
+        createProducer(createKafka({ clientId: this.clientId }), {
           allowAutoTopicCreation: false
-        }
-      )
+        }),
+        sleep(KafkaOccupancyPublisher.connectTimeoutMs).then(() => {
+          throw new Error(
+            `Kafka producer connect timed out after ${KafkaOccupancyPublisher.connectTimeoutMs}ms`
+          )
+        })
+      ])
     }
 
     return this.connectPromise

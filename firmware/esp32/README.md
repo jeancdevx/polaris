@@ -104,6 +104,19 @@ explícito.
 FC-51: **LOW** = obstáculo. Sin sensor cableado, usar `INPUT_PULLUP` o no
 alimentar el ESP (pines flotantes → falsas ocupaciones en AWS).
 
+### `leds_zone_a` / `leds_zone_b` — RGB por plaza
+
+Cada plaza usa los 3 canales del LED (cátodo común: HIGH = encendido):
+
+| Estado RDS / MQTT `mode`  | Color                     | Canales RGB |
+| ------------------------- | ------------------------- | ----------- |
+| `free`                    | Verde fijo                | G           |
+| `reserved` / `blink_blue` | Azul parpadeante (500 ms) | B           |
+| `occupied`                | Rojo fijo                 | R           |
+| `off`                     | Apagado                   | —           |
+
+`blink_green` sigue aceptándose en firmware (alias legacy → azul parpadeante).
+
 ## Smoke desde PC
 
 ```bash

@@ -26,8 +26,8 @@ constexpr int kServoOpenAngle = 90;
 constexpr unsigned long kServoBootGraceMs = 4'000;
 
 // Exit gate heuristic (no ultrasonic)
-constexpr unsigned long kExitMinOpenMs = 2'000;
-constexpr unsigned long kExitCloseAfterMs = 8'000;
+constexpr unsigned long kExitMinOpenMs = 3'000;
+constexpr unsigned long kExitCloseAfterMs = 15'000;
 constexpr unsigned long kExitMaxOpenMs = 60'000;
 
 // FC-51 zone sensors

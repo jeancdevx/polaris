@@ -230,14 +230,21 @@ void handleUltrasonic(unsigned long nowMs) {
   }
   gLastUltrasonicMs = nowMs;
 
-  const int distance = gUltrasonic.measureCm();
+  unsigned long echoMicros = 0;
+  const int distance = gUltrasonic.measureCm(&echoMicros);
   gLastDistanceCm = distance;
 
 #if defined(POLARIS_DEBUG_ULTRASONIC)
   static unsigned long lastDebugMs = 0;
   if (nowMs - lastDebugMs >= 5000) {
     lastDebugMs = nowMs;
-    Serial.printf("[entry_io] Ultrasonic distance=%d cm\n", distance);
+    Serial.printf(
+        "[entry_io] Ultrasonic TRIG=%d ECHO=%d echo_us=%lu distance=%d cm%s\n",
+        polaris::pins::entry_io::kUltrasonicTrig,
+        polaris::pins::entry_io::kUltrasonicEcho,
+        echoMicros,
+        distance,
+        echoMicros == 0 ? " (timeout — sin pulso ECHO)" : "");
   }
 #endif
 
@@ -324,6 +331,14 @@ void handleEntryRfid() {
     return;
   }
 
+  if (!gProximityActive && !gEntryGateOpenAssumed) {
+    Serial.printf(
+        "[entry_io] Entry RFID ignored — acerque vehiculo primero uid=%s\n",
+        uid.c_str());
+    gLcd.showProximityPrompt();
+    return;
+  }
+
   gProximityActive = false;
   publishRfidScan(uid, "entry");
 }
@@ -380,6 +395,11 @@ void setup() {
     }
   }
 
+  Serial.printf(
+      "[entry_io] HC-SR04 TRIG=GPIO%d ECHO=GPIO%d (VCC=5V, GND común, divisor "
+      "ECHO→3.3V)\n",
+      polaris::pins::entry_io::kUltrasonicTrig,
+      polaris::pins::entry_io::kUltrasonicEcho);
   Serial.println("[entry_io] Ready — 2× RC522 + LCD I2C + HC-SR04 (servo via MQTT)");
 }
 

@@ -925,6 +925,9 @@ importers:
       '@aws-sdk/client-dynamodb':
         specifier: 3.1075.0
         version: 3.1075.0
+      '@aws-sdk/client-iot-data-plane':
+        specifier: 3.1075.0
+        version: 3.1075.0
       '@aws-sdk/lib-dynamodb':
         specifier: 3.1075.0
         version: 3.1075.0(@aws-sdk/client-dynamodb@3.1075.0)
@@ -940,6 +943,9 @@ importers:
       '@polaris/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
+      '@polaris/shared-utils':
+        specifier: workspace:*
+        version: link:../../packages/shared-utils
     devDependencies:
       '@polaris/build-config':
         specifier: workspace:*

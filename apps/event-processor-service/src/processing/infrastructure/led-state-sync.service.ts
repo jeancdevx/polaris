@@ -34,15 +34,28 @@ export class LedStateSyncService implements OnModuleInit {
     let published = 0
 
     for (const row of rows) {
-      const ok = await this.ledCommands.publishSpotMode(
-        row.spotId,
-        ledModeForStatus(row.status as ParkingSpotStatus)
-      )
+      try {
+        const ok = await this.ledCommands.publishSpotMode(
+          row.spotId,
+          ledModeForStatus(row.status as ParkingSpotStatus)
+        )
 
-      if (ok) {
-        published += 1
-        this.logger.log(`LED cloud sync ${row.spotId} -> ${row.status}`)
+        if (ok) {
+          published += 1
+          this.logger.log(`LED cloud sync ${row.spotId} -> ${row.status}`)
+        }
+      } catch (error) {
+        this.logger.error(
+          `LED cloud sync failed for ${row.spotId} (${row.status})`,
+          error
+        )
       }
+    }
+
+    if (published === 0 && rows.length > 0) {
+      throw new Error(
+        `LED cloud sync published 0/${rows.length} spots — check iot:Publish + iot:RetainPublish IAM`
+      )
     }
 
     return published

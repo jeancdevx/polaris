@@ -36,7 +36,9 @@ data "aws_iam_policy_document" "sensor_data_processor_data" {
   statement {
     effect = "Allow"
     actions = [
-      "iot:Publish"
+      "iot:Publish",
+      # Required when PublishCommand uses retain=true (LED sync / occupancy LED state).
+      "iot:RetainPublish"
     ]
     resources = [
       "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/led/*"

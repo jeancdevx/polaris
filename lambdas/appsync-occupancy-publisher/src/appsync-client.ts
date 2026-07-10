@@ -1,8 +1,8 @@
 import { Sha256 } from '@aws-crypto/sha256-js'
-import { defaultProvider } from '@aws-sdk/credential-provider-node'
 import { HttpRequest } from '@smithy/protocol-http'
 import { SignatureV4 } from '@smithy/signature-v4'
 
+import { lambdaExecutionCredentials } from './lambda-credentials.js'
 import type { OccupancyChangedInput } from './occupancy-event.js'
 
 const publishOccupancyChangedMutation = `
@@ -60,7 +60,7 @@ export const publishOccupancyChanged = async (input: {
   })
 
   const signer = new SignatureV4({
-    credentials: defaultProvider(),
+    credentials: lambdaExecutionCredentials,
     region: input.region,
     service: 'appsync',
     sha256: Sha256

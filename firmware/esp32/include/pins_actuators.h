@@ -13,7 +13,7 @@ constexpr int kFc51Count = 10;
 // Orden: [1,2,3,4,5,6,7,8,9,10]
 constexpr int kFc51SpotNumbers[kFc51Count] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 // Importante: evita GPIO reservados / de arranque según tu ESP32 devkit.
-constexpr int kFc51Pins[kFc51Count] = {32, 33, 25, 35, 26, 27, 14, 4, 16, 17};
+constexpr int kFc51Pins[kFc51Count] = {32, 33, 25, 35, 26, 27, 14, 4, 18, 19};
 
 }  // namespace polaris::pins::actuators
 

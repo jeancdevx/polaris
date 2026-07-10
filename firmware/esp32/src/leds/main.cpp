@@ -38,8 +38,9 @@ RgbMode modeFromString(const char* mode) {
   if (strcmp(mode, "occupied") == 0) {
     return RgbMode::Occupied;
   }
-  if (strcmp(mode, "blink_green") == 0 || strcmp(mode, "reserved") == 0) {
-    return RgbMode::BlinkGreen;
+  if (strcmp(mode, "blink_blue") == 0 || strcmp(mode, "blink_green") == 0 ||
+      strcmp(mode, "reserved") == 0) {
+    return RgbMode::BlinkBlue;
   }
   if (strcmp(mode, "off") == 0) {
     return RgbMode::Off;

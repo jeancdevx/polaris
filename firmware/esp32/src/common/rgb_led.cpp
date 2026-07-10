@@ -46,6 +46,8 @@ void RgbLed::setMode(RgbMode mode) {
   applyModeColors(true);
 }
 
+RgbMode RgbLed::mode() const { return mode_; }
+
 void RgbLed::update(unsigned long nowMs) {
   if (mode_ != RgbMode::BlinkBlue) {
     return;

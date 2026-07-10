@@ -55,6 +55,26 @@ RgbLed* findLedBySpotNumber(int spotNumber) {
   return gLeds[spotNumber - POLARIS_SPOT_FIRST];
 }
 
+void publishLedSyncRequest() {
+  if (gClient == nullptr || !gClient->isMqttConnected()) {
+    return;
+  }
+
+  JsonDocument doc;
+  doc["deviceId"] = POLARIS_DEVICE_ID;
+  doc["event"] = "led_sync_request";
+  doc["spotFirst"] = POLARIS_SPOT_FIRST;
+  doc["spotLast"] = POLARIS_SPOT_LAST;
+  doc["timestamp"] = polaris::time::nowEpochMs();
+
+  if (gClient->publishJson(polaris::mqtt::kLedSyncRequestTopic, doc)) {
+    Serial.printf(
+        "[leds] LED sync requested for spots %d..%d\n",
+        POLARIS_SPOT_FIRST,
+        POLARIS_SPOT_LAST);
+  }
+}
+
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   JsonDocument doc;
   if (deserializeJson(doc, reinterpret_cast<const char*>(payload), length)) {
@@ -67,6 +87,12 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
 
   const char* mode = doc["mode"] | "free";
   const char* spot = doc["spotId"] | "";
+  if (spot[0] == '\0') {
+    const char* ledPrefix = strstr(topic, "/led/");
+    if (ledPrefix != nullptr) {
+      spot = ledPrefix + 5;
+    }
+  }
   if (spot[0] == '\0') {
     return;
   }
@@ -111,6 +137,7 @@ void ensureMqtt() {
       polaris::time::syncFromNtp();
       if (gClient->connectMqtt()) {
         subscribeLedCommands(*gClient);
+        publishLedSyncRequest();
       }
     }
   }
@@ -161,6 +188,7 @@ void setup() {
     polaris::time::syncFromNtp();
     if (client.connectMqtt()) {
       subscribeLedCommands(client);
+      publishLedSyncRequest();
     }
   }
 

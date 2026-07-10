@@ -16,6 +16,7 @@ import { AuditLogRepository } from './infrastructure/audit-log.repository.js'
 import { DatabaseService } from './infrastructure/database.service.js'
 import { EventBridgePublisherService } from './infrastructure/eventbridge-publisher.service.js'
 import { IotLedCommandPublisher } from './infrastructure/iot-led-command.publisher.js'
+import { LedStateSyncService } from './infrastructure/led-state-sync.service.js'
 import { RedisService } from './infrastructure/redis.service.js'
 import { KafkaConsumerService } from './kafka-consumer.service.js'
 import { ParkingRedisStore } from './parking/parking-redis.store.js'
@@ -28,6 +29,7 @@ import { ParkingRepository } from './parking/parking.repository.js'
     RedisService,
     EventBridgePublisherService,
     IotLedCommandPublisher,
+    LedStateSyncService,
     AuditLogRepository,
     ParkingRepository,
     ParkingRedisStore,

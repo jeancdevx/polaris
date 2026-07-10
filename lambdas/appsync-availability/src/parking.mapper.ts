@@ -8,6 +8,26 @@ import type {
 const isParkingSpotStatus = (value: string): value is ParkingSpotStatus =>
   value === 'free' || value === 'occupied' || value === 'reserved'
 
+export const occupiedSinceToSeconds = (
+  value: Date | string | undefined | null
+): number | undefined => {
+  if (value == null) {
+    return undefined
+  }
+
+  if (value instanceof Date) {
+    return Math.floor(value.getTime() / 1000)
+  }
+
+  const raw = Number.parseInt(value, 10)
+
+  if (!Number.isFinite(raw)) {
+    return undefined
+  }
+
+  return raw > 9_999_999_999 ? Math.floor(raw / 1000) : raw
+}
+
 export const parkingZoneFromSpotId = (spotId: string): string => {
   const spotNumber = Number.parseInt(spotId.replace('spot-', ''), 10)
   return spotNumber <= 5 ? 'a' : 'b'
@@ -29,9 +49,7 @@ export const mapRedisHashToParkingSpot = (
     status,
     userId: hash.userId,
     reservationId: hash.reservationId,
-    occupiedSince: hash.occupiedSince
-      ? Number.parseInt(hash.occupiedSince, 10)
-      : undefined
+    occupiedSince: occupiedSinceToSeconds(hash.occupiedSince)
   }
 }
 
@@ -41,7 +59,7 @@ export const mapParkingSpotRow = (row: ParkingSpotRow): ParkingSpot => ({
   status: row.status,
   userId: row.userId,
   reservationId: row.reservationId,
-  occupiedSince: row.occupiedSince?.getTime()
+  occupiedSince: occupiedSinceToSeconds(row.occupiedSince)
 })
 
 export const buildParkingStatus = (spots: ParkingSpot[]): ParkingStatus => {

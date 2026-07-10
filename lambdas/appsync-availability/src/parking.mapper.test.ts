@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildParkingStatus,
-  mapRedisHashToParkingSpot
+  mapParkingSpotRow,
+  mapRedisHashToParkingSpot,
+  occupiedSinceToSeconds
 } from './parking.mapper.js'
 
 describe('parking.mapper', () => {
@@ -20,6 +22,28 @@ describe('parking.mapper', () => {
       reservationId: undefined,
       occupiedSince: undefined
     })
+  })
+
+  it('converts epoch milliseconds to seconds for AppSync Int', () => {
+    const at = new Date('2026-07-10T02:00:00.000Z')
+    const seconds = Math.floor(at.getTime() / 1000)
+
+    expect(occupiedSinceToSeconds(at)).toBe(seconds)
+    expect(occupiedSinceToSeconds(String(at.getTime()))).toBe(seconds)
+    expect(occupiedSinceToSeconds(String(seconds))).toBe(seconds)
+    expect(seconds).toBeLessThan(2_147_483_647)
+  })
+
+  it('maps RDS occupiedSince as Unix seconds', () => {
+    const at = new Date('2026-07-10T02:00:00.000Z')
+    const spot = mapParkingSpotRow({
+      spotId: 'spot-01',
+      zone: 'a',
+      status: 'occupied',
+      occupiedSince: at
+    } as never)
+
+    expect(spot.occupiedSince).toBe(Math.floor(at.getTime() / 1000))
   })
 
   it('builds parking status aggregates', () => {

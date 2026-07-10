@@ -42,7 +42,8 @@ export class IotLedCommandPublisher {
             mode
           })
         ),
-        qos: 1
+        qos: 1,
+        retain: true
       })
     )
 

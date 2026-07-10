@@ -7,6 +7,7 @@ import { KAFKA_TOPICS } from '@polaris/shared-types'
 import { AuditLogRepository } from '../infrastructure/audit-log.repository.js'
 import { EventBridgePublisherService } from '../infrastructure/eventbridge-publisher.service.js'
 import { IotLedCommandPublisher } from '../infrastructure/iot-led-command.publisher.js'
+import { ledModeForStatus } from '../infrastructure/led-mode.js'
 import { ParkingRedisStore } from '../parking/parking-redis.store.js'
 import { ParkingRepository } from '../parking/parking.repository.js'
 
@@ -69,7 +70,7 @@ export class SensorOccupancyHandler {
 
       await this.ledCommands.publishSpotMode(
         event.spotId,
-        result.spot.status === 'occupied' ? 'occupied' : 'free'
+        ledModeForStatus(result.spot.status)
       )
 
       this.logger.log(

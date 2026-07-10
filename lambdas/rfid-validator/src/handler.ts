@@ -21,6 +21,12 @@ export const handler: Handler<unknown, RfidValidatorResponse> =
     { serviceName: 'rfid-validator' },
     async (event, _context, logger) => {
       const scan = parseRfidScanEvent(event)
+      logger.info('RFID scan received', {
+        rfidUid: scan.rfidUid,
+        readerLocation: scan.readerLocation,
+        deviceId: scan.deviceId
+      })
+
       const result = await validateRfidScan(scan, dependencies)
 
       logger.info('RFID validation completed', {
@@ -28,7 +34,9 @@ export const handler: Handler<unknown, RfidValidatorResponse> =
         reason: result.reason,
         rfidUid: scan.rfidUid,
         readerLocation: scan.readerLocation,
-        lookupSource: result.lookupSource
+        lookupSource: result.lookupSource,
+        gateCommandsPublished: result.gateCommandsPublished,
+        kafkaPublished: result.kafkaPublished
       })
 
       return result

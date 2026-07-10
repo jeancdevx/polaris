@@ -80,6 +80,21 @@ describe('validateRfidScan', () => {
     expect(deps.kafkaPublisher.publishValidation).toHaveBeenCalledOnce()
   })
 
+  it('still publishes gate commands when Kafka publish fails', async () => {
+    const deps = buildDeps()
+    vi.mocked(deps.rfidLookup.findByUid).mockResolvedValue(null)
+    vi.mocked(deps.kafkaPublisher.publishValidation).mockRejectedValue(
+      new Error('Kafka producer connect timed out')
+    )
+
+    const result = await validateRfidScan(entryScan, deps)
+
+    expect(result.valid).toBe(false)
+    expect(result.gateCommandsPublished).toBe(false)
+    expect(deps.gateCommands.publishDenied).toHaveBeenCalledOnce()
+    expect(result.kafkaPublished).toBe(false)
+  })
+
   it('allows entry when RFID and active reservation exist', async () => {
     const deps = buildDeps()
     vi.mocked(deps.rfidLookup.findByUid).mockResolvedValue(tagLookup as never)

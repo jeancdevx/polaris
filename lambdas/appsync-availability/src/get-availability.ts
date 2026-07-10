@@ -3,7 +3,8 @@ import type { ParkingStatus } from '@polaris/shared-types'
 import {
   connectRedis,
   disconnectRedis,
-  scanRedisKeyBatches
+  scanRedisKeyBatches,
+  sleep
 } from '@polaris/shared-utils'
 
 import { PARKING_SPOT_KEY_PREFIX } from './parking.constants.js'
@@ -14,12 +15,44 @@ import {
 } from './parking.mapper.js'
 import type { AppSyncAvailabilityEnv } from './read-env.js'
 
-let dataSource: ReturnType<typeof createDataSource> | undefined
+type DataSource = ReturnType<typeof createDataSource>
+
+const connectTimeoutMs = 10_000
+const redisConnectTimeoutMs = 5_000
+
+let dataSource: DataSource | undefined
+let initializePromise: Promise<DataSource> | undefined
+
+const getDataSource = async (): Promise<DataSource> => {
+  if (dataSource?.isInitialized) {
+    return dataSource
+  }
+
+  if (!initializePromise) {
+    dataSource = createDataSource()
+    initializePromise = Promise.race([
+      dataSource.initialize(),
+      sleep(connectTimeoutMs).then(() => {
+        throw new Error(`RDS initialize timed out after ${connectTimeoutMs}ms`)
+      })
+    ])
+      .then(() => dataSource as DataSource)
+      .catch(error => {
+        initializePromise = undefined
+        dataSource = undefined
+        throw error
+      })
+  }
+
+  return initializePromise
+}
 
 const tryGetAvailabilityFromRedis = async (
   redisUrl: string
 ): Promise<ParkingStatus | null> => {
-  const client = await connectRedis(redisUrl)
+  const client = await connectRedis(redisUrl, {
+    socket: { connectTimeout: redisConnectTimeoutMs }
+  })
 
   try {
     const spots = []
@@ -52,12 +85,8 @@ const tryGetAvailabilityFromRedis = async (
 }
 
 const getAvailabilityFromRds = async (): Promise<ParkingStatus> => {
-  if (!dataSource?.isInitialized) {
-    dataSource = createDataSource()
-    await dataSource.initialize()
-  }
-
-  const repository = dataSource.getRepository<ParkingSpotRow>('ParkingSpot')
+  const source = await getDataSource()
+  const repository = source.getRepository<ParkingSpotRow>('ParkingSpot')
   const rows = await repository.find({ order: { spotId: 'ASC' } })
 
   return buildParkingStatus(rows.map(mapParkingSpotRow))
@@ -73,4 +102,9 @@ export const getAvailability = async (
   }
 
   return getAvailabilityFromRds()
+}
+
+export const resetAvailabilityDataSourceForTests = (): void => {
+  dataSource = undefined
+  initializePromise = undefined
 }

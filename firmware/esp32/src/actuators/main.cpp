@@ -146,7 +146,6 @@ WifiMqttConfig makeConfig() {
 void subscribeCommands(WifiMqttClient& client) {
   client.subscribe(polaris::mqtt::servoCommandTopic(POLARIS_ENTRY_SERVO_ID).c_str());
   client.subscribe(polaris::mqtt::servoCommandTopic(POLARIS_EXIT_SERVO_ID).c_str());
-  forceServosClosedOnBoot("mqtt_connected");
 }
 
 bool publishOccupancy(int spotNumber, bool occupied) {

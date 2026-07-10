@@ -41,7 +41,7 @@ unsigned long gLastPassageTelemetryMs = 0;
 bool gPassageStalledPublished = false;
 int gLastDistanceCm = 999;
 
-bool publishServoCommand(const char* servoId, const char* action, int angle) {
+bool publishServoCommand(const char* servoId, const char* action) {
   if (gClient == nullptr || !gClient->isMqttConnected()) {
     return false;
   }
@@ -49,14 +49,13 @@ bool publishServoCommand(const char* servoId, const char* action, int angle) {
   JsonDocument doc;
   doc["deviceId"] = servoId;
   doc["action"] = action;
-  doc["angle"] = angle;
   doc["timestamp"] = polaris::time::nowEpochMs();
 
   return gClient->publishJson(polaris::mqtt::servoCommandTopic(servoId).c_str(), doc);
 }
 
 void closeEntryGateSafe(const char* reason) {
-  publishServoCommand(POLARIS_ENTRY_SERVO_ID, "close", polaris::hw::kServoClosedAngle);
+  publishServoCommand(POLARIS_ENTRY_SERVO_ID, "close");
   gProximityActive = false;
   gClearedSinceMs = 0;
   gPassageStalledPublished = false;
@@ -65,7 +64,9 @@ void closeEntryGateSafe(const char* reason) {
 }
 
 void closeExitGate(const char* reason) {
-  publishServoCommand(POLARIS_EXIT_SERVO_ID, "close", polaris::hw::kServoClosedAngle);
+  gExitGateOpenAssumed = false;
+  gExitGateOpenedMs = 0;
+  publishServoCommand(POLARIS_EXIT_SERVO_ID, "close");
   Serial.printf("[entry_io] Exit gate close requested (%s)\n", reason);
 }
 
@@ -348,6 +349,10 @@ void handleExitRfid() {
   if (!gRfidExit.readUid(uid)) {
     return;
   }
+
+  // Clear stale auto-close timer before the lambda issues a new open command.
+  gExitGateOpenAssumed = false;
+  gExitGateOpenedMs = 0;
 
   Serial.printf("[entry_io] RFID exit detected uid=%s\n", uid.c_str());
   publishRfidScan(uid, "exit");

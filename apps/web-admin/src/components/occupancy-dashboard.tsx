@@ -13,10 +13,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ParkingSpot, ParkingStatus } from '@polaris/shared-types'
 
 import { loadActiveAnomalySpotIds } from '@/lib/admin/alerts'
+import { configureAmplify } from '@/lib/amplify-config'
 import {
   AVAILABILITY_QUERY,
   ON_OCCUPANCY_CHANGED_SUBSCRIPTION
 } from '@/lib/appsync/operations'
+import { readGraphqlError } from '@/lib/appsync/read-graphql-error'
 import {
   mergeOccupancyChange,
   type OccupancyChangedEvent
@@ -58,10 +60,24 @@ export const OccupancyDashboard = () => {
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const fetchAvailability = useCallback(async () => {
+    if (!configureAmplify()) {
+      throw new Error(
+        'Faltan variables NEXT_PUBLIC_COGNITO_* o NEXT_PUBLIC_APPSYNC_GRAPHQL_ENDPOINT.'
+      )
+    }
+
     const response = (await client.graphql({
       query: AVAILABILITY_QUERY,
       authMode: 'userPool'
-    })) as { data: AvailabilityQueryResult }
+    })) as { data?: AvailabilityQueryResult; errors?: { message?: string }[] }
+
+    if (response.errors?.[0]?.message) {
+      throw new Error(response.errors[0].message)
+    }
+
+    if (!response.data?.availability) {
+      throw new Error('AppSync no devolvió datos de ocupación.')
+    }
 
     setStatus(response.data.availability)
     setError(null)
@@ -123,10 +139,7 @@ export const OccupancyDashboard = () => {
           return
         }
 
-        const message =
-          loadError instanceof Error
-            ? loadError.message
-            : 'No se pudo cargar el dashboard.'
+        const message = readGraphqlError(loadError)
 
         setError(message)
         setConnected(false)

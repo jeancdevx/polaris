@@ -33,6 +33,8 @@ bool gExitGateOpenAssumed = false;
 bool gExitPassageArmed = false;
 unsigned long gExitGateOpenedMs = 0;
 bool gProximityActive = false;
+bool gVehiclePresent = false;
+bool gEntryRfidConsumed = false;
 unsigned long gProximitySinceMs = 0;
 unsigned long gLastUltrasonicMs = 0;
 unsigned long gClearedSinceMs = 0;
@@ -41,6 +43,18 @@ unsigned long gGateOpenedMs = 0;
 unsigned long gLastPassageTelemetryMs = 0;
 bool gPassageStalledPublished = false;
 int gLastDistanceCm = 999;
+
+void resetEntryPresenceCycle(const char* reason) {
+  const bool hadState =
+      gProximityActive || gVehiclePresent || gEntryRfidConsumed;
+  gProximityActive = false;
+  gVehiclePresent = false;
+  gEntryRfidConsumed = false;
+  gProximitySinceMs = 0;
+  if (hadState) {
+    Serial.printf("[entry_io] Entry presence cycle reset (%s)\n", reason);
+  }
+}
 
 bool publishServoCommand(const char* servoId, const char* action) {
   if (gClient == nullptr || !gClient->isMqttConnected()) {
@@ -57,7 +71,6 @@ bool publishServoCommand(const char* servoId, const char* action) {
 
 void closeEntryGateSafe(const char* reason) {
   publishServoCommand(POLARIS_ENTRY_SERVO_ID, "close");
-  gProximityActive = false;
   gClearedSinceMs = 0;
   gPassageStalledPublished = false;
   gLcd.showIdle();
@@ -94,11 +107,25 @@ void handleServoStatus(const char* servoId, JsonDocument& doc) {
       gGateOpenedMs = millis();
       gClearedSinceMs = 0;
       gPassageStalledPublished = false;
+      gProximityActive = false;
       Serial.println("[entry_io] Entry gate reported open");
       return;
     }
 
+    // Barrera cerrada: si el vehículo ya no está, libera pasada.
+    // Si sigue delante del HC, mantiene consumed hasta que se aleje.
     gProximityActive = false;
+    const bool vehicleStillThere =
+        gLastDistanceCm > 0 && gLastDistanceCm <= polaris::hw::kApproachCm;
+    if (!vehicleStillThere) {
+      resetEntryPresenceCycle("entry_gate_closed");
+      gLcd.showIdle();
+    } else {
+      gVehiclePresent = true;
+      gEntryRfidConsumed = true;
+      Serial.println(
+          "[entry_io] Entry gate closed — RFID still locked until vehicle leaves");
+    }
     Serial.println("[entry_io] Entry gate reported closed");
     return;
   }
@@ -263,25 +290,31 @@ void handleUltrasonic(unsigned long nowMs) {
     gLastSafetyBlockMs = nowMs;
   }
 
-  if (!gEntryGateOpenAssumed && distance < polaris::hw::kApproachCm) {
-    if (!gProximityActive) {
-      gProximityActive = true;
-      gProximitySinceMs = nowMs;
-      publishProximity(distance);
-      gLcd.showProximityPrompt();
-      Serial.printf("[entry_io] Proximity detected %d cm\n", distance);
-    }
-  }
-
-  if (gProximityActive && !gEntryGateOpenAssumed &&
-      (nowMs - gProximitySinceMs) >= polaris::hw::kProximityTimeoutMs) {
-    publishProximityTimeout();
-    gProximityActive = false;
-    gLcd.showIdle();
-    Serial.println("[entry_io] Proximity timeout");
-  }
-
   if (!gEntryGateOpenAssumed) {
+    const bool vehicleAtReader =
+        distance > 0 && distance <= polaris::hw::kApproachCm;
+
+    if (vehicleAtReader) {
+      if (!gVehiclePresent) {
+        gVehiclePresent = true;
+        Serial.printf("[entry_io] Vehicle present %d cm\n", distance);
+      }
+
+      // Una sola tarjeta por presencia: si ya se escaneó, no rearmar RFID.
+      if (!gEntryRfidConsumed && !gProximityActive) {
+        gProximityActive = true;
+        publishProximity(distance);
+        gLcd.showProximityPrompt();
+        Serial.printf("[entry_io] Proximity detected %d cm (RFID armed)\n", distance);
+      }
+      gProximitySinceMs = nowMs;
+    } else if (gVehiclePresent || gProximityActive || gEntryRfidConsumed) {
+      // El carro se fue (o ya no está a <=20cm): nueva pasada permitida.
+      resetEntryPresenceCycle("vehicle_left");
+      gLcd.showIdle();
+      Serial.printf("[entry_io] Proximity cleared %d cm\n", distance);
+    }
+
     return;
   }
 
@@ -342,16 +375,39 @@ void handleEntryRfid() {
     return;
   }
 
-  if (!gProximityActive && !gEntryGateOpenAssumed) {
+  if (gEntryGateOpenAssumed) {
     Serial.printf(
-        "[entry_io] Entry RFID ignored — acerque vehiculo primero uid=%s\n",
+        "[entry_io] Entry RFID ignored — gate already open uid=%s\n",
+        uid.c_str());
+    return;
+  }
+
+  if (gEntryRfidConsumed) {
+    Serial.printf(
+        "[entry_io] Entry RFID ignored — already used this passage uid=%s\n",
+        uid.c_str());
+    return;
+  }
+
+  const bool vehicleAtReader =
+      gVehiclePresent && gLastDistanceCm > 0 &&
+      gLastDistanceCm <= polaris::hw::kApproachCm;
+
+  if (!vehicleAtReader) {
+    Serial.printf(
+        "[entry_io] Entry RFID ignored — vehiculo debe estar a <=%dcm "
+        "(ahora=%dcm) uid=%s\n",
+        polaris::hw::kApproachCm,
+        gLastDistanceCm,
         uid.c_str());
     gLcd.showProximityPrompt();
     return;
   }
 
+  gEntryRfidConsumed = true;
   gProximityActive = false;
   publishRfidScan(uid, "entry");
+  Serial.println("[entry_io] Entry RFID consumed for this passage");
 }
 
 void handleExitRfid() {

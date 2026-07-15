@@ -7,7 +7,9 @@ import type { RfidScanEvent } from '../iot-event.js'
 import type { RfidValidatorEnv } from '../read-env.js'
 import {
   displayMessageForAllowed,
-  displayMessageForDenied
+  displayMessageForDenied,
+  displayMessageIdle,
+  type DisplayMessage
 } from './display-messages.js'
 
 export type GateCommandContext = Readonly<{
@@ -15,6 +17,7 @@ export type GateCommandContext = Readonly<{
   accessType?: 'reserved' | 'walk_in'
   parkingSpotId?: string
   reason?: string
+  freeSpots?: number
 }>
 
 export class GateCommandPublisher {
@@ -40,7 +43,8 @@ export class GateCommandPublisher {
     const display = displayMessageForAllowed({
       readerLocation: context.scan.readerLocation,
       accessType: context.accessType,
-      parkingSpotId: context.parkingSpotId
+      parkingSpotId: context.parkingSpotId,
+      freeSpots: context.freeSpots
     })
 
     await this.publishDisplay(display)
@@ -62,21 +66,31 @@ export class GateCommandPublisher {
       return false
     }
 
-    const display = displayMessageForDenied(context.reason)
+    const display = displayMessageForDenied(context.reason, context.freeSpots)
     await this.publishDisplay(display)
     return true
   }
 
-  private async publishDisplay(display: {
-    line1: string
-    line2: string
-  }): Promise<void> {
+  async publishIdle(freeSpots: number): Promise<boolean> {
+    if (!this.client) {
+      return false
+    }
+
+    await this.publishDisplay(displayMessageIdle(freeSpots))
+    return true
+  }
+
+  private async publishDisplay(display: DisplayMessage): Promise<void> {
     await this.publish(
       `parking/commands/display/${this.env.entryDisplayDeviceId}`,
       {
         line1: display.line1,
         line2: display.line2,
-        backlight: true
+        backlight: true,
+        ...(display.idle ? { idle: true } : {}),
+        ...(display.freeSpots !== undefined
+          ? { freeSpots: display.freeSpots }
+          : {})
       }
     )
   }
@@ -89,7 +103,8 @@ export class GateCommandPublisher {
       new PublishCommand({
         topic,
         payload: Buffer.from(JSON.stringify(payload)),
-        qos: 1
+        qos: 1,
+        retain: Boolean(payload.idle)
       })
     )
   }

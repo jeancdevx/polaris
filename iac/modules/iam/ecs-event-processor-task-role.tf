@@ -31,7 +31,8 @@ data "aws_iam_policy_document" "ecs_event_processor_iot_publish" {
       "iot:RetainPublish"
     ]
     resources = [
-      "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/led/*"
+      "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/led/*",
+      "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/display/*"
     ]
   }
 }

@@ -165,10 +165,24 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   }
 
   if (strstr(topic, "/display/") != nullptr) {
+    if (doc["freeSpots"].is<int>()) {
+      gLcd.setFreeSpots(doc["freeSpots"].as<int>());
+    }
+
+    const bool idle = doc["idle"] | false;
+    if (idle) {
+      gLcd.showIdle();
+      return;
+    }
+
     const char* line1 = doc["line1"] | "";
     const char* line2 = doc["line2"] | "";
     const bool backlight = doc["backlight"] | true;
-    gLcd.showLines(line1, line2, backlight);
+    if (line1[0] != '\0' || line2[0] != '\0') {
+      gLcd.showLines(line1, line2, backlight);
+    } else {
+      gLcd.showIdle();
+    }
   }
 }
 
@@ -309,7 +323,6 @@ void handleUltrasonic(unsigned long nowMs) {
       }
       gProximitySinceMs = nowMs;
     } else if (gVehiclePresent || gProximityActive || gEntryRfidConsumed) {
-      // El carro se fue (o ya no está a <=20cm): nueva pasada permitida.
       resetEntryPresenceCycle("vehicle_left");
       gLcd.showIdle();
       Serial.printf("[entry_io] Proximity cleared %d cm\n", distance);

@@ -13,10 +13,18 @@ describe('ReservationCreatedHandler', () => {
     const ledCommands = {
       publishSpotMode: vi.fn(async () => true)
     }
+    const displayCommands = {
+      publishIdleFreeSpots: vi.fn(async () => true)
+    }
+    const parkingRedisStore = {
+      getTotalAvailable: vi.fn(async () => 7)
+    }
 
     const handler = new ReservationCreatedHandler(
       eventBridgePublisher as never,
-      ledCommands as never
+      ledCommands as never,
+      displayCommands as never,
+      parkingRedisStore as never
     )
 
     await handler.handle({
@@ -50,10 +58,18 @@ describe('ReservationCancelledHandler', () => {
     const ledCommands = {
       publishSpotMode: vi.fn(async () => true)
     }
+    const displayCommands = {
+      publishIdleFreeSpots: vi.fn(async () => true)
+    }
+    const parkingRedisStore = {
+      getTotalAvailable: vi.fn(async () => 8)
+    }
 
     const handler = new ReservationCancelledHandler(
       eventBridgePublisher as never,
-      ledCommands as never
+      ledCommands as never,
+      displayCommands as never,
+      parkingRedisStore as never
     )
 
     await handler.handle({

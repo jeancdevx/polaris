@@ -222,13 +222,20 @@ const finalizeValidation = async (
     lookupSource?: 'dynamodb' | 'rds'
   }
 ): Promise<RfidValidatorResponse> => {
+  const freeSpots = await deps.parkingCapacity.countFreeSpots()
+
   const gateCommandsPublished = result.valid
     ? await deps.gateCommands.publishAllowed({
         scan,
         accessType: result.accessType,
-        parkingSpotId: result.parkingSpotId
+        parkingSpotId: result.parkingSpotId,
+        freeSpots
       })
-    : await deps.gateCommands.publishDenied({ scan, reason: result.reason })
+    : await deps.gateCommands.publishDenied({
+        scan,
+        reason: result.reason,
+        freeSpots
+      })
 
   let kafkaPublished = false
   try {

@@ -6,6 +6,7 @@ import { KAFKA_TOPICS } from '@polaris/shared-types'
 
 import { AuditLogRepository } from '../infrastructure/audit-log.repository.js'
 import { EventBridgePublisherService } from '../infrastructure/eventbridge-publisher.service.js'
+import { IotDisplayCommandPublisher } from '../infrastructure/iot-display-command.publisher.js'
 import { IotLedCommandPublisher } from '../infrastructure/iot-led-command.publisher.js'
 import { ledModeForStatus } from '../infrastructure/led-mode.js'
 import { ParkingRedisStore } from '../parking/parking-redis.store.js'
@@ -20,7 +21,8 @@ export class SensorOccupancyHandler {
     private readonly parkingRedisStore: ParkingRedisStore,
     private readonly eventBridgePublisher: EventBridgePublisherService,
     private readonly auditLogRepository: AuditLogRepository,
-    private readonly ledCommands: IotLedCommandPublisher
+    private readonly ledCommands: IotLedCommandPublisher,
+    private readonly displayCommands: IotDisplayCommandPublisher
   ) {}
 
   async handle(event: OccupancyChangedEvent): Promise<void> {
@@ -71,6 +73,10 @@ export class SensorOccupancyHandler {
       await this.ledCommands.publishSpotMode(
         event.spotId,
         ledModeForStatus(result.spot.status)
+      )
+
+      await this.displayCommands.publishIdleFreeSpots(
+        await this.parkingRedisStore.getTotalAvailable()
       )
 
       this.logger.log(

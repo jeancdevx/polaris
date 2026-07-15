@@ -81,6 +81,13 @@ export class ParkingRedisStore {
     applyStatDelta(multi, delta)
     await multi.exec()
   }
+
+  async getTotalAvailable(): Promise<number> {
+    const client = await this.redisService.getClient()
+    const value = await client.get(PARKING_STATS_KEYS.totalAvailable)
+    const parsed = Number.parseInt(value ?? '0', 10)
+    return Number.isNaN(parsed) ? 0 : parsed
+  }
 }
 
 const applyStatDelta = (

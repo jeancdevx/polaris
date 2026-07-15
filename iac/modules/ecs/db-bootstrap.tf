@@ -61,10 +61,10 @@ resource "aws_ecs_task_definition" "db_bootstrap" {
       ]
 
       secrets = [
-        {
-          name      = "DATABASE_URL"
-          valueFrom = "${aws_secretsmanager_secret.db_bootstrap_env.arn}:DATABASE_URL::"
-        },
+        # Prefer live RDS master credentials over a composed DATABASE_URL.
+        # A static DATABASE_URL in Secrets Manager goes stale after Aurora
+        # password rotation and ECS injects secrets with higher precedence
+        # than RunTask environment overrides.
         {
           name      = "DB_USERNAME"
           valueFrom = "${var.rds_master_user_secret_arn}:username::"

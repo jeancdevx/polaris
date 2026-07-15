@@ -85,9 +85,9 @@ jobs:
       - name: Run db-bootstrap ECS task
         id: run
         run: |
-          DATABASE_URL="$(bash scripts/build-database-url-from-rds.sh "${NAME_PREFIX}")"
-          echo "::add-mask::$DATABASE_URL"
-
+          # Auth uses DB_HOST + DB_USERNAME/DB_PASSWORD from the live RDS master
+          # secret (task definition). Do not override DATABASE_URL here: ECS
+          # secrets win over RunTask environment overrides.
           SUBNETS=$(aws ec2 describe-subnets \
             --filters "Name=tag:Name,Values=${NAME_PREFIX}-private-*" \
             --query 'Subnets[*].SubnetId' \
@@ -98,16 +98,11 @@ jobs:
             --query 'SecurityGroups[0].GroupId' \
             --output text)
 
-          OVERRIDES=$(jq -n \
-            --arg url "$DATABASE_URL" \
-            '{containerOverrides:[{name:"db-bootstrap",environment:[{name:"DATABASE_URL",value:$url}]}]}')
-
           TASK_ARN=$(aws ecs run-task \
             --cluster "${NAME_PREFIX}-cluster" \
             --task-definition "${{ steps.task.outputs.family }}:${{ steps.task.outputs.revision }}" \
             --launch-type FARGATE \
             --network-configuration "awsvpcConfiguration={subnets=[${SUBNETS}],securityGroups=[${SG}],assignPublicIp=DISABLED}" \
-            --overrides "$OVERRIDES" \
             --query 'tasks[0].taskArn' \
             --output text)
 

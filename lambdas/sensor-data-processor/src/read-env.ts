@@ -1,3 +1,5 @@
+import { normalizeIotDataEndpoint } from '@polaris/shared-utils'
+
 export type SensorDataProcessorEnv = Readonly<{
   sensorReadingsTableName: string
   sensorReadingsTtlDays: number
@@ -16,6 +18,8 @@ export const readSensorDataProcessorEnv = (): SensorDataProcessorEnv => ({
   ),
   kafkaClientId: process.env.KAFKA_CLIENT_ID ?? 'sensor-data-processor',
   ledCommandsEnabled: process.env.LED_COMMANDS_ENABLED !== 'false',
-  iotDataEndpoint: process.env.IOT_DATA_ENDPOINT?.trim() || undefined,
+  iotDataEndpoint: process.env.IOT_DATA_ENDPOINT?.trim()
+    ? normalizeIotDataEndpoint(process.env.IOT_DATA_ENDPOINT)
+    : undefined,
   redisUrl: process.env.REDIS_URL?.trim() || undefined
 })

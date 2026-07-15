@@ -15,6 +15,7 @@ import { eventProcessorConfig } from './event-processor.config.js'
 import { AuditLogRepository } from './infrastructure/audit-log.repository.js'
 import { DatabaseService } from './infrastructure/database.service.js'
 import { EventBridgePublisherService } from './infrastructure/eventbridge-publisher.service.js'
+import { IotDisplayCommandPublisher } from './infrastructure/iot-display-command.publisher.js'
 import { IotLedCommandPublisher } from './infrastructure/iot-led-command.publisher.js'
 import { LedStateSyncService } from './infrastructure/led-state-sync.service.js'
 import { RedisService } from './infrastructure/redis.service.js'
@@ -29,6 +30,7 @@ import { ParkingRepository } from './parking/parking.repository.js'
     RedisService,
     EventBridgePublisherService,
     IotLedCommandPublisher,
+    IotDisplayCommandPublisher,
     LedStateSyncService,
     AuditLogRepository,
     ParkingRepository,

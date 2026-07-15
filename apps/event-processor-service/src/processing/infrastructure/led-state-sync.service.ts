@@ -4,6 +4,7 @@ import type { ParkingSpotRow } from '@polaris/database'
 import type { ParkingSpotStatus } from '@polaris/shared-types'
 
 import { DatabaseService } from './database.service.js'
+import { IotDisplayCommandPublisher } from './iot-display-command.publisher.js'
 import { IotLedCommandPublisher } from './iot-led-command.publisher.js'
 import { ledModeForStatus } from './led-mode.js'
 
@@ -13,7 +14,8 @@ export class LedStateSyncService implements OnModuleInit {
 
   constructor(
     private readonly databaseService: DatabaseService,
-    private readonly ledCommands: IotLedCommandPublisher
+    private readonly ledCommands: IotLedCommandPublisher,
+    private readonly displayCommands: IotDisplayCommandPublisher
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -32,8 +34,13 @@ export class LedStateSyncService implements OnModuleInit {
       .find({ order: { spotId: 'ASC' } })
 
     let published = 0
+    let freeSpots = 0
 
     for (const row of rows) {
+      if (row.status === 'free') {
+        freeSpots += 1
+      }
+
       try {
         const ok = await this.ledCommands.publishSpotMode(
           row.spotId,
@@ -50,6 +57,12 @@ export class LedStateSyncService implements OnModuleInit {
           error
         )
       }
+    }
+
+    try {
+      await this.displayCommands.publishIdleFreeSpots(freeSpots)
+    } catch (error) {
+      this.logger.error('LCD idle free spots sync failed on startup', error)
     }
 
     if (published === 0 && rows.length > 0) {

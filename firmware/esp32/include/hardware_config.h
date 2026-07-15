@@ -3,7 +3,8 @@
 namespace polaris::hw {
 
 // HC-SR04 (entry)
-constexpr int kApproachCm = 20;
+// RFID de entrada solo se arma con objeto a 0..kApproachCm del sensor.
+constexpr int kApproachCm = 12;
 constexpr int kAtGateCm = 10;
 constexpr int kSafetyBlockCm = 15;
 constexpr int kClearedCm = 50;

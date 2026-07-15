@@ -18,7 +18,8 @@ describe('VehicleEntryHandler', () => {
       }))
     }
     const parkingRedisStore = {
-      syncSpotTransition: vi.fn(async () => undefined)
+      syncSpotTransition: vi.fn(async () => undefined),
+      getTotalAvailable: vi.fn(async () => 5)
     }
     const eventBridgePublisher = {
       publishProcessedParkingEvent: vi.fn(async () => undefined)
@@ -26,12 +27,16 @@ describe('VehicleEntryHandler', () => {
     const ledCommands = {
       publishSpotMode: vi.fn(async () => true)
     }
+    const displayCommands = {
+      publishIdleFreeSpots: vi.fn(async () => true)
+    }
 
     const handler = new VehicleEntryHandler(
       parkingRepository as never,
       parkingRedisStore as never,
       eventBridgePublisher as never,
-      ledCommands as never
+      ledCommands as never,
+      displayCommands as never
     )
 
     await handler.handle({

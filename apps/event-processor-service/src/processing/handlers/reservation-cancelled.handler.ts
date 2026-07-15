@@ -4,7 +4,9 @@ import type { ReservationCancelledEvent } from '@polaris/kafka'
 import { KAFKA_TOPICS } from '@polaris/shared-types'
 
 import { EventBridgePublisherService } from '../infrastructure/eventbridge-publisher.service.js'
+import { IotDisplayCommandPublisher } from '../infrastructure/iot-display-command.publisher.js'
 import { IotLedCommandPublisher } from '../infrastructure/iot-led-command.publisher.js'
+import { ParkingRedisStore } from '../parking/parking-redis.store.js'
 
 /** RDS/Redis ya los actualiza reservation-service; aquí solo reenviamos a EventBridge. */
 @Injectable()
@@ -13,7 +15,9 @@ export class ReservationCancelledHandler {
 
   constructor(
     private readonly eventBridgePublisher: EventBridgePublisherService,
-    private readonly ledCommands: IotLedCommandPublisher
+    private readonly ledCommands: IotLedCommandPublisher,
+    private readonly displayCommands: IotDisplayCommandPublisher,
+    private readonly parkingRedisStore: ParkingRedisStore
   ) {}
 
   async handle(event: ReservationCancelledEvent): Promise<void> {
@@ -29,6 +33,9 @@ export class ReservationCancelledHandler {
     })
 
     await this.ledCommands.publishSpotMode(event.parkingSpotId, 'free')
+    await this.displayCommands.publishIdleFreeSpots(
+      await this.parkingRedisStore.getTotalAvailable()
+    )
 
     this.logger.log(
       `Reservation cancelled forwarded for ${event.parkingSpotId} (${event.reservationId})`

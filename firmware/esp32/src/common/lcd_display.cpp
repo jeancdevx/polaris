@@ -20,6 +20,14 @@ void LcdDisplay::begin(int sdaPin, int sclPin) {
   Serial.println("[lcd] I2C display initialized");
 }
 
+void LcdDisplay::setFreeSpots(int freeSpots) {
+  if (freeSpots < 0) {
+    freeSpots_ = -1;
+    return;
+  }
+  freeSpots_ = freeSpots;
+}
+
 void LcdDisplay::writeLines(const char* line1, const char* line2) {
   if (!ready_ || gLcd == nullptr) {
     Serial.printf("[lcd] %s | %s\n", line1, line2);
@@ -34,7 +42,13 @@ void LcdDisplay::writeLines(const char* line1, const char* line2) {
 }
 
 void LcdDisplay::showIdle() {
-  writeLines("Estacionamiento", "Pase su tarjeta");
+  char line2[17];
+  if (freeSpots_ < 0) {
+    snprintf(line2, sizeof(line2), "Libres: --");
+  } else {
+    snprintf(line2, sizeof(line2), "Libres: %d", freeSpots_);
+  }
+  writeLines("Bienvenido", line2);
 }
 
 void LcdDisplay::showProximityPrompt() {

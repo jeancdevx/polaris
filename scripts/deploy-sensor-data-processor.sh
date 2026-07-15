@@ -11,17 +11,24 @@ fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 function_name="${SENSOR_DATA_PROCESSOR_FUNCTION_NAME:-polaris-${environment}-sensor-data-processor}"
-zip_path="${repo_root}/iac/modules/sensor-data-processor/.terraform/${function_name}.zip"
+dist_dir="${repo_root}/lambdas/sensor-data-processor/dist"
+zip_path="${repo_root}/lambdas/sensor-data-processor/.deploy/${function_name}.zip"
 
 echo "Building sensor-data-processor..."
 cd "${repo_root}"
 pnpm --filter @polaris/sensor-data-processor build
 
-if [[ ! -f "${zip_path}" ]]; then
-  echo "Lambda zip not found at ${zip_path}" >&2
-  echo "Run terraform plan/apply in iac/environments/${environment} first to build the package." >&2
+if [[ ! -f "${dist_dir}/index.js" ]]; then
+  echo "Build output not found at ${dist_dir}/index.js" >&2
   exit 1
 fi
+
+mkdir -p "$(dirname "${zip_path}")"
+rm -f "${zip_path}"
+(
+  cd "${dist_dir}"
+  zip -qr "${zip_path}" .
+)
 
 echo "Updating Lambda ${function_name} in ${aws_region}..."
 aws lambda update-function-code \

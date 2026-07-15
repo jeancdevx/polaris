@@ -96,9 +96,7 @@ jobs:
       - name: Run db-reset ECS task
         id: run
         run: |
-          DATABASE_URL="$(bash scripts/build-database-url-from-rds.sh "${NAME_PREFIX}")"
-          echo "::add-mask::$DATABASE_URL"
-
+          # Use live DB_* secrets from the task definition (see db-bootstrap-dev.yml).
           SUBNETS=$(aws ec2 describe-subnets \
             --filters "Name=tag:Name,Values=${NAME_PREFIX}-private-*" \
             --query 'Subnets[*].SubnetId' \
@@ -110,10 +108,9 @@ jobs:
             --output text)
 
           OVERRIDES=$(jq -n \
-            --arg url "$DATABASE_URL" \
             --arg cmd0 "node" \
             --arg cmd1 "dist/reset.js" \
-            '{containerOverrides:[{name:"db-bootstrap",command:[$cmd0,$cmd1],environment:[{name:"DATABASE_URL",value:$url}]}]}')
+            '{containerOverrides:[{name:"db-bootstrap",command:[$cmd0,$cmd1]}]}')
 
           TASK_ARN=$(aws ecs run-task \
             --cluster "${NAME_PREFIX}-cluster" \

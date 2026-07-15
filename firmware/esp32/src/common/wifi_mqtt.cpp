@@ -54,7 +54,7 @@ bool WifiMqttClient::connectMqtt() {
   network_.setPrivateKey(config_.deviceKeyPem);
 
   mqtt_.setServer(config_.iotEndpoint, 8883);
-  mqtt_.setBufferSize(1024);
+  mqtt_.setBufferSize(4096);
   mqtt_.setKeepAlive(30);
 
   Serial.printf("[mqtt] Connecting to %s as %s\n", config_.iotEndpoint, config_.thingName);
@@ -110,6 +110,8 @@ bool WifiMqttClient::subscribe(const char* topic) {
 
   const bool ok = mqtt_.subscribe(topic, 1);
   Serial.printf("[mqtt] Subscribe %s -> %s\n", topic, ok ? "ok" : "fail");
+  // Drain retained/queued messages between subscriptions.
+  mqtt_.loop();
   return ok;
 }
 

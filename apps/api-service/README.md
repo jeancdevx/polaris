@@ -79,7 +79,7 @@ curl -s http://localhost:3001/parking/availability
 ```
 
 Respuesta tipada con `ParkingStatus` de `@polaris/shared-types`
-(`Cache-Control: max-age=30`).
+(`Cache-Control: private, no-store`).
 
 Variables generales (dev): carga automática desde `infra/local/.env.local` vía
 `@nestjs/config`.

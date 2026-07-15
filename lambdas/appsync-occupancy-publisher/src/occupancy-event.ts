@@ -8,6 +8,14 @@ export const parkingZoneFromSpotId = (spotId: string): string => {
 const isParkingSpotStatus = (value: string): value is ParkingSpotStatus =>
   value === 'free' || value === 'occupied' || value === 'reserved'
 
+const OCCUPANCY_DETAIL_TYPES = new Set([
+  'sensor.occupancy',
+  'vehicle.entry',
+  'vehicle.exit',
+  'reservation.created',
+  'reservation.cancelled'
+])
+
 export type OccupancyPublisherEvent = Readonly<{
   detailType: string
   source: string
@@ -42,6 +50,26 @@ const readString = (
   return typeof value === 'string' && value.length > 0 ? value : undefined
 }
 
+const inferStatusTransition = (
+  detailType: string
+): Readonly<{
+  previousStatus: ParkingSpotStatus
+  currentStatus: ParkingSpotStatus
+}> | null => {
+  switch (detailType) {
+    case 'vehicle.entry':
+      return { previousStatus: 'reserved', currentStatus: 'occupied' }
+    case 'vehicle.exit':
+      return { previousStatus: 'occupied', currentStatus: 'free' }
+    case 'reservation.created':
+      return { previousStatus: 'free', currentStatus: 'reserved' }
+    case 'reservation.cancelled':
+      return { previousStatus: 'reserved', currentStatus: 'free' }
+    default:
+      return null
+  }
+}
+
 export const parseOccupancyPublisherEvent = (
   raw: unknown
 ): OccupancyPublisherEvent => {
@@ -59,13 +87,11 @@ export const parseOccupancyPublisherEvent = (
   const source = typeof raw.source === 'string' ? raw.source : 'unknown'
   const detail = readDetail(raw.detail ?? raw)
 
-  if (detailType !== 'sensor.occupancy') {
+  if (!detailType || !OCCUPANCY_DETAIL_TYPES.has(detailType)) {
     throw new Error(`Unsupported detail-type: ${detailType ?? 'unknown'}`)
   }
 
   const parkingSpotId = readString(detail, 'parkingSpotId')
-  const previousStatus = readString(detail, 'previousStatus')
-  const currentStatus = readString(detail, 'currentStatus')
   const occurredAt =
     readString(detail, 'occurredAt') ??
     readString(detail, 'processedAt') ??
@@ -75,11 +101,24 @@ export const parseOccupancyPublisherEvent = (
     throw new Error('parkingSpotId is required')
   }
 
-  if (!previousStatus || !isParkingSpotStatus(previousStatus)) {
+  const previousRaw = readString(detail, 'previousStatus')
+  const currentRaw = readString(detail, 'currentStatus')
+  const inferred = inferStatusTransition(detailType)
+
+  const previousStatus =
+    previousRaw && isParkingSpotStatus(previousRaw)
+      ? previousRaw
+      : inferred?.previousStatus
+  const currentStatus =
+    currentRaw && isParkingSpotStatus(currentRaw)
+      ? currentRaw
+      : inferred?.currentStatus
+
+  if (!previousStatus) {
     throw new Error('previousStatus is required')
   }
 
-  if (!currentStatus || !isParkingSpotStatus(currentStatus)) {
+  if (!currentStatus) {
     throw new Error('currentStatus is required')
   }
 

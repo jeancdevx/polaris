@@ -30,7 +30,7 @@ const readErrorMessage = async (response: Response): Promise<string> => {
     : `Error ${response.status}`
 }
 
-/** Flujo 23 — GET /parking/availability (API pública, cache 30 s). */
+/** Flujo 23 — GET /parking/availability (API pública, sin cache HTTP). */
 export const fetchAvailability = async (
   apiUrl: string
 ): Promise<ParkingStatus> => {

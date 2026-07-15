@@ -22,6 +22,7 @@ export type OccupancySubscriptionHandle = Readonly<{
 type SubscriptionCallbacks = Readonly<{
   onEvent: (event: OccupancyChangedEvent) => void
   onError?: (error: unknown) => void
+  onConnected?: () => void
 }>
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -29,19 +30,19 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 /**
  * Cliente mínimo del protocolo realtime de AppSync (graphql-ws sobre WebSocket
- * con auth Cognito User Pools). El header de auth va en el query string de la
- * conexión y en extensions.authorization de cada subscripción.
+ * con auth Cognito User Pools). AppSync espera el ID token de Cognito en
+ * Authorization (no el access token).
  */
 export const subscribeToOccupancy = (config: {
   graphqlEndpoint: string
   realtimeEndpoint: string
-  accessToken: string
+  idToken: string
   callbacks: SubscriptionCallbacks
 }): OccupancySubscriptionHandle => {
   const graphqlHost = new URL(config.graphqlEndpoint).host
   const authorization = {
     host: graphqlHost,
-    Authorization: config.accessToken
+    Authorization: config.idToken
   }
 
   const header = encodeBase64(JSON.stringify(authorization))
@@ -50,6 +51,15 @@ export const subscribeToOccupancy = (config: {
 
   const subscriptionId = `occupancy-${Date.now()}`
   let closedByClient = false
+  let errorNotified = false
+
+  const notifyError = (error: unknown) => {
+    if (closedByClient || errorNotified) {
+      return
+    }
+    errorNotified = true
+    config.callbacks.onError?.(error)
+  }
 
   const ws = new WebSocket(url, 'graphql-ws')
 
@@ -81,11 +91,12 @@ export const subscribeToOccupancy = (config: {
           }
         })
       )
+      config.callbacks.onConnected?.()
       return
     }
 
     if (message.type === 'error' || message.type === 'connection_error') {
-      config.callbacks.onError?.(message)
+      notifyError(message)
       return
     }
 
@@ -106,9 +117,11 @@ export const subscribeToOccupancy = (config: {
   }
 
   ws.onerror = errorEvent => {
-    if (!closedByClient) {
-      config.callbacks.onError?.(errorEvent)
-    }
+    notifyError(errorEvent)
+  }
+
+  ws.onclose = () => {
+    notifyError(new Error('AppSync WebSocket closed'))
   }
 
   return {

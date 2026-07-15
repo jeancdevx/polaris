@@ -28,6 +28,8 @@ export class ReservationCreatedHandler {
       reservationId: event.reservationId,
       userId: event.userId,
       parkingSpotId: event.parkingSpotId,
+      previousStatus: 'free',
+      currentStatus: 'reserved',
       expiresAt: event.expiresAt
     })
 

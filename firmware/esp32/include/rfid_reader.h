@@ -8,8 +8,11 @@ class RfidReader {
   RfidReader(int ssPin, int rstPin);
 
   void begin(int sckPin, int misoPin, int mosoPin);
+  void reinitialize();
   bool readUid(String& uidOut);
   bool isHealthy() const { return healthy_; }
+  void setAntennaEnabled(bool enabled);
+  void deselect();
 
  private:
   bool probeChip();

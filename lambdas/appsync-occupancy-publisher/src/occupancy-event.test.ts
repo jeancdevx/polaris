@@ -32,11 +32,61 @@ describe('parseOccupancyPublisherEvent', () => {
     })
   })
 
+  it('parses vehicle.entry with explicit status fields', () => {
+    const event = parseOccupancyPublisherEvent({
+      source: 'polaris.event-processor',
+      'detail-type': 'vehicle.entry',
+      detail: {
+        parkingSpotId: 'spot-01',
+        previousStatus: 'reserved',
+        currentStatus: 'occupied',
+        occurredAt: '2025-06-19T14:05:00.000Z'
+      }
+    })
+
+    expect(event.previousStatus).toBe('reserved')
+    expect(event.currentStatus).toBe('occupied')
+    expect(event.detailType).toBe('vehicle.entry')
+  })
+
+  it('infers reservation.created status when fields are missing', () => {
+    const event = parseOccupancyPublisherEvent({
+      source: 'polaris.event-processor',
+      'detail-type': 'reservation.created',
+      detail: {
+        parkingSpotId: 'spot-02',
+        reservationId: 'res-001',
+        occurredAt: '2025-06-19T14:05:00.000Z'
+      }
+    })
+
+    expect(event.previousStatus).toBe('free')
+    expect(event.currentStatus).toBe('reserved')
+  })
+
+  it('infers reservation.cancelled and vehicle.exit transitions', () => {
+    expect(
+      parseOccupancyPublisherEvent({
+        source: 'polaris.event-processor',
+        'detail-type': 'reservation.cancelled',
+        detail: { parkingSpotId: 'spot-02' }
+      }).currentStatus
+    ).toBe('free')
+
+    expect(
+      parseOccupancyPublisherEvent({
+        source: 'polaris.event-processor',
+        'detail-type': 'vehicle.exit',
+        detail: { parkingSpotId: 'spot-02' }
+      }).currentStatus
+    ).toBe('free')
+  })
+
   it('rejects unsupported detail types', () => {
     expect(() =>
       parseOccupancyPublisherEvent({
         source: 'polaris.event-processor',
-        'detail-type': 'vehicle.entry',
+        'detail-type': 'rfid.scan',
         detail: {
           parkingSpotId: 'spot-01',
           previousStatus: 'free',

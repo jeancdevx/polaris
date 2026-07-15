@@ -69,8 +69,34 @@ export default function ParkingScreen() {
     }
 
     let disposed = false
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+    let attempt = 0
+
+    const clearReconnect = () => {
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer)
+        reconnectTimer = null
+      }
+    }
+
+    const scheduleReconnect = () => {
+      if (disposed) {
+        return
+      }
+
+      clearReconnect()
+      const delayMs = Math.min(30_000, 1_000 * 2 ** Math.min(attempt, 5))
+      attempt += 1
+      reconnectTimer = setTimeout(() => {
+        void connect()
+      }, delayMs)
+    }
 
     const connect = async () => {
+      subscriptionRef.current?.close()
+      subscriptionRef.current = null
+      setRealtimeConnected(false)
+
       const fresh = await getFreshTokens()
 
       if (!fresh || disposed) {
@@ -80,14 +106,21 @@ export default function ParkingScreen() {
       const env = readMobileEnv()
 
       if (!env.appsyncRealtimeEndpoint || !env.appsyncGraphqlEndpoint) {
+        console.warn(
+          '[parking] AppSync endpoints missing — occupancy falls back to polling'
+        )
         return
       }
 
       subscriptionRef.current = subscribeToOccupancy({
         graphqlEndpoint: env.appsyncGraphqlEndpoint,
         realtimeEndpoint: env.appsyncRealtimeEndpoint,
-        accessToken: fresh.accessToken,
+        idToken: fresh.idToken,
         callbacks: {
+          onConnected: () => {
+            attempt = 0
+            setRealtimeConnected(true)
+          },
           onEvent: change => {
             setRealtimeConnected(true)
             setStatus(current =>
@@ -96,17 +129,17 @@ export default function ParkingScreen() {
           },
           onError: () => {
             setRealtimeConnected(false)
+            scheduleReconnect()
           }
         }
       })
-
-      setRealtimeConnected(true)
     }
 
     void connect()
 
     return () => {
       disposed = true
+      clearReconnect()
       subscriptionRef.current?.close()
       subscriptionRef.current = null
       setRealtimeConnected(false)

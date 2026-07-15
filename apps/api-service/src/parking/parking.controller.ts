@@ -9,7 +9,7 @@ export class ParkingController {
   constructor(private readonly parkingService: ParkingService) {}
 
   @Get('availability')
-  @Header('Cache-Control', 'public, max-age=30')
+  @Header('Cache-Control', 'private, no-store')
   getAvailability(): Promise<ParkingStatus> {
     return this.parkingService.getAvailability()
   }

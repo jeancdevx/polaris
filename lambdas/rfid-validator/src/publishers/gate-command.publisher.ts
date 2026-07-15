@@ -55,7 +55,9 @@ export class GateCommandPublisher {
         : this.env.exitServoDeviceId
 
     await this.publish(`parking/commands/servo/${servoId}`, {
-      action: 'open'
+      deviceId: servoId,
+      action: 'open',
+      timestamp: Date.now()
     })
 
     return true

@@ -81,8 +81,8 @@ Polling del HC-SR04: cada **200 ms**.
 depende del HC-SR04.
 
 ```
-Estado CERRADA  → servo 0°
-Estado ABIERTA  → servo 90°
+Estado CERRADA  → ángulo closed (0° por defecto; 90° con POLARIS_SERVO_INVERT)
+Estado ABIERTA  → ángulo open   (90° por defecto; 0° con POLARIS_SERVO_INVERT)
 
 Abrir:   RFID válido + acceso autorizado
 Mantener abierta: mientras distancia < 50 cm (vehículo en zona)
@@ -90,6 +90,8 @@ Cerrar:  solo cuando distancia > 50 cm durante 500 ms consecutivos
          Y distancia nunca estuvo < 15 cm en el instante de cierre
 Timeout máximo abierta: 120 s → alerta admin, barrera sigue abierta hasta CLEARED o intervención
 ```
+
+En el prototipo, `[env:actuators]` compila con `POLARIS_SERVO_INVERT=1`.
 
 ### 1.4 Lógica de barrera de salida (SG90)
 
@@ -225,11 +227,16 @@ Lambda publica en MQTT:
 **Servo entrada** — topic `parking/commands/servo/entry-servo`:
 
 ```json
-{ "action": "open", "angle": 90 }
+{ "deviceId": "entry-servo", "action": "open", "timestamp": 1717000008000 }
 ```
 
-ESP32 entrada mueve SG90 a 90°. Estado interno: `BARRIER_OPEN`. Inicia monitoreo
-HC-SR04 para cierre seguro (no timer fijo).
+No forzar `"angle"` desde la nube: el ESP `actuators` usa
+`POLARIS_SERVO_INVERT` (por defecto closed=90°, open=0°). Un `"angle":90`
+en open dejaría la barrera físicamente cerrada en montajes invertidos.
+
+ESP32 `actuators` mueve el SG90 al ángulo abierto configurado. Estado interno
+en `entry_io`: `BARRIER_OPEN` vía status MQTT. Inicia monitoreo HC-SR04 para
+cierre seguro (no timer fijo).
 
 #### Paso 1.5 — Paso del vehículo (barrera permanece abierta)
 
@@ -470,10 +477,11 @@ Topic: `parking/rfid/exit/exit-gate-01` → Lambda `rfid-validator`.
 MQTT `parking/commands/servo/exit-servo`:
 
 ```json
-{ "action": "open", "angle": 90 }
+{ "deviceId": "exit-servo", "action": "open", "timestamp": 1717000008000 }
 ```
 
-SG90 salida → 90°. Timer interno: mínimo **2 s** abierta.
+SG90 salida → ángulo open del firmware. `entry_io` arma el paso y cierra por
+heurística (sin HC en salida).
 
 #### Paso 7.4 — Cierre barrera de salida (sin HC-SR04)
 

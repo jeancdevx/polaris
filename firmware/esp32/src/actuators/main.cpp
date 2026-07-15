@@ -56,6 +56,15 @@ Fc51Spot gSpots[polaris::pins::actuators::kFc51Count] = {
 unsigned long gLastZonePollMs = 0;
 unsigned long gBootMs = 0;
 
+struct PendingServoCommand {
+  bool pending = false;
+  char action[8] = {};
+  int angle = -1;  // <0 → use hardware default for action
+};
+
+PendingServoCommand gPendingEntry;
+PendingServoCommand gPendingExit;
+
 String spotIdFromNumber(int spotNumber) {
   char buffer[12];
   snprintf(buffer, sizeof(buffer), "spot-%02d", spotNumber);
@@ -75,58 +84,107 @@ void publishServoStatus(const char* servoId, const char* status, const char* rea
   gClient->publishJson(polaris::mqtt::servoStatusTopic(servoId).c_str(), doc);
 }
 
-void handleServoCommand(const char* servoId, ServoBarrier& servo, JsonDocument& doc) {
-  const char* action = doc["action"] | "";
+void queueServoCommand(PendingServoCommand& slot, const char* action, int angle) {
+  slot.pending = true;
+  strncpy(slot.action, action, sizeof(slot.action) - 1);
+  slot.action[sizeof(slot.action) - 1] = '\0';
+  slot.angle = angle;
+}
 
-  if (strcmp(action, "open") == 0) {
+void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCommand& slot) {
+  if (!slot.pending) {
+    return;
+  }
+  slot.pending = false;
+
+  if (strcmp(slot.action, "open") == 0) {
     if (millis() - gBootMs < polaris::hw::kServoBootGraceMs) {
       Serial.printf("[actuators] Ignored open for %s during boot grace\n", servoId);
       return;
     }
 
-    const int angle = doc["angle"] | polaris::hw::kServoOpenAngle;
-    servo.setAngle(angle);
+    const int angle =
+        slot.angle >= 0 ? slot.angle : polaris::hw::kServoOpenAngle;
+    if (!servo.setAngle(angle)) {
+      Serial.printf("[actuators] Servo %s OPEN failed (PWM not attached)\n", servoId);
+      return;
+    }
     publishServoStatus(servoId, "open", "command");
-    Serial.printf("[actuators] Servo %s opened (angle=%d)\n", servoId, angle);
+    Serial.printf("[actuators] Servo %s opened (angle=%d pin=%d)\n",
+                  servoId,
+                  angle,
+                  servo.pin());
     return;
   }
 
-  if (strcmp(action, "close") == 0) {
-    const int angle = doc["angle"] | polaris::hw::kServoClosedAngle;
-    servo.setAngle(angle);
+  if (strcmp(slot.action, "close") == 0) {
+    const int angle =
+        slot.angle >= 0 ? slot.angle : polaris::hw::kServoClosedAngle;
+    if (!servo.setAngle(angle)) {
+      Serial.printf("[actuators] Servo %s CLOSE failed (PWM not attached)\n", servoId);
+      return;
+    }
     publishServoStatus(servoId, "closed", "command");
-    Serial.printf("[actuators] Servo %s closed (angle=%d)\n", servoId, angle);
+    Serial.printf("[actuators] Servo %s closed (angle=%d pin=%d)\n",
+                  servoId,
+                  angle,
+                  servo.pin());
     return;
   }
 
-  Serial.printf("[actuators] Ignored servo command for %s (action=%s)\n", servoId, action);
+  Serial.printf("[actuators] Ignored servo command for %s (action=%s)\n",
+                servoId,
+                slot.action);
 }
 
 void forceServosClosedOnBoot(const char* reason) {
-  gEntryServo.close();
-  gExitServo.close();
-  publishServoStatus(POLARIS_ENTRY_SERVO_ID, "closed", reason);
-  publishServoStatus(POLARIS_EXIT_SERVO_ID, "closed", reason);
-  Serial.printf("[actuators] Servos forced closed (%s)\n", reason);
+  const bool entryOk = gEntryServo.close();
+  const bool exitOk = gExitServo.close();
+  if (entryOk) {
+    publishServoStatus(POLARIS_ENTRY_SERVO_ID, "closed", reason);
+  }
+  if (exitOk) {
+    publishServoStatus(POLARIS_EXIT_SERVO_ID, "closed", reason);
+  }
+  Serial.printf("[actuators] Servos forced closed (%s) entry_ok=%d exit_ok=%d\n",
+                reason,
+                entryOk ? 1 : 0,
+                exitOk ? 1 : 0);
 }
 
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
-  JsonDocument doc;
-  if (deserializeJson(doc, reinterpret_cast<const char*>(payload), length)) {
+  // Status feedback must not be treated as a command.
+  if (strstr(topic, "/status") != nullptr) {
     return;
   }
-
   if (strstr(topic, "/servo/") == nullptr) {
     return;
   }
 
+  JsonDocument doc;
+  if (deserializeJson(doc, reinterpret_cast<const char*>(payload), length)) {
+    Serial.println("[actuators] Ignored servo command (JSON parse error)");
+    return;
+  }
+
+  const char* action = doc["action"] | "";
+  const int angle = doc["angle"] | -1;
+
   if (strstr(topic, POLARIS_ENTRY_SERVO_ID) != nullptr) {
-    handleServoCommand(POLARIS_ENTRY_SERVO_ID, gEntryServo, doc);
+    Serial.printf("[actuators] Cmd queued %s action=%s angle=%d\n",
+                  POLARIS_ENTRY_SERVO_ID,
+                  action,
+                  angle);
+    queueServoCommand(gPendingEntry, action, angle);
     return;
   }
 
   if (strstr(topic, POLARIS_EXIT_SERVO_ID) != nullptr) {
-    handleServoCommand(POLARIS_EXIT_SERVO_ID, gExitServo, doc);
+    Serial.printf("[actuators] Cmd queued %s action=%s angle=%d\n",
+                  POLARIS_EXIT_SERVO_ID,
+                  action,
+                  angle);
+    queueServoCommand(gPendingExit, action, angle);
   }
 }
 
@@ -246,15 +304,28 @@ void setup() {
   }
 
   Serial.println("[actuators] Ready — 2× servo + FC-51 occupancy (spots 1..10)");
-  Serial.printf("[actuators] Servo closed=%d open=%d boot_grace=%lums\n",
+  Serial.printf("[actuators] Servo closed=%d open=%d invert=%d boot_grace=%lums\n",
                 polaris::hw::kServoClosedAngle,
                 polaris::hw::kServoOpenAngle,
+#if defined(POLARIS_SERVO_INVERT)
+                1,
+#else
+                0,
+#endif
                 polaris::hw::kServoBootGraceMs);
+  Serial.printf("[actuators] Pins entry=%d exit=%d attached=%d/%d\n",
+                gEntryServo.pin(),
+                gExitServo.pin(),
+                gEntryServo.isAttached() ? 1 : 0,
+                gExitServo.isAttached() ? 1 : 0);
 }
 
 void loop() {
   const unsigned long nowMs = millis();
   ensureMqtt();
+
+  applyServoCommand(POLARIS_ENTRY_SERVO_ID, gEntryServo, gPendingEntry);
+  applyServoCommand(POLARIS_EXIT_SERVO_ID, gExitServo, gPendingExit);
 
   if (nowMs - gLastZonePollMs >= polaris::hw::kZonePollMs) {
     gLastZonePollMs = nowMs;
@@ -265,4 +336,3 @@ void loop() {
 
   delay(5);
 }
-

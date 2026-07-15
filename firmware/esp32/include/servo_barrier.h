@@ -8,11 +8,13 @@ class ServoBarrier {
   explicit ServoBarrier(int pin);
 
   void begin();
-  void open();
-  void close();
-  void setAngle(int angle);
+  bool open();
+  bool close();
+  bool setAngle(int angle);
   bool isOpen() const;
+  bool isAttached() const;
   int angle() const;
+  int pin() const;
 
  private:
   int pin_;

@@ -44,7 +44,9 @@ unsigned long gGateOpenedMs = 0;
 unsigned long gLastPassageTelemetryMs = 0;
 bool gPassageStalledPublished = false;
 int gLastDistanceCm = 999;
+int gLastGoodDistanceCm = 999;
 unsigned long gLastGoodApproachMs = 0;
+int gProximityClearReads = 0;
 
 bool isDistanceUnknown(int distanceCm) {
   return distanceCm <= 0 || distanceCm >= 900;
@@ -60,6 +62,15 @@ bool isWithinApproachRelease(int distanceCm) {
          distanceCm <= polaris::hw::kApproachReleaseCm;
 }
 
+bool hasRecentEntryPresence(unsigned long nowMs) {
+  return gLastGoodApproachMs > 0 &&
+         (nowMs - gLastGoodApproachMs) <= polaris::hw::kVehiclePresentGraceMs;
+}
+
+bool isEntryPresenceLatched(unsigned long nowMs) {
+  return gVehiclePresent || gProximityActive || hasRecentEntryPresence(nowMs);
+}
+
 void resetEntryPresenceCycle(const char* reason) {
   const bool hadState =
       gProximityActive || gVehiclePresent || gEntryRfidConsumed;
@@ -69,9 +80,18 @@ void resetEntryPresenceCycle(const char* reason) {
   gProximitySinceMs = 0;
   gProximityGoneSinceMs = 0;
   gLastGoodApproachMs = 0;
+  gProximityClearReads = 0;
   if (hadState) {
     Serial.printf("[entry_io] Entry presence cycle reset (%s)\n", reason);
   }
+}
+
+void noteGoodApproach(unsigned long nowMs, int distanceCm) {
+  gLastGoodApproachMs = nowMs;
+  gLastGoodDistanceCm = distanceCm;
+  gLastDistanceCm = distanceCm;
+  gProximityGoneSinceMs = 0;
+  gProximityClearReads = 0;
 }
 
 bool publishServoCommand(const char* servoId, const char* action) {
@@ -133,7 +153,9 @@ void handleServoStatus(const char* servoId, JsonDocument& doc) {
     // Barrera cerrada: si el vehículo ya no está, libera pasada.
     // Si sigue delante del HC, mantiene consumed hasta que se aleje.
     gProximityActive = false;
-    const bool vehicleStillThere = isWithinApproachRelease(gLastDistanceCm);
+    const bool vehicleStillThere =
+        isEntryPresenceLatched(millis()) ||
+        isWithinApproachRelease(gLastGoodDistanceCm);
     if (!vehicleStillThere) {
       resetEntryPresenceCycle("entry_gate_closed");
       gLcd.showIdle();
@@ -301,7 +323,10 @@ void handleUltrasonic(unsigned long nowMs) {
 
   unsigned long echoMicros = 0;
   const int distance = gUltrasonic.measureCm(&echoMicros);
-  gLastDistanceCm = distance;
+  const bool distanceUnknown = isDistanceUnknown(distance);
+  if (!distanceUnknown) {
+    gLastDistanceCm = distance;
+  }
 
 #if defined(POLARIS_DEBUG_ULTRASONIC)
   static unsigned long lastDebugMs = 0;
@@ -317,41 +342,45 @@ void handleUltrasonic(unsigned long nowMs) {
   }
 #endif
 
-  if (distance < polaris::hw::kSafetyBlockCm) {
+  if (!distanceUnknown && distance < polaris::hw::kSafetyBlockCm) {
     gLastSafetyBlockMs = nowMs;
   }
 
   if (!gEntryGateOpenAssumed) {
-    const bool distanceUnknown = isDistanceUnknown(distance);
     const bool inArmWindow = isWithinApproach(distance);
-    const bool stillHolding =
-        gVehiclePresent && isWithinApproachRelease(distance);
+    const bool stillHolding = isWithinApproachRelease(distance);
 
-    if (inArmWindow || stillHolding) {
-      gProximityGoneSinceMs = 0;
-      if (inArmWindow) {
-        gLastGoodApproachMs = nowMs;
-      }
+    if (inArmWindow) {
+      noteGoodApproach(nowMs, distance);
       if (!gVehiclePresent) {
         gVehiclePresent = true;
         Serial.printf("[entry_io] Vehicle present %d cm\n", distance);
       }
 
-      // Solo arma RFID al entrar en la ventana 0..kApproachCm (no al sostener).
-      if (inArmWindow && !gEntryRfidConsumed && !gProximityActive) {
+      // Solo arma RFID al entrar en la ventana 0..kApproachCm.
+      if (!gEntryRfidConsumed && !gProximityActive) {
         gProximityActive = true;
         publishProximity(distance);
         gLcd.showProximityPrompt();
         Serial.printf("[entry_io] Proximity detected %d cm (RFID armed)\n", distance);
       }
       gProximitySinceMs = nowMs;
-    } else if (!distanceUnknown &&
-               (gVehiclePresent || gProximityActive || gEntryRfidConsumed)) {
-      // 999 / timeout no desarma; solo distancias claras fuera de histeresis.
+    } else if (stillHolding && gVehiclePresent) {
+      // Histeresis: 13–40 cm no desarma (el log real oscila 8↔13).
+      noteGoodApproach(nowMs, distance);
+      gProximitySinceMs = nowMs;
+    } else if (distanceUnknown && isEntryPresenceLatched(nowMs)) {
+      // Timeout 999 / sin eco: NO desarma. Mantiene gracia reciente.
+      gProximityClearReads = 0;
+      gProximityGoneSinceMs = 0;
+    } else if (!distanceUnknown && isEntryPresenceLatched(nowMs)) {
+      // Distancia clara fuera de histeresis: exige N lecturas + hold.
+      ++gProximityClearReads;
       if (gProximityGoneSinceMs == 0) {
         gProximityGoneSinceMs = nowMs;
-      } else if ((nowMs - gProximityGoneSinceMs) >=
-                 polaris::hw::kProximityClearHoldMs) {
+      }
+      if (gProximityClearReads >= polaris::hw::kProximityClearConfirmReads &&
+          (nowMs - gProximityGoneSinceMs) >= polaris::hw::kProximityClearHoldMs) {
         resetEntryPresenceCycle("vehicle_left");
         gLcd.showIdle();
         Serial.printf("[entry_io] Proximity cleared %d cm\n", distance);
@@ -363,17 +392,20 @@ void handleUltrasonic(unsigned long nowMs) {
 
   if (nowMs - gLastPassageTelemetryMs >= polaris::hw::kPassageTelemetryMs) {
     gLastPassageTelemetryMs = nowMs;
-    publishPassageTelemetry(distance);
+    publishPassageTelemetry(distanceUnknown ? gLastDistanceCm : distance);
   }
 
-  if (!gPassageStalledPublished && distance < polaris::hw::kApproachCm &&
+  if (!gPassageStalledPublished && !distanceUnknown &&
+      distance < polaris::hw::kApproachCm &&
       (nowMs - gGateOpenedMs) >= polaris::hw::kBarrierMaxOpenMs) {
     gPassageStalledPublished = true;
     publishPassageStalled();
     Serial.println("[entry_io] Passage stalled alert");
   }
 
-  if (distance > polaris::hw::kClearedCm) {
+  const int passageDistance = distanceUnknown ? gLastDistanceCm : distance;
+  if (!isDistanceUnknown(passageDistance) &&
+      passageDistance > polaris::hw::kClearedCm) {
     if (gClearedSinceMs == 0) {
       gClearedSinceMs = nowMs;
     }
@@ -412,82 +444,75 @@ void handleExitGate(unsigned long nowMs) {
   }
 }
 
-void handleEntryRfid() {
-  String uid;
-  if (!gRfidEntry.readUid(uid)) {
-    return;
-  }
+bool tryConsumeEntryRfid(const String& uid, const char* via) {
+  const unsigned long nowMs = millis();
 
   if (gEntryGateOpenAssumed) {
     Serial.printf(
-        "[entry_io] Entry RFID ignored — gate already open uid=%s\n",
+        "[entry_io] Entry RFID ignored — gate already open (%s) uid=%s\n",
+        via,
         uid.c_str());
-    return;
+    return false;
   }
 
   if (gEntryRfidConsumed) {
     Serial.printf(
-        "[entry_io] Entry RFID ignored — already used this passage uid=%s\n",
+        "[entry_io] Entry RFID ignored — already used this passage (%s) uid=%s\n",
+        via,
         uid.c_str());
-    return;
+    return false;
   }
 
-  const unsigned long nowMs = millis();
-  // No remedir si ya hay presencia reciente: pulseIn bloquea ~30ms y
-  // compite con el bus SPI/RC522 en el mismo loop.
-  const bool recentPresence =
-      gLastGoodApproachMs > 0 &&
-      (nowMs - gLastGoodApproachMs) <= polaris::hw::kVehiclePresentGraceMs;
-  if (!(gVehiclePresent && recentPresence)) {
-    unsigned long echoMicros = 0;
-    const int liveDistance = gUltrasonic.measureCm(&echoMicros);
-    if (!isDistanceUnknown(liveDistance)) {
-      gLastDistanceCm = liveDistance;
-      if (isWithinApproach(liveDistance)) {
-        gLastGoodApproachMs = nowMs;
-        gVehiclePresent = true;
-      }
-    } else {
-      Serial.printf(
-          "[entry_io] Entry RFID live HC timeout (echo_us=%lu) — "
-          "usando ultima distancia=%dcm uid=%s\n",
-          echoMicros,
-          gLastDistanceCm,
-          uid.c_str());
-    }
-  }
-
-  const bool presenceLatched = gVehiclePresent || gProximityActive || recentPresence;
-  const bool inArmWindow = isWithinApproach(gLastDistanceCm);
-  const bool inHoldWindow =
-      presenceLatched && isWithinApproachRelease(gLastDistanceCm);
-  const bool vehicleAtReader = presenceLatched && (inArmWindow || inHoldWindow);
-
-  if (!vehicleAtReader) {
+  if (!isEntryPresenceLatched(nowMs)) {
     Serial.printf(
         "[entry_io] Entry RFID ignored — vehiculo debe estar a <=%dcm "
-        "(ahora=%dcm present=%d armed=%d) uid=%s\n",
+        "(ahora=%dcm good=%dcm present=%d armed=%d grace=%d) via=%s uid=%s\n",
         polaris::hw::kApproachCm,
         gLastDistanceCm,
+        gLastGoodDistanceCm,
         gVehiclePresent ? 1 : 0,
         gProximityActive ? 1 : 0,
+        hasRecentEntryPresence(nowMs) ? 1 : 0,
+        via,
         uid.c_str());
     gLcd.showProximityPrompt();
-    return;
+    return false;
   }
 
   gEntryRfidConsumed = true;
   gProximityActive = false;
   publishRfidScan(uid, "entry");
   Serial.printf(
-      "[entry_io] Entry RFID consumed for this passage uid=%s dist=%dcm\n",
+      "[entry_io] Entry RFID consumed via=%s uid=%s dist=%dcm good=%dcm\n",
+      via,
       uid.c_str(),
-      gLastDistanceCm);
+      gLastDistanceCm,
+      gLastGoodDistanceCm);
+  return true;
+}
+
+void handleEntryRfid() {
+  String uid;
+  if (!gRfidEntry.readUid(uid)) {
+    return;
+  }
+  tryConsumeEntryRfid(uid, "entry_reader");
 }
 
 void handleExitRfid() {
   String uid;
   if (!gRfidExit.readUid(uid)) {
+    return;
+  }
+
+  const unsigned long nowMs = millis();
+  // Con presencia de entrada armada, el RC522 de salida a menudo captura la
+  // misma tarjeta (antenas cerca / bus SPI). Tratarla como lectura de entrada.
+  if (isEntryPresenceLatched(nowMs) && !gEntryRfidConsumed) {
+    Serial.printf(
+        "[entry_io] Exit reader saw card during entry presence — routing to entry uid=%s\n",
+        uid.c_str());
+    tryConsumeEntryRfid(uid, "exit_reader_routed");
     return;
   }
 
@@ -539,9 +564,11 @@ void setup() {
                   polaris::pins::entry_io::kRfidMosi);
   // Segundo RC522 deja el bus SPI inestable; reinit del de entrada.
   delay(50);
-  gRfidEntry.reinitialize();
-  gRfidEntry.deselect();
-  gRfidExit.deselect();
+  gRfidEntry.begin(polaris::pins::entry_io::kRfidSck,
+                   polaris::pins::entry_io::kRfidMiso,
+                   polaris::pins::entry_io::kRfidMosi);
+  digitalWrite(polaris::pins::entry_io::kRfidEntrySs, HIGH);
+  digitalWrite(polaris::pins::entry_io::kRfidExitSs, HIGH);
   gUltrasonic.begin();
   gLcd.begin(polaris::pins::entry_io::kLcdSda, polaris::pins::entry_io::kLcdScl);
 
@@ -554,10 +581,12 @@ void setup() {
                 polaris::pins::entry_io::kRfidExitSs,
                 polaris::pins::entry_io::kRfidExitRst);
   Serial.printf(
-      "[entry_io] RFID arm <=%dcm, hold/hysteresis <=%dcm, clear hold %lums\n",
+      "[entry_io] RFID arm <=%dcm, hold <=%dcm, clear %dx/%lums, grace %lums\n",
       polaris::hw::kApproachCm,
       polaris::hw::kApproachReleaseCm,
-      polaris::hw::kProximityClearHoldMs);
+      polaris::hw::kProximityClearConfirmReads,
+      polaris::hw::kProximityClearHoldMs,
+      polaris::hw::kVehiclePresentGraceMs);
 
   static WifiMqttClient client(makeConfig());
   gClient = &client;

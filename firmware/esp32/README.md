@@ -93,14 +93,27 @@ actuators) para ver proximidad/RFID. Pasar la tarjeta sin proximidad imprime
 
 Los servos **solo se mueven** al recibir MQTT
 `parking/commands/servo/{entry-servo|exit-servo}` con `"action":"open"` o
-`"close"` (publicado por la Lambda tras validar RFID).
+`"close"` (Lambda abre; `entry_io` cierra). Payload mínimo: `{"action":"open"}`
+— **no** envíes `"angle":90` si compilaste con `POLARIS_SERVO_INVERT`
+(closed=90°, open=0°).
 
 Si al flashear **se levantan solos**, el montaje suele invertir 0°/90°. En
-`[env:actuators]` ya va `-D POLARIS_SERVO_INVERT=1` (closed=90°, open=0°). Si en
-tu banco fuera al revés, quita esa flag y recompila.
+`[env:actuators]` ya va `-D POLARIS_SERVO_INVERT=1`. Si en tu banco fuera al
+revés, quita esa flag y recompila.
 
 El firmware ignora MQTT `open` durante 4 s tras boot y exige `"action"`
-explícito.
+explícito. Serial esperado en **actuators** al abrir:
+
+```
+[mqtt] Subscribe parking/commands/servo/entry-servo -> ok
+[actuators] Cmd queued entry-servo action=open angle=-1
+[servo] write pin=13 angle=0
+[actuators] Servo entry-servo opened (angle=0 pin=13)
+```
+
+Si ves `attach FAILED` / `PWM not attached`, revisa alimentación 5 V del SG90
+(GND común) y GPIO 12/13. GPIO 12 es strapping — si el de salida no arranca
+bien, cambia `kExitServo` en `pins_actuators.h`.
 
 FC-51: **LOW** = obstáculo. Sin sensor cableado, usar `INPUT_PULLUP` o no
 alimentar el ESP (pines flotantes → falsas ocupaciones en AWS).

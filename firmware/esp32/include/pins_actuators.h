@@ -2,7 +2,6 @@
 
 namespace polaris::pins::actuators {
 
-// Servos (SG90)
 constexpr int kEntryServo = 13;
 constexpr int kExitServo = 12;
 

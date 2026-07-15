@@ -15,11 +15,11 @@ struct RgbPins {
 
 // RGB discreto (3 pines c/u). Misma asignación en zone_a y zone_b (placas distintas).
 constexpr RgbPins kRgb[kSpotCount] = {
+    {14, 27, 26},
     {17, 16, 4},
-    {19, 18, 5},
-    {27, 14, 12},
-    {33, 25, 26},
-    {34, 35, 32},
+    {18, 19, 21},
+    {22, 23, 5},
+    {32, 33, 25},
 };
 
 }  // namespace polaris::pins::leds

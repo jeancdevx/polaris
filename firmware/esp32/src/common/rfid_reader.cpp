@@ -34,6 +34,10 @@ void RfidReader::preparePins() {
   digitalWrite(rstPin_, HIGH);
 }
 
+void RfidReader::deselect() {
+  digitalWrite(ssPin_, HIGH);
+}
+
 void RfidReader::softReset() {
   digitalWrite(rstPin_, LOW);
   delay(50);
@@ -44,6 +48,39 @@ void RfidReader::softReset() {
 bool RfidReader::probeChip() {
   const byte version = reader_.PCD_ReadRegister(reader_.VersionReg);
   return version != 0x00 && version != 0xFF;
+}
+
+void RfidReader::setAntennaEnabled(bool enabled) {
+  if (!healthy_) {
+    return;
+  }
+  if (enabled) {
+    reader_.PCD_AntennaOn();
+  } else {
+    reader_.PCD_AntennaOff();
+  }
+  deselect();
+}
+
+void RfidReader::reinitialize() {
+  deselect();
+  softReset();
+  reader_.PCD_Init();
+  delay(20);
+  healthy_ = probeChip();
+  if (!healthy_) {
+    softReset();
+    reader_.PCD_Init();
+    delay(20);
+    healthy_ = probeChip();
+  }
+  if (healthy_) {
+    reader_.PCD_AntennaOff();
+  }
+  deselect();
+  Serial.printf("[rfid] RC522 reinitialized SS=%d — %s\n",
+                ssPin_,
+                healthy_ ? "OK" : "FALLO");
 }
 
 void RfidReader::begin(int sckPin, int misoPin, int mosoPin) {
@@ -76,7 +113,10 @@ void RfidReader::begin(int sckPin, int misoPin, int mosoPin) {
         "[rfid] WARNING: RC522 SS=%d no responde (version 0x00/0xFF). "
         "Revise cableado SCK/MISO/MOSI/SDA/RST y alimentacion 3.3V.\n",
         ssPin_);
+  } else {
+    reader_.PCD_AntennaOff();
   }
+  deselect();
 }
 
 bool RfidReader::readUid(String& uidOut) {
@@ -84,13 +124,27 @@ bool RfidReader::readUid(String& uidOut) {
     return false;
   }
 
-  if (!reader_.PICC_IsNewCardPresent() || !reader_.PICC_ReadCardSerial()) {
+  deselect();
+  reader_.PCD_AntennaOn();
+
+  if (!reader_.PICC_IsNewCardPresent()) {
+    reader_.PCD_AntennaOff();
+    deselect();
     return false;
+  }
+  if (!reader_.PICC_ReadCardSerial()) {
+    if (!reader_.PICC_IsNewCardPresent() || !reader_.PICC_ReadCardSerial()) {
+      reader_.PCD_AntennaOff();
+      deselect();
+      return false;
+    }
   }
 
   const String uid = formatUid(reader_.uid);
   reader_.PICC_HaltA();
   reader_.PCD_StopCrypto1();
+  reader_.PCD_AntennaOff();
+  deselect();
 
   const unsigned long now = millis();
   if (uid == lastUid_ && (now - lastReadMs_) < polaris::hw::kRfidCooldownMs) {

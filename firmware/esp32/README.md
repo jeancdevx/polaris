@@ -77,11 +77,12 @@ pio run -e entry_io_debug -t upload && pio device monitor
 
 Cada 5 s verás `[entry_io] Ultrasonic TRIG=… ECHO=… echo_us=… distance=… cm`.
 
-**Flujo entrada:** HC-SR04 detecta vehículo → LCD pide tarjeta → solo entonces
-el RC522 de entrada publica el RFID → Lambda valida → MQTT abre servo en
-`actuators`. Monitorea **entry_io** (no actuators) para ver proximidad/RFID.
-Pasare la tarjeta sin proximidad imprime
-`Entry RFID ignored — acerque vehiculo primero`.
+**Flujo entrada:** HC-SR04 detecta vehículo a ≤12 cm → LCD pide tarjeta → el
+RC522 de entrada publica el RFID (se mantiene armado con histéresis hasta 25
+cm). Lambda valida → MQTT abre servo en `actuators`. Monitorea **entry_io** (no
+actuators) para ver proximidad/RFID. Pasar la tarjeta sin proximidad imprime
+`Entry RFID ignored — vehiculo debe estar a <=12cm`. Timeouts HC
+(`distance=999`) no desarman presencia de inmediato.
 
 ### `actuators` — servos + FC-51
 

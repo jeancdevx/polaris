@@ -70,11 +70,17 @@ const char* spotIdFromTopic(const char* topic) {
 bool applyLedCommand(const char* spot, const char* mode) {
   int spotNumber = 0;
   if (sscanf(spot, "spot-%d", &spotNumber) != 1) {
+    Serial.printf("[leds] ignore bad spotId=%s\n", spot);
     return false;
   }
 
   RgbLed* led = findLedBySpotNumber(spotNumber);
   if (led == nullptr) {
+    Serial.printf(
+        "[leds] spot %d out of range for this device (%d..%d)\n",
+        spotNumber,
+        POLARIS_SPOT_FIRST,
+        POLARIS_SPOT_LAST);
     return false;
   }
 
@@ -110,9 +116,19 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
+  char json[512];
+  if (length >= sizeof(json)) {
+    Serial.printf("[leds] payload too large topic=%s len=%u\n", topic, length);
+    return;
+  }
+  memcpy(json, payload, length);
+  json[length] = '\0';
+
+  Serial.printf("[leds] mqtt in topic=%s payload=%s\n", topic, json);
+
   JsonDocument doc;
-  if (deserializeJson(doc, reinterpret_cast<const char*>(payload), length)) {
-    Serial.printf("[leds] cloud JSON parse failed topic=%s len=%u\n", topic, length);
+  if (deserializeJson(doc, json)) {
+    Serial.printf("[leds] cloud JSON parse failed topic=%s\n", topic);
     return;
   }
 
@@ -122,6 +138,7 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
     spot = spotIdFromTopic(topic);
   }
   if (spot[0] == '\0') {
+    Serial.printf("[leds] missing spotId topic=%s\n", topic);
     return;
   }
 
@@ -144,6 +161,12 @@ WifiMqttConfig makeConfig() {
 void subscribeLedCommands(WifiMqttClient& client) {
   for (int spot = POLARIS_SPOT_FIRST; spot <= POLARIS_SPOT_LAST; ++spot) {
     client.subscribe(polaris::mqtt::ledCommandTopic(spotIdFromNumber(spot).c_str()).c_str());
+  }
+
+  const unsigned long drainUntil = millis() + 1500;
+  while (millis() < drainUntil) {
+    client.loop();
+    delay(10);
   }
 }
 

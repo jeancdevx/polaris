@@ -45,6 +45,8 @@ describe('ReservationCreatedHandler', () => {
       reservationId: 'res-001',
       userId: 'usr-12345',
       parkingSpotId: 'spot-03',
+      previousStatus: 'free',
+      currentStatus: 'reserved',
       expiresAt: '2025-06-19T12:00:00.000Z'
     })
   })
@@ -90,6 +92,8 @@ describe('ReservationCancelledHandler', () => {
       reservationId: 'res-001',
       userId: 'usr-12345',
       parkingSpotId: 'spot-03',
+      previousStatus: 'reserved',
+      currentStatus: 'free',
       reason: 'user_cancelled'
     })
   })

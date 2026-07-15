@@ -36,6 +36,8 @@ export type PublishReservationEventInput = Readonly<{
   reservationId: string
   userId: string
   parkingSpotId: string
+  previousStatus: ParkingSpotStatus
+  currentStatus: ParkingSpotStatus
   expiresAt?: string
   reason?: string
 }>
@@ -94,7 +96,9 @@ export class EventBridgePublisherService implements OnModuleDestroy {
       processedAt: new Date().toISOString(),
       reservationId: input.reservationId,
       userId: input.userId,
-      parkingSpotId: input.parkingSpotId
+      parkingSpotId: input.parkingSpotId,
+      previousStatus: input.previousStatus,
+      currentStatus: input.currentStatus
     }
 
     if (input.expiresAt) {

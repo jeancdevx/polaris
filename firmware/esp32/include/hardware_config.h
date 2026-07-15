@@ -3,16 +3,20 @@
 namespace polaris::hw {
 
 // HC-SR04 (entry)
-// RFID de entrada solo se arma con objeto a 0..kApproachCm del sensor.
+// RFID de entrada se arma con objeto a 0..kApproachCm; histeresis hasta
+// kApproachReleaseCm evita desarmar por ruido/angulo del HC.
 constexpr int kApproachCm = 12;
+constexpr int kApproachReleaseCm = 25;
 constexpr int kAtGateCm = 10;
 constexpr int kSafetyBlockCm = 15;
 constexpr int kClearedCm = 50;
+constexpr unsigned long kProximityClearHoldMs = 2'000;
 constexpr unsigned long kUltrasonicPollMs = 200;
 constexpr unsigned long kClearedHoldMs = 500;
 constexpr unsigned long kProximityTimeoutMs = 30'000;
 constexpr unsigned long kBarrierMaxOpenMs = 120'000;
 constexpr unsigned long kPassageTelemetryMs = 1'000;
+constexpr unsigned long kVehiclePresentGraceMs = 1'500;
 
 // SG90 — si la barrera se levanta al arrancar, compilar actuators con
 // -D POLARIS_SERVO_INVERT=1 en platformio.ini

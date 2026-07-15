@@ -1,15 +1,21 @@
 resource "aws_cloudwatch_event_rule" "appsync_occupancy_publisher" {
   name           = "${local.name_prefix}-sensor-occupancy-appsync"
-  description    = "Route sensor.occupancy events to appsync-occupancy-publisher"
+  description    = "Route occupancy-affecting events to appsync-occupancy-publisher"
   event_bus_name = aws_cloudwatch_event_bus.main.name
   event_pattern = jsonencode({
-    source      = [var.event_processor_source]
-    detail-type = ["sensor.occupancy"]
+    source = [var.event_processor_source]
+    detail-type = [
+      "sensor.occupancy",
+      "vehicle.entry",
+      "vehicle.exit",
+      "reservation.created",
+      "reservation.cancelled"
+    ]
   })
 
   tags = merge(local.common_tags, {
     Name       = "${local.name_prefix}-sensor-occupancy-appsync"
-    DetailType = "sensor.occupancy"
+    DetailType = "occupancy-realtime"
     Target     = "appsync-occupancy-publisher"
   })
 }

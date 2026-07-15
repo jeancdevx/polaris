@@ -29,6 +29,8 @@ export class ReservationCancelledHandler {
       reservationId: event.reservationId,
       userId: event.userId,
       parkingSpotId: event.parkingSpotId,
+      previousStatus: 'reserved',
+      currentStatus: 'free',
       reason: event.reason
     })
 

@@ -1,20 +1,10 @@
-name: Deploy web-admin production
+name: Deploy web-admin production (manual)
 
 on:
-  push:
-    branches: [production]
-    paths:
-      - 'apps/web-admin/**'
-      - 'packages/shared-types/**'
-      - 'packages/tsconfig/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - 'turbo.json'
   workflow_dispatch:
 
 concurrency:
-  group: deploy-web-admin-production
+  group: release-production
   cancel-in-progress: false
 
 permissions:
@@ -22,26 +12,7 @@ permissions:
   id-token: write
 
 jobs:
-  changes:
-    name: Detect web-admin changes
-    runs-on: ubuntu-latest
-    outputs:
-      web_admin: ${{ steps.filter.outputs.web-admin }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - uses: dorny/paths-filter@v4
-        id: filter
-        with:
-          filters: .github/filters/web-admin.yml
-
   deploy:
-    needs: changes
-    if:
-      github.event_name == 'workflow_dispatch' ||
-      needs.changes.outputs.web_admin == 'true'
     uses: ./.github/workflows/deploy-web-admin.yml
     with:
       environment: prod

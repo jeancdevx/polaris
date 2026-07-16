@@ -33,8 +33,24 @@ resource "aws_ecs_task_definition" "api_service" {
 
       secrets = [
         {
-          name      = "DATABASE_URL"
-          valueFrom = "${aws_secretsmanager_secret.api_service_env.arn}:DATABASE_URL::"
+          name      = "DB_HOST"
+          valueFrom = "${var.rds_master_user_secret_arn}:host::"
+        },
+        {
+          name      = "DB_PORT"
+          valueFrom = "${var.rds_master_user_secret_arn}:port::"
+        },
+        {
+          name      = "DB_NAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
+        },
+        {
+          name      = "DB_USERNAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:username::"
+        },
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${var.rds_master_user_secret_arn}:password::"
         },
         {
           name      = "REDIS_URL"
@@ -100,8 +116,24 @@ resource "aws_ecs_task_definition" "admin_service" {
 
       secrets = [
         {
-          name      = "DATABASE_URL"
-          valueFrom = "${aws_secretsmanager_secret.admin_service_env.arn}:DATABASE_URL::"
+          name      = "DB_HOST"
+          valueFrom = "${var.rds_master_user_secret_arn}:host::"
+        },
+        {
+          name      = "DB_PORT"
+          valueFrom = "${var.rds_master_user_secret_arn}:port::"
+        },
+        {
+          name      = "DB_NAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
+        },
+        {
+          name      = "DB_USERNAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:username::"
+        },
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${var.rds_master_user_secret_arn}:password::"
         },
         {
           name      = "REDIS_URL"
@@ -172,8 +204,24 @@ resource "aws_ecs_task_definition" "reservation_service" {
 
       secrets = [
         {
-          name      = "DATABASE_URL"
-          valueFrom = "${aws_secretsmanager_secret.reservation_service_env.arn}:DATABASE_URL::"
+          name      = "DB_HOST"
+          valueFrom = "${var.rds_master_user_secret_arn}:host::"
+        },
+        {
+          name      = "DB_PORT"
+          valueFrom = "${var.rds_master_user_secret_arn}:port::"
+        },
+        {
+          name      = "DB_NAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
+        },
+        {
+          name      = "DB_USERNAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:username::"
+        },
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${var.rds_master_user_secret_arn}:password::"
         },
         {
           name      = "REDIS_URL"
@@ -249,8 +297,24 @@ resource "aws_ecs_task_definition" "event_processor_service" {
 
       secrets = [
         {
-          name      = "DATABASE_URL"
-          valueFrom = "${aws_secretsmanager_secret.event_processor_service_env.arn}:DATABASE_URL::"
+          name      = "DB_HOST"
+          valueFrom = "${var.rds_master_user_secret_arn}:host::"
+        },
+        {
+          name      = "DB_PORT"
+          valueFrom = "${var.rds_master_user_secret_arn}:port::"
+        },
+        {
+          name      = "DB_NAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
+        },
+        {
+          name      = "DB_USERNAME"
+          valueFrom = "${var.rds_master_user_secret_arn}:username::"
+        },
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${var.rds_master_user_secret_arn}:password::"
         },
         {
           name      = "REDIS_URL"
@@ -272,7 +336,7 @@ resource "aws_ecs_task_definition" "event_processor_service" {
       }
 
       healthCheck = {
-        command     = ["CMD-SHELL", "node --input-type=module -e \"fetch('http://127.0.0.1:${var.event_processor_service_container_port}${var.health_check_path}').then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))\""]
+        command     = ["CMD-SHELL", "node --input-type=module -e \"fetch('http://127.0.0.1:${var.event_processor_service_container_port}${var.health_check_path}/ready').then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))\""]
         interval    = 30
         timeout     = 5
         retries     = 3

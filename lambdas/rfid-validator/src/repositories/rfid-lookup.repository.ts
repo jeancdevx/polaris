@@ -94,6 +94,13 @@ export class RfidLookupRepository {
     const dynamoTag = await this.findInDynamo(rfidUid)
 
     if (dynamoTag) {
+      // An explicit DynamoDB record is authoritative in both Dynamo modes.
+      // Never fall back to a potentially stale active RDS record when the
+      // projection says the credential is inactive or expired.
+      if (!isRfidTagValid(dynamoTag)) {
+        return null
+      }
+
       return { tag: dynamoTag, source: 'dynamodb' }
     }
 

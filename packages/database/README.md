@@ -31,6 +31,10 @@ Variables (ver `infra/local/.env.example`):
 DATABASE_URL=postgresql://parking_admin:parking_dev@localhost:5432/parking_db
 ```
 
+En Lambdas, `createDataSourceAsync()` obtiene `username` y `password` una vez
+por cold start desde `DB_SECRET_ARN` y completa las variables `DB_*`. Los
+valores no secretos `DB_HOST`, `DB_PORT` y `DB_NAME` se configuran en Terraform.
+
 ## Migraciones
 
 ```bash

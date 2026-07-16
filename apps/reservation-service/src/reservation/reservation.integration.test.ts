@@ -20,6 +20,7 @@ import {
   createDataSource,
   runMigrations,
   runSeed,
+  type OutboxEventRow,
   type ParkingSpotRow
 } from '@polaris/database'
 import { createKafka } from '@polaris/kafka'
@@ -214,6 +215,21 @@ describe('reservation integration', () => {
       expect(spotHash.reservationId).toBeUndefined()
     } finally {
       await redisAfterCancel.quit()
+    }
+
+    const outboxDataSource = createDataSource()
+    await outboxDataSource.initialize()
+    try {
+      const events = await outboxDataSource
+        .getRepository<OutboxEventRow>('OutboxEvent')
+        .find({ where: { partitionKey: created.reservationId } })
+      expect(events.map(event => event.topic).sort()).toEqual([
+        KAFKA_TOPICS.RESERVATION_CANCELLED,
+        KAFKA_TOPICS.RESERVATION_CREATED
+      ])
+      expect(events.every(event => event.attempts >= 0)).toBe(true)
+    } finally {
+      await outboxDataSource.destroy()
     }
   })
 

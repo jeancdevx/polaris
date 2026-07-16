@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common'
 
-import type { ParkingSpotRow, ReservationRow } from '@polaris/database'
+import {
+  enqueueOutboxEvent,
+  outboxPayload,
+  type ParkingSpotRow,
+  type ReservationRow
+} from '@polaris/database'
 import {
   businessRuleViolation,
+  createReservationCancelledEvent,
+  createReservationCreatedEvent,
   createReservationId,
   createSpotId,
   createUserId,
@@ -81,6 +88,19 @@ export class ReservationRepository {
         )
       }
 
+      const event = createReservationCreatedEvent({
+        reservationId: row.reservationId,
+        userId: row.userId,
+        parkingSpotId: row.parkingSpotId,
+        expiresAt: row.expiresAt.toISOString(),
+        occurredAt: row.createdAt
+      })
+      await enqueueOutboxEvent(manager, {
+        topic: event.eventName,
+        partitionKey: event.aggregateId,
+        payload: outboxPayload(event)
+      })
+
       return row
     })
   }
@@ -94,7 +114,10 @@ export class ReservationRepository {
     })
   }
 
-  async persistCancellation(cancelled: Reservation): Promise<ReservationRow> {
+  async persistCancellation(
+    cancelled: Reservation,
+    reason: 'user_cancelled' | 'admin' = 'user_cancelled'
+  ): Promise<ReservationRow> {
     const dataSource = await this.databaseService.getDataSource()
 
     return dataSource.transaction(async manager => {
@@ -142,6 +165,19 @@ export class ReservationRepository {
           }
         )
       }
+
+      const event = createReservationCancelledEvent({
+        reservationId: row.reservationId,
+        userId: row.userId,
+        parkingSpotId: row.parkingSpotId,
+        reason,
+        occurredAt: row.cancelledAt
+      })
+      await enqueueOutboxEvent(manager, {
+        topic: event.eventName,
+        partitionKey: event.aggregateId,
+        payload: outboxPayload(event)
+      })
 
       return row
     })

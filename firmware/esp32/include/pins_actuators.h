@@ -2,8 +2,9 @@
 
 namespace polaris::pins::actuators {
 
+// Evitar GPIO 12 (strapping / flash voltage). Señal SG90 a 3.3V OK.
 constexpr int kEntryServo = 13;
-constexpr int kExitServo = 12;
+constexpr int kExitServo = 22;
 
 // FC-51 OUT → obstáculo = LOW
 // 10 plazas totales: 1..10

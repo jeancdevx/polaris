@@ -23,7 +23,6 @@ import type { PolarisRedisClient } from '@polaris/shared-utils'
 
 import { RedisService } from './redis.service.js'
 import type { CreateReserveBody } from './reservation-body.validation.js'
-import { ReservationEventPublisher } from './reservation-event.publisher.js'
 import { generateReservationId } from './reservation-id.js'
 import {
   RESERVATION_CONFIG_KEY,
@@ -44,8 +43,7 @@ export class ReservationService {
   constructor(
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-    private readonly reservationRepository: ReservationRepository,
-    private readonly reservationEventPublisher: ReservationEventPublisher
+    private readonly reservationRepository: ReservationRepository
   ) {}
 
   async create(
@@ -101,18 +99,7 @@ export class ReservationService {
           `Reservation ${row.reservationId} created for spot ${spotId.value}`
         )
 
-        const reservationDto = mapReservationRow(row)
-
-        try {
-          await this.reservationEventPublisher.publishCreated(reservationDto)
-        } catch (publishError) {
-          this.logger.error(
-            `Reservation ${row.reservationId} persisted but Kafka publish failed`,
-            publishError
-          )
-        }
-
-        return reservationDto
+        return mapReservationRow(row)
       } finally {
         try {
           await client.del(lockKey)
@@ -172,18 +159,7 @@ export class ReservationService {
 
       this.logger.log(`Reservation ${updatedRow.reservationId} cancelled`)
 
-      const reservationDto = mapReservationRow(updatedRow)
-
-      try {
-        await this.reservationEventPublisher.publishCancelled(reservationDto)
-      } catch (publishError) {
-        this.logger.error(
-          `Reservation ${updatedRow.reservationId} cancelled but Kafka publish failed`,
-          publishError
-        )
-      }
-
-      return reservationDto
+      return mapReservationRow(updatedRow)
     } catch (error) {
       throw this.mapDomainError(error)
     }

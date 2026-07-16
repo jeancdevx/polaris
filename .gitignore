@@ -52,6 +52,7 @@ junit.xml
 .piolibdeps/
 firmware/esp32/.vscode/
 firmware/esp32/include/polaris_device.h
+firmware/esp32/include/polaris_device.*.h
 *.elf
 *.bin
 *.hex

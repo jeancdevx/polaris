@@ -1,4 +1,5 @@
 import type { RfidValidationResult } from '@polaris/domain'
+import { sleep } from '@polaris/shared-utils'
 
 import { ParkingCapacityRepository } from './repositories/parking-capacity.repository.js'
 import { ParkingSessionRepository } from './repositories/parking-session.repository.js'
@@ -237,12 +238,30 @@ const finalizeValidation = async (
         freeSpots
       })
 
-  let kafkaPublished = false
-  try {
-    await deps.kafkaPublisher.publishValidation({ scan, result })
-    kafkaPublished = true
-  } catch {
-    // Gate commands are time-critical; Kafka audit can be retried operationally.
+  let lastPublishError: unknown
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await deps.kafkaPublisher.publishValidation({ scan, result })
+      lastPublishError = undefined
+      break
+    } catch (error) {
+      lastPublishError = error
+      console.error('RFID validation Kafka publish failed', {
+        attempt,
+        deviceId: scan.deviceId,
+        rfidUid: scan.rfidUid,
+        valid: result.valid,
+        gateCommandsPublished,
+        error
+      })
+      if (attempt < 3) await sleep(100 * 2 ** (attempt - 1))
+    }
+  }
+
+  if (lastPublishError) {
+    // The gate command may already be delivered. Failing the invocation keeps
+    // the source event retryable instead of reporting an incomplete success.
+    throw lastPublishError
   }
 
   return {
@@ -257,6 +276,6 @@ const finalizeValidation = async (
     vehiclePlate: result.vehiclePlate,
     lookupSource: result.lookupSource,
     gateCommandsPublished,
-    kafkaPublished
+    kafkaPublished: true
   }
 }

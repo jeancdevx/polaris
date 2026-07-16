@@ -45,8 +45,3 @@ resource "aws_iam_role_policy_attachment" "appsync_availability_execution" {
   role       = aws_iam_role.appsync_availability.name
   policy_arn = aws_iam_policy.appsync_availability_execution.arn
 }
-
-resource "aws_iam_role_policy_attachment" "appsync_availability_secrets_read" {
-  role       = aws_iam_role.appsync_availability.name
-  policy_arn = aws_iam_policy.secrets_read.arn
-}

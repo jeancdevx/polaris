@@ -10,6 +10,7 @@ import {
   createDataSource,
   runMigrations,
   runSeed,
+  type OutboxEventRow,
   type ReservationRow
 } from '@polaris/database'
 
@@ -139,6 +140,18 @@ describe('users integration', () => {
         .findOne({ where: { spotId: 'spot-01' } })
 
       expect(spot?.status).toBe('free')
+
+      const outboxEvent = await dataSourceAfter
+        .getRepository<OutboxEventRow>('OutboxEvent')
+        .findOne({ where: { partitionKey: reservationId } })
+      expect(outboxEvent).toMatchObject({
+        topic: 'reservation.cancelled',
+        status: 'pending'
+      })
+      expect(outboxEvent?.payload).toMatchObject({
+        reservationId,
+        reason: 'admin'
+      })
     } finally {
       await dataSourceAfter.destroy()
     }

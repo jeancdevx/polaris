@@ -99,6 +99,14 @@ variable "devices" {
     )
     error_message = "devices must include entry-gate-01 (prod/staging) or entry-io-01 (dev) for smoke tests."
   }
+
+  validation {
+    condition = alltrue([
+      for device in values(var.devices) :
+      contains(["entry-gate", "entry-io", "actuators", "leds-zone"], device.role)
+    ])
+    error_message = "device roles must be entry-gate, entry-io, actuators, or leds-zone."
+  }
 }
 
 variable "tags" {

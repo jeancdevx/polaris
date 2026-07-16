@@ -47,6 +47,19 @@ int gLastDistanceCm = 999;
 int gLastGoodDistanceCm = 999;
 unsigned long gLastGoodApproachMs = 0;
 int gProximityClearReads = 0;
+uint32_t gCommandBootNonce = 0;
+uint32_t gCommandSequence = 0;
+
+struct PendingCloseCommand {
+  bool active = false;
+  char commandId[96] = {};
+  unsigned long lastPublishMs = 0;
+  unsigned int attempts = 0;
+};
+
+PendingCloseCommand gPendingEntryClose;
+PendingCloseCommand gPendingExitClose;
+constexpr unsigned long kCloseRetryMs = 2'000;
 
 bool isDistanceUnknown(int distanceCm) {
   return distanceCm <= 0 || distanceCm >= 900;
@@ -94,7 +107,9 @@ void noteGoodApproach(unsigned long nowMs, int distanceCm) {
   gProximityClearReads = 0;
 }
 
-bool publishServoCommand(const char* servoId, const char* action) {
+bool publishServoCommandWithId(const char* servoId,
+                               const char* action,
+                               const char* commandId) {
   if (gClient == nullptr || !gClient->isMqttConnected()) {
     return false;
   }
@@ -102,13 +117,54 @@ bool publishServoCommand(const char* servoId, const char* action) {
   JsonDocument doc;
   doc["deviceId"] = servoId;
   doc["action"] = action;
+  doc["commandId"] = commandId;
   doc["timestamp"] = polaris::time::nowEpochMs();
 
-  return gClient->publishJson(polaris::mqtt::servoCommandTopic(servoId).c_str(), doc);
+  const bool published =
+      gClient->publishJson(polaris::mqtt::servoCommandTopic(servoId).c_str(), doc);
+  Serial.printf("[entry_io] Servo command %s action=%s id=%s publish=%s\n",
+                servoId,
+                action,
+                commandId,
+                published ? "ok" : "failed");
+  return published;
+}
+
+PendingCloseCommand& pendingCloseFor(const char* servoId) {
+  return strcmp(servoId, POLARIS_ENTRY_SERVO_ID) == 0
+             ? gPendingEntryClose
+             : gPendingExitClose;
+}
+
+bool requestServoClose(const char* servoId) {
+  PendingCloseCommand& pending = pendingCloseFor(servoId);
+  if (!pending.active) {
+    snprintf(pending.commandId,
+             sizeof(pending.commandId),
+             "%s:%08lx:%lu",
+             POLARIS_DEVICE_ID,
+             static_cast<unsigned long>(gCommandBootNonce),
+             static_cast<unsigned long>(++gCommandSequence));
+    pending.active = true;
+    pending.attempts = 0;
+  }
+
+  pending.lastPublishMs = millis();
+  pending.attempts++;
+  return publishServoCommandWithId(servoId, "close", pending.commandId);
+}
+
+void servicePendingClose(const char* servoId,
+                         PendingCloseCommand& pending,
+                         unsigned long nowMs) {
+  if (!pending.active || nowMs - pending.lastPublishMs < kCloseRetryMs) {
+    return;
+  }
+  requestServoClose(servoId);
 }
 
 void closeEntryGateSafe(const char* reason) {
-  publishServoCommand(POLARIS_ENTRY_SERVO_ID, "close");
+  requestServoClose(POLARIS_ENTRY_SERVO_ID);
   gClearedSinceMs = 0;
   gPassageStalledPublished = false;
   gLcd.showIdle();
@@ -119,7 +175,7 @@ void closeExitGate(const char* reason) {
   gExitPassageArmed = false;
   gExitGateOpenAssumed = false;
   gExitGateOpenedMs = 0;
-  publishServoCommand(POLARIS_EXIT_SERVO_ID, "close");
+  requestServoClose(POLARIS_EXIT_SERVO_ID);
   Serial.printf("[entry_io] Exit gate close requested (%s)\n", reason);
 }
 
@@ -137,6 +193,38 @@ void publishExitBarrierTimeout() {
 
 void handleServoStatus(const char* servoId, JsonDocument& doc) {
   const char* status = doc["status"] | "";
+  const char* result = doc["result"] | "legacy";
+  const char* action = doc["action"] | "unknown";
+  const char* commandId = doc["commandId"] | "legacy-missing";
+  const int angle = doc["angle"] | -1;
+  Serial.printf(
+      "[entry_io] Servo ack %s result=%s status=%s action=%s angle=%d id=%s\n",
+      servoId,
+      result,
+      status,
+      action,
+      angle,
+      commandId);
+
+  PendingCloseCommand& pendingClose = pendingCloseFor(servoId);
+  if (pendingClose.active && strcmp(action, "close") == 0 &&
+      strcmp(status, "closed") == 0 &&
+      (strcmp(result, "applied") == 0 || strcmp(result, "duplicate") == 0) &&
+      strcmp(commandId, pendingClose.commandId) == 0) {
+    Serial.printf(
+        "[entry_io] Correlated close acknowledged servo=%s id=%s attempts=%u\n",
+        servoId,
+        commandId,
+        pendingClose.attempts);
+    pendingClose.active = false;
+  }
+
+  if (strcmp(result, "rejected") == 0 || strcmp(status, "unknown") == 0) {
+    return;
+  }
+  if (strcmp(status, "open") != 0 && strcmp(status, "closed") != 0) {
+    return;
+  }
   const bool isOpen = strcmp(status, "open") == 0;
 
   if (strstr(servoId, POLARIS_ENTRY_SERVO_ID) != nullptr) {
@@ -231,6 +319,7 @@ WifiMqttConfig makeConfig() {
       .wifiPassword = POLARIS_WIFI_PASSWORD,
       .iotEndpoint = POLARIS_IOT_ENDPOINT,
       .thingName = POLARIS_IOT_THING_NAME,
+      .deviceId = POLARIS_DEVICE_ID,
       .deviceCertPem = POLARIS_IOT_DEVICE_CERT,
       .deviceKeyPem = POLARIS_IOT_DEVICE_PRIVATE_KEY,
       .rootCaPem = POLARIS_IOT_ROOT_CA,
@@ -552,6 +641,7 @@ void ensureMqtt() {
 void setup() {
   Serial.begin(115200);
   delay(500);
+  gCommandBootNonce = esp_random();
 
   Serial.printf("\nPolaris ESP32 — role=%s deviceId=%s\n", kRoleName, POLARIS_DEVICE_ID);
 
@@ -607,8 +697,11 @@ void setup() {
 }
 
 void loop() {
-  const unsigned long nowMs = millis();
   ensureMqtt();
+  const unsigned long nowMs = millis();
+  servicePendingClose(
+      POLARIS_ENTRY_SERVO_ID, gPendingEntryClose, nowMs);
+  servicePendingClose(POLARIS_EXIT_SERVO_ID, gPendingExitClose, nowMs);
   handleUltrasonic(nowMs);
   // Entrada primero: critica para peaje; antenas mutuas en readUid.
   handleEntryRfid();

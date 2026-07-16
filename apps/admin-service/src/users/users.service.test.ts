@@ -54,9 +54,10 @@ describe('UsersService', () => {
   it('creates a user in Cognito, RDS and DynamoDB', async () => {
     vi.mocked(usersRepository.findByEmail).mockResolvedValue(null)
     vi.mocked(usersRepository.findByRfidUid).mockResolvedValue(null)
-    vi.mocked(usersRepository.insertUserWithRfidTag).mockResolvedValue(
-      sampleRow
-    )
+    vi.mocked(usersRepository.insertUserWithRfidTag).mockResolvedValue({
+      user: sampleRow,
+      cancelledReservations: []
+    })
 
     const result = await service.create({
       name: 'Jane Admin',
@@ -84,9 +85,10 @@ describe('UsersService', () => {
       userType: 'visitor',
       email: 'tarjeta-02@polaris.local'
     })
-    vi.mocked(usersRepository.insertUserWithRfidTag).mockResolvedValue(
-      sampleRow
-    )
+    vi.mocked(usersRepository.insertUserWithRfidTag).mockResolvedValue({
+      user: sampleRow,
+      cancelledReservations: []
+    })
 
     await service.create({
       name: 'Jane Admin',

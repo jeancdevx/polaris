@@ -24,4 +24,12 @@ locals {
   sqs_dlq_alarms = {
     for name in var.sqs_dlq_queue_names : name => name
   }
+
+  kafka_brokers = {
+    for broker_id in range(var.kafka_broker_count) : tostring(broker_id + 1) => tostring(broker_id + 1)
+  }
+
+  redis_cache_clusters = {
+    for cluster_id in var.redis_cache_cluster_ids : cluster_id => cluster_id
+  }
 }

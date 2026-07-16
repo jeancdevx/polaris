@@ -1,4 +1,4 @@
-import { createDataSource, type ParkingSpotRow } from '@polaris/database'
+import { createDataSourceAsync, type ParkingSpotRow } from '@polaris/database'
 import type { ParkingStatus } from '@polaris/shared-types'
 import {
   connectRedis,
@@ -15,7 +15,7 @@ import {
 } from './parking.mapper.js'
 import type { AppSyncAvailabilityEnv } from './read-env.js'
 
-type DataSource = ReturnType<typeof createDataSource>
+type DataSource = Awaited<ReturnType<typeof createDataSourceAsync>>
 
 const connectTimeoutMs = 10_000
 const redisConnectTimeoutMs = 5_000
@@ -29,14 +29,18 @@ const getDataSource = async (): Promise<DataSource> => {
   }
 
   if (!initializePromise) {
-    dataSource = createDataSource()
-    initializePromise = Promise.race([
-      dataSource.initialize(),
-      sleep(connectTimeoutMs).then(() => {
-        throw new Error(`RDS initialize timed out after ${connectTimeoutMs}ms`)
+    initializePromise = createDataSourceAsync()
+      .then(source => {
+        dataSource = source
+        return Promise.race([
+          source.initialize(),
+          sleep(connectTimeoutMs).then(() => {
+            throw new Error(
+              `RDS initialize timed out after ${connectTimeoutMs}ms`
+            )
+          })
+        ]).then(() => source)
       })
-    ])
-      .then(() => dataSource as DataSource)
       .catch(error => {
         initializePromise = undefined
         dataSource = undefined

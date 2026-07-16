@@ -46,7 +46,6 @@ export const expireExpiredReservations = async (
       const expired = expireReservation(reservation, at)
       const row = await deps.reservations.persistExpiration(expired)
       await deps.redis.markSpotFree(row.parkingSpotId)
-      await deps.kafkaPublisher.publishExpired(row)
       await deps.eventBridgePublisher.publishExpired(row)
       reservationIds.push(row.reservationId)
     } catch (error) {

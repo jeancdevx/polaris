@@ -17,7 +17,16 @@ output "alarm_count" {
     length(aws_cloudwatch_metric_alarm.api_gateway_5xx) +
     length(aws_cloudwatch_metric_alarm.appsync_5xx) +
     length(aws_cloudwatch_metric_alarm.rds_cpu_high) +
+    length(aws_cloudwatch_metric_alarm.rds_connections_high) +
     length(aws_cloudwatch_metric_alarm.lambda_errors) +
-    length(aws_cloudwatch_metric_alarm.sqs_dlq_messages)
+    length(aws_cloudwatch_metric_alarm.sqs_dlq_messages) +
+    length(aws_cloudwatch_metric_alarm.kafka_offline_partitions) +
+    length(aws_cloudwatch_metric_alarm.kafka_disk_used_high) +
+    length(aws_cloudwatch_metric_alarm.kafka_consumer_lag) +
+    length(aws_cloudwatch_metric_alarm.redis_memory_high) +
+    length(aws_cloudwatch_metric_alarm.redis_evictions) +
+    length(aws_cloudwatch_metric_alarm.redis_serverless_storage_high) +
+    length(aws_cloudwatch_metric_alarm.redis_serverless_evictions) +
+    length(aws_cloudwatch_metric_alarm.event_processor_consumer_failure)
   )
 }

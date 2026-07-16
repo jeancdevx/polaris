@@ -21,6 +21,8 @@ export class ReservationCancelledHandler {
   ) {}
 
   async handle(event: ReservationCancelledEvent): Promise<void> {
+    await this.parkingRedisStore.markReservationCancelled(event.parkingSpotId)
+
     await this.eventBridgePublisher.publishReservationEvent({
       detailType: KAFKA_TOPICS.RESERVATION_CANCELLED,
       eventName: event.eventName,

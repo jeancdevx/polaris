@@ -88,6 +88,30 @@ export class ParkingRedisStore {
     const parsed = Number.parseInt(value ?? '0', 10)
     return Number.isNaN(parsed) ? 0 : parsed
   }
+
+  async markReservationCancelled(spotId: string): Promise<void> {
+    const client = await this.redisService.getClient()
+    const spotKey = parkingSpotKey(spotId)
+    const currentStatus = await client.hGet(spotKey, 'status')
+
+    if (currentStatus === 'free') {
+      return
+    }
+
+    const multi = client
+      .multi()
+      .hSet(spotKey, { status: 'free' })
+      .hDel(spotKey, ['userId', 'reservationId', 'occupiedSince'])
+      .incr(PARKING_STATS_KEYS.totalAvailable)
+
+    if (currentStatus === 'reserved') {
+      multi.decr(PARKING_STATS_KEYS.totalReserved)
+    } else if (currentStatus === 'occupied') {
+      multi.decr(PARKING_STATS_KEYS.totalOccupied)
+    }
+
+    await multi.exec()
+  }
 }
 
 const applyStatDelta = (

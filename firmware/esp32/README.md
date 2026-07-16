@@ -11,21 +11,29 @@ Firmware para los **4 nodos** Polaris. Ver `docs/flujos.md`.
 | `leds_zone_a` | `leds-zone-a`  | `polaris-dev-leds-zone-a`  | RGB plazas 1–5                             |
 | `leds_zone_b` | `leds-zone-b`  | `polaris-dev-leds-zone-b`  | RGB plazas 6–10                            |
 
-Cada placa necesita **su propio certificado** en `polaris_device.h` (Thing name
-= client id MQTT).
+Cada placa necesita **su propio certificado y header**:
+`polaris_device.entry_io.h`, `polaris_device.actuators.h`,
+`polaris_device.leds_zone_a.h` o `polaris_device.leds_zone_b.h`. El Thing name
+debe terminar en el `deviceId`; el firmware rechaza la conexión MQTT si no
+coincide.
 
 ## Build / flash
 
 ```bash
 cd firmware/esp32
+# CI/compile check: compila todos los entornos de default_envs, no flashea.
+pio run
+
+# Flash supervisado de una placa concreta.
 pio run -e actuators -t upload
 pio device monitor
 ```
 
 ## Configuración AWS / WiFi
 
-Copiar `include/polaris_device.h.example` → `include/polaris_device.h`
-(gitignored).
+El script crea el header ignorado correcto a partir de
+`include/polaris_device.h.example`. No reutilizar el header, certificado o clave
+de otra placa.
 
 Tras `terraform apply` en dev:
 
@@ -89,34 +97,74 @@ actuators) para ver proximidad/RFID. Pasar la tarjeta sin proximidad imprime
 | Señal         | GPIO |
 | ------------- | ---- |
 | Servo entrada | 13   |
-| Servo salida  | 12   |
+| Servo salida  | 22   |
 
-Los servos **solo se mueven** al recibir MQTT
-`parking/commands/servo/{entry-servo|exit-servo}` con `"action":"open"` o
-`"close"` (Lambda abre; `entry_io` cierra). Payload mínimo: `{"action":"open"}`
-— **no** envíes `"angle":90` si compilaste con `POLARIS_SERVO_INVERT`
-(closed=90°, open=0°).
+Los servos se adjuntan **después** de WiFi (si no, el PWM LEDC queda mudo).
+Adjuntar o reconectar **no mueve** las barreras: se publica `status:"unknown"`
+con `result:"ready"` hasta recibir un comando válido. Luego MQTT
+`parking/commands/servo/{entry-servo|exit-servo}` con `"action":"open"|"close"`
+(Lambda abre; `entry_io` cierra). Los comandos nuevos incluyen un `commandId`
+estable; firmware sigue aceptando payloads legacy sin ID y los etiqueta
+`commandIdSource:"legacy-missing"`.
 
-Si al flashear **se levantan solos**, el montaje suele invertir 0°/90°. En
-`[env:actuators]` ya va `-D POLARIS_SERVO_INVERT=1`. Si en tu banco fuera al
-revés, quita esa flag y recompila.
+Payload recomendado:
 
-El firmware ignora MQTT `open` durante 4 s tras boot y exige `"action"`
-explícito. Serial esperado en **actuators** al abrir:
+```json
+{
+  "deviceId": "entry-servo",
+  "action": "open",
+  "commandId": "rfid:entry-io-01:entry:A3:BF:22:01:1784145600000",
+  "timestamp": 1784145600000
+}
+```
+
+`action` solo acepta `open` o `close`; `angle`, si se incluye, debe ser entero
+entre 0 y 180. El status conserva el topic existente y responde con
+`result:"applied"|"rejected"|"duplicate"`, `action`, `angle` y `commandId`. Los
+IDs repetidos se deduplican en RAM (se reinician al reboot). `entry_io`
+reintenta cada cierre con el mismo ID hasta recibir un acknowledgement
+correlacionado `closed/applied` o `closed/duplicate`; esto compensa la
+publicación QoS 0 de PubSubClient sin ejecutar el movimiento dos veces.
+
+Alimentación: **VCC del SG90 a 5 V externo** (no al 3.3V del ESP), **GND común**
+con el ESP, señal a GPIO 13/22.
+
+El self-test open→close está desactivado en builds normales. Solo para una
+prueba supervisada, compilar `actuators` agregando temporalmente
+`-D POLARIS_SERVO_SELF_TEST` a sus `build_flags`; no dejar esa flag en CI ni en
+firmware operativo.
+
+Serial esperado en **actuators** al abrir:
 
 ```
-[mqtt] Subscribe parking/commands/servo/entry-servo -> ok
-[actuators] Cmd queued entry-servo action=open angle=-1
-[servo] write pin=13 angle=0
+[actuators] Pins entry=13 exit=22 attached=1/1
+[actuators] Cmd queued entry-servo action=open angle=-1 id=rfid:...
+[servo] write pin=13 angle=0 us=500
 [actuators] Servo entry-servo opened (angle=0 pin=13)
 ```
 
-Si ves `attach FAILED` / `PWM not attached`, revisa alimentación 5 V del SG90
-(GND común) y GPIO 12/13. GPIO 12 es strapping — si el de salida no arranca
-bien, cambia `kExitServo` en `pins_actuators.h`.
-
 FC-51: **LOW** = obstáculo. Sin sensor cableado, usar `INPUT_PULLUP` o no
 alimentar el ESP (pines flotantes → falsas ocupaciones en AWS).
+
+#### Checklist HIL supervisado
+
+1. Desconectar brazos/carga mecánica; verificar VCC 5 V externo, GND común y
+   señales GPIO 13/22. Mantener una persona junto al corte de alimentación.
+2. Arrancar firmware normal y confirmar que ninguna barrera se mueve; serial
+   debe indicar `unknown/ready` y que el self-test está desactivado.
+3. Con MQTT conectado, enviar un comando inválido y uno con `angle` fuera de
+   0..180; confirmar `rejected` y ausencia de movimiento.
+4. Enviar `close` con un `commandId` nuevo antes de montar los brazos; confirmar
+   `applied`, ángulo cerrado y eco exacto del ID.
+5. Repetir el mismo payload; confirmar `duplicate` y ausencia de un segundo
+   `write` del servo.
+6. Cortar/restaurar WiFi y MQTT con una barrera en posición conocida; confirmar
+   reattach `unknown/ready` sin movimiento automático.
+7. Enviar `open` y luego `close` con IDs distintos, observando recorrido, topes
+   y corriente. Detener ante vibración, atasco o sobrecorriente.
+8. Solo si hace falta validar cableado sin MQTT, habilitar
+   `POLARIS_SERVO_SELF_TEST`, despejar físicamente ambas barreras y repetir con
+   supervisión. Retirar la flag al terminar.
 
 ### `leds_zone_a` / `leds_zone_b` — RGB por plaza
 

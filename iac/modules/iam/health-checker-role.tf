@@ -72,8 +72,3 @@ resource "aws_iam_role_policy_attachment" "health_checker_alerts" {
   role       = aws_iam_role.health_checker.name
   policy_arn = aws_iam_policy.health_checker_alerts.arn
 }
-
-resource "aws_iam_role_policy_attachment" "health_checker_secrets_read" {
-  role       = aws_iam_role.health_checker.name
-  policy_arn = aws_iam_policy.secrets_read.arn
-}

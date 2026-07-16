@@ -30,12 +30,6 @@ variable "github_repository" {
   }
 }
 
-variable "grant_administrator_access" {
-  description = "Attach AdministratorAccess to the apply role (dev only; use false in prod)"
-  type        = bool
-  default     = true
-}
-
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string

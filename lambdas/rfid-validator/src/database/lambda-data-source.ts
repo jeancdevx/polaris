@@ -1,7 +1,7 @@
-import { createDataSource } from '@polaris/database'
+import { createDataSourceAsync } from '@polaris/database'
 import { sleep } from '@polaris/shared-utils'
 
-type DataSource = ReturnType<typeof createDataSource>
+type DataSource = Awaited<ReturnType<typeof createDataSourceAsync>>
 
 const connectTimeoutMs = 10_000
 
@@ -27,12 +27,16 @@ export const getLambdaDataSource = async (): Promise<DataSource> => {
   }
 
   if (!initializePromise) {
-    dataSource = createDataSource()
-    initializePromise = initializeWithTimeout(dataSource).catch(error => {
-      initializePromise = undefined
-      dataSource = undefined
-      throw error
-    })
+    initializePromise = createDataSourceAsync()
+      .then(source => {
+        dataSource = source
+        return initializeWithTimeout(source)
+      })
+      .catch(error => {
+        initializePromise = undefined
+        dataSource = undefined
+        throw error
+      })
   }
 
   return initializePromise

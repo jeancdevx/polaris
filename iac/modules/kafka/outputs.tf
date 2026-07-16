@@ -8,6 +8,11 @@ output "bootstrap_brokers_tls" {
   value       = aws_msk_cluster.main.bootstrap_brokers_tls
 }
 
+output "broker_count" {
+  description = "Number of MSK brokers used for per-broker CloudWatch alarms"
+  value       = local.broker_count
+}
+
 output "cluster_arn" {
   description = "ARN of the MSK cluster"
   value       = aws_msk_cluster.main.arn

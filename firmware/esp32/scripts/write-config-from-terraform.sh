@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Write include/polaris_device.h snippets from Terraform dev outputs.
+# Write a per-environment device header from Terraform dev outputs.
 # Usage: ./scripts/write-config-from-terraform.sh actuators-01
 set -euo pipefail
 
@@ -9,9 +9,22 @@ dev_dir="${repo_root}/iac/environments/dev"
 firmware_include="${esp32_dir}/include"
 device_key="${1:-entry-io-01}"
 
-if [[ ! -f "${firmware_include}/polaris_device.h" ]]; then
-  cp "${firmware_include}/polaris_device.h.example" "${firmware_include}/polaris_device.h"
-  echo "Created include/polaris_device.h from example — edit WiFi credentials."
+case "$device_key" in
+  entry-io-01) environment_name="entry_io" ;;
+  actuators-01) environment_name="actuators" ;;
+  leds-zone-a) environment_name="leds_zone_a" ;;
+  leds-zone-b) environment_name="leds_zone_b" ;;
+  *)
+    echo "Unknown device key: ${device_key}" >&2
+    exit 1
+    ;;
+esac
+
+config_path="${firmware_include}/polaris_device.${environment_name}.h"
+
+if [[ ! -f "$config_path" ]]; then
+  cp "${firmware_include}/polaris_device.h.example" "$config_path"
+  echo "Created ${config_path} from example — edit WiFi credentials."
 fi
 
 cd "$dev_dir"
@@ -34,7 +47,7 @@ python3 - <<PY
 from pathlib import Path
 import re
 
-config_path = Path("${firmware_include}/polaris_device.h")
+config_path = Path("${config_path}")
 text = config_path.read_text()
 text = re.sub(
     r'#define POLARIS_IOT_ENDPOINT "[^"]*"',
@@ -49,10 +62,10 @@ text = re.sub(
     count=1,
 )
 config_path.write_text(text)
-print("Updated endpoint + thing name in polaris_device.h")
+print("Updated endpoint + thing name in ${config_path}")
 PY
 
-echo "Set POLARIS_WIFI_* and PEM macros in ${firmware_include}/polaris_device.h"
+echo "Set POLARIS_WIFI_* and PEM macros in ${config_path}"
 echo "Cert/key for ${device_key}:"
 echo "  terraform output -json iot_device_certificate_pems | jq -r '.[\"${device_key}\"]'"
 echo "  terraform output -json iot_device_private_keys | jq -r '.[\"${device_key}\"]'"

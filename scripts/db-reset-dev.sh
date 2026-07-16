@@ -58,8 +58,7 @@ sg="$(aws ec2 describe-security-groups \
 
 echo "Running dev reset task (TRUNCATE + seed + Redis flush/sync)..."
 
-# Auth uses live DB_* secrets from the task definition (RDS master secret).
-# Do not override DATABASE_URL — ECS secrets beat RunTask env overrides.
+# Connection settings use live DB_* keys from the RDS-managed secret.
 task_arn="$(aws ecs run-task \
   --cluster "${name_prefix}-cluster" \
   --task-definition "${family}:${revision}" \

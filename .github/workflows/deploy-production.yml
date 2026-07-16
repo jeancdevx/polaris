@@ -1,4 +1,4 @@
-name: Deploy production
+name: Release production
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
         default: false
 
 concurrency:
-  group: deploy-production
+  group: release-production
   cancel-in-progress: false
 
 permissions:
@@ -20,7 +20,7 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  release:
     uses: ./.github/workflows/deploy.yml
     with:
       environment: prod

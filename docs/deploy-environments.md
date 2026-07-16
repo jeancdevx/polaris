@@ -164,7 +164,7 @@ falta para escribir código.
 
 Root: `iac/environments/dev/`  
 State key: `env/dev/terraform.tfstate`  
-Rama CI: `develop` → `iac-apply-dev.yml` + `deploy-dev.yml`
+Rama CI: `develop` → `deploy-dev.yml` (release único y ordenado)
 
 ### 2.1 Primer apply (local, obligatorio)
 
@@ -243,8 +243,8 @@ El rol OIDC solo acepta jobs con
    # ... resto de servicios
    ```
 
-2. **DB bootstrap** — workflow `db-bootstrap-dev.yml` en push a `develop`, o
-   manual. Credencial admin inicial:
+2. **DB bootstrap** — paso condicional de `deploy-dev.yml`, o workflow
+   `db-bootstrap-dev.yml` manual. Credencial admin inicial:
 
    ```bash
    aws secretsmanager get-secret-value \
@@ -258,8 +258,9 @@ El rol OIDC solo acepta jobs con
 ### 2.4 Flujo día a día (dev)
 
 1. PR → `ci.yml` (lint/test) + Atlantis plan (si está habilitado).
-2. Merge a `develop` con cambios en `iac/**` → `iac-apply-dev.yml`.
-3. Merge con cambios en apps → `deploy-dev.yml`.
+2. Merge a `develop` → `deploy-dev.yml`.
+3. El release ejecuta validación → IaC/Lambdas → DB → ECS → health y omite los
+   pasos sin cambios.
 
 ### 2.5 Clientes locales contra APIs en AWS (dev)
 
@@ -350,7 +351,7 @@ corriendo.
 
 Root: `iac/environments/prod/`  
 State key: `env/prod/terraform.tfstate`  
-Rama CI: `production` → `iac-apply-production.yml` + `deploy-production.yml`
+Rama CI: `production` → `deploy-production.yml` (release único y ordenado)
 
 ### 4.1 Primer apply (local, obligatorio)
 
@@ -437,21 +438,21 @@ apliques en la cuenta. Si ya existía por dev, en prod usa
 | Paso | Acción |
 | ---- | ------ |
 | 1 | Push imágenes a ECR (`polaris-prod-*`) |
-| 2 | `ecs update-service --force-new-deployment` o merge a `production` con `deploy-production.yml` |
-| 3 | DB: `db-bootstrap-production.yml` (push a `production` con cambios en database, o `workflow_dispatch`) |
-| 4 | Web-admin: merge a `production` con cambios en `apps/web-admin/**` → `deploy-web-admin-production.yml` (o `workflow_dispatch`) |
+| 2 | Merge a `production`: registra task definitions con la imagen `${GITHUB_SHA}` y actualiza los servicios a esa revisión |
+| 3 | DB: paso ordenado del release si cambió database, o `db-bootstrap-production.yml` manual |
+| 4 | Web-admin: paso final del release si cambió `apps/web-admin/**`, o `deploy-web-admin-production.yml` manual |
 | 5 | Probar URLs públicas (outputs `api_public_url`, `admin_public_url`, etc.) |
 | 6 | Configurar clientes (mobile `EXPO_PUBLIC_API_URL`, web-admin env) |
 
 ### 4.4 Flujo día a día (prod)
 
 1. PR → CI + Atlantis `atlantis plan -p prod`.
-2. Merge a `production` + cambio en `iac/**` → `iac-apply-production.yml`
-   (con approval si configuraste reviewers).
-3. Cambios en apps → `deploy-production.yml`.
-4. Cambios en `packages/database/**` o `apps/db-bootstrap/**` →
-   `db-bootstrap-production.yml` (con approval en environment `prod`).
-5. Cambios en `apps/web-admin/**` → `deploy-web-admin-production.yml`.
+2. Merge a `production` → `deploy-production.yml` (con approval si configuraste
+   reviewers).
+3. El release ordena validación → IaC/Lambdas → DB → ECS → health → web-admin.
+4. `iac-apply-production.yml`, `db-bootstrap-production.yml` y
+   `deploy-web-admin-production.yml` quedan como dispatch manual y comparten el
+   lock del release.
 
 ---
 
@@ -461,9 +462,9 @@ Modelo de ramas del repo (ver [`ci-cd.md`](./ci-cd.md)):
 
 | Rama | Entorno AWS | Deploy automático (apps) | IaC apply automático | Web-admin CloudFront |
 | ---- | ----------- | ------------------------ | -------------------- | -------------------- |
-| `develop` | **dev** | `deploy-dev.yml` | `iac-apply-dev.yml` | ❌ (UI en local) |
+| `develop` | **dev** | `deploy-dev.yml` | dentro de `deploy-dev.yml` | ❌ (UI en local) |
 | — | **staging** | manual | manual (sin workflow aún) | `deploy-web-admin-staging.yml` (manual) |
-| `production` | **prod** | `deploy-production.yml` | `iac-apply-production.yml` | `deploy-web-admin-production.yml` |
+| `production` | **prod** | `deploy-production.yml` | dentro de `deploy-production.yml` | dentro de `deploy-production.yml` |
 
 ### Flujo recomendado
 
@@ -487,11 +488,9 @@ feature/*  →  PR  →  develop  →  (validar en dev AWS + UI local)  →  sta
    - No uses cherry-pick aislado hacia `production` salvo hotfixes documentados;
      después del hotfix, mergea `production` de vuelta a `develop` para no
      diverger.
-6. **Orden cuando cambian infra + apps + web:**
-   1. Merge IaC → `terraform apply` del entorno destino.
-   2. Deploy ECS (`deploy-*.yml`).
-   3. DB bootstrap si hubo cambios en schema/seed.
-   4. Deploy web-admin (build con URLs de **ese** entorno).
+6. **Orden cuando cambian infra + apps + web:** un solo release ejecuta
+   validación/build → Terraform/Lambdas → DB bootstrap → ECS con task
+   definitions SHA → health → web-admin.
 
 ### Staging sin rama CI (estado actual)
 
@@ -517,7 +516,7 @@ las llamadas REST van directo al API Gateway admin desde el browser
 | Workflow | Environment GitHub | Cuándo |
 | -------- | ------------------ | ------ |
 | `deploy-web-admin-staging.yml` | `staging` | Manual (`workflow_dispatch`) |
-| `deploy-web-admin-production.yml` | `prod` | Push a `production` (cambios en `apps/web-admin/**`) + manual |
+| `deploy-web-admin-production.yml` | `prod` | Solo manual; en push lo ejecuta el release de producción |
 
 **No hay** workflow de web-admin para dev: en dev usas `pnpm --filter web-admin dev`.
 

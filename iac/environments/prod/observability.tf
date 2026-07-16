@@ -15,6 +15,16 @@ module "observability" {
   appsync_api_id                = module.appsync.api_id
   rds_cluster_identifier        = module.rds.cluster_id
 
+  event_processor_log_group_name = module.ecs.event_processor_service_log_group_name
+
+  kafka_cluster_name   = module.kafka.cluster_name
+  kafka_broker_count   = module.kafka.broker_count
+  kafka_consumer_group = "event-processor-service"
+
+  redis_cache_cluster_ids                       = module.redis.cache_cluster_ids
+  redis_serverless_cache_name                   = coalesce(module.redis.cache_name, "")
+  redis_serverless_data_storage_threshold_bytes = module.redis.serverless_max_data_storage_gb * 1024 * 1024 * 1024 * 0.8
+
   lambda_function_names = [
     module.health_checker.function_name,
     module.rfid_validator.function_name,
@@ -37,5 +47,7 @@ module "observability" {
     module.api_gateway,
     module.appsync,
     module.rds,
+    module.kafka,
+    module.redis,
   ]
 }

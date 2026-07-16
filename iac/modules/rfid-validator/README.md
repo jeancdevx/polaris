@@ -5,11 +5,10 @@ DynamoDB/RDS, publica `rfid.validation` a MSK y opcionalmente comandos MQTT.
 
 ## Archivos
 
-| Archivo       | Responsabilidad                      |
-| ------------- | ------------------------------------ |
-| `build.tf`    | Zip del artefacto (`archive_file`)   |
-| `data.tf`     | `DATABASE_URL` desde Secrets Manager |
-| `function.tf` | Log group + Lambda en VPC            |
+| Archivo       | Responsabilidad                                |
+| ------------- | ---------------------------------------------- |
+| `build.tf`    | Zip del artefacto (`archive_file`)             |
+| `function.tf` | Lambda en VPC + acceso mínimo al secret de RDS |
 
 ## Requisitos
 

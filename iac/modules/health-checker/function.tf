@@ -11,7 +11,10 @@ resource "aws_lambda_function" "main" {
 
   environment {
     variables = {
-      DATABASE_URL                 = local.database_url
+      DB_HOST                      = var.rds_cluster_endpoint
+      DB_PORT                      = tostring(var.rds_cluster_port)
+      DB_NAME                      = var.rds_database_name
+      DB_SECRET_ARN                = var.rds_master_secret_arn
       REDIS_URL                    = var.redis_url
       SNS_ALERTS_TOPIC_ARN         = var.sns_alerts_topic_arn
       HEALTH_ALERTS_ENABLED        = tostring(var.health_alerts_enabled)
@@ -36,5 +39,19 @@ resource "aws_lambda_function" "main" {
 
   depends_on = [
     aws_cloudwatch_log_group.main,
+    aws_iam_role_policy.database_secret_read,
   ]
+}
+
+resource "aws_iam_role_policy" "database_secret_read" {
+  name = "${local.function_name}-database-secret-read"
+  role = basename(var.lambda_role_arn)
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "secretsmanager:GetSecretValue"
+      Resource = var.rds_master_secret_arn
+    }]
+  })
 }

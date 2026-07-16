@@ -8,6 +8,7 @@ class ServoBarrier {
   explicit ServoBarrier(int pin);
 
   void begin();
+  void detach();
   bool open();
   bool close();
   bool setAngle(int angle);
@@ -18,7 +19,7 @@ class ServoBarrier {
 
  private:
   int pin_;
-  int angle_ = 0;
+  int angle_ = -1;
   bool attached_ = false;
   Servo servo_;
 };

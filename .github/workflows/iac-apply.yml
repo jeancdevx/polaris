@@ -68,6 +68,12 @@ jobs:
             -backend-config="encrypt=true" \
             -backend-config="use_lockfile=true"
 
+      - name: Terraform format and validate
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform fmt -check -recursive ../../
+          terraform validate
+
       - name: Terraform apply
         working-directory: ${{ env.TF_DIR }}
         run: |
@@ -75,3 +81,10 @@ jobs:
             -var-file="${TF_VAR_FILE}" \
             -var="terraform_state_bucket=${{ vars.TF_STATE_BUCKET }}" \
             -var="aws_profile="
+
+      - name: Terraform diagnostics on failure
+        if: failure()
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform state list || true
+          terraform show -no-color || true

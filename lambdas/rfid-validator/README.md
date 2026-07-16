@@ -33,7 +33,9 @@ cd iac/environments/dev && terraform apply
 pnpm rfid-validator:smoke:dev
 ```
 
-Variables Lambda (Terraform): `DATABASE_URL`, `RFID_VALIDATIONS_TABLE_NAME`,
-`KAFKA_BROKERS`, `KAFKA_AUTH_MODE=iam`, `GATE_COMMANDS_ENABLED=false` (dev).
+Variables Lambda (Terraform): `DB_SECRET_ARN`, `DB_HOST`, `DB_PORT`, `DB_NAME`,
+`RFID_VALIDATIONS_TABLE_NAME`, `KAFKA_BROKERS`, `KAFKA_AUTH_MODE=iam`,
+`GATE_COMMANDS_ENABLED=false` (dev). Las credenciales se leen del secret
+administrado por RDS al iniciar en frío.
 
 IoT Rule trigger → Fase 5.6/6.3.

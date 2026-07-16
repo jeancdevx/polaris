@@ -12,7 +12,10 @@ resource "aws_lambda_function" "main" {
   environment {
     variables = merge(
       {
-        DATABASE_URL                 = local.database_url
+        DB_HOST                      = var.rds_cluster_endpoint
+        DB_PORT                      = tostring(var.rds_cluster_port)
+        DB_NAME                      = var.rds_database_name
+        DB_SECRET_ARN                = var.rds_master_secret_arn
         RFID_LOOKUP_MODE             = "dynamodb_with_rds_fallback"
         RFID_VALIDATIONS_TABLE_NAME  = var.rfid_validations_table_name
         GATE_COMMANDS_ENABLED        = tostring(var.gate_commands_enabled)
@@ -44,5 +47,19 @@ resource "aws_lambda_function" "main" {
 
   depends_on = [
     aws_cloudwatch_log_group.main,
+    aws_iam_role_policy.database_secret_read,
   ]
+}
+
+resource "aws_iam_role_policy" "database_secret_read" {
+  name = "${local.function_name}-database-secret-read"
+  role = basename(var.lambda_role_arn)
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "secretsmanager:GetSecretValue"
+      Resource = var.rds_master_secret_arn
+    }]
+  })
 }

@@ -18,7 +18,7 @@ resource "aws_iot_certificate" "device" {
 resource "aws_iot_policy_attachment" "device" {
   for_each = var.devices
 
-  policy = aws_iot_policy.device.name
+  policy = aws_iot_policy.device[each.key].name
   target = aws_iot_certificate.device[each.key].arn
 }
 

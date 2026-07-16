@@ -58,7 +58,7 @@ output "alb_zone_id" {
 }
 
 output "admin_service_env_secret_arn" {
-  description = "Secrets Manager ARN with DATABASE_URL, REDIS_URL and RFID_VALIDATIONS_TABLE_NAME for admin-service"
+  description = "Secrets Manager ARN with REDIS_URL and RFID_VALIDATIONS_TABLE_NAME for admin-service"
   value       = aws_secretsmanager_secret.admin_service_env.arn
   sensitive   = true
 }
@@ -79,7 +79,7 @@ output "admin_service_task_definition_arn" {
 }
 
 output "api_service_env_secret_arn" {
-  description = "Secrets Manager ARN with DATABASE_URL and REDIS_URL for api-service"
+  description = "Secrets Manager ARN with REDIS_URL for api-service"
   value       = aws_secretsmanager_secret.api_service_env.arn
   sensitive   = true
 }
@@ -100,7 +100,7 @@ output "api_service_task_definition_arn" {
 }
 
 output "reservation_service_env_secret_arn" {
-  description = "Secrets Manager ARN with DATABASE_URL, REDIS_URL and KAFKA_BROKERS for reservation-service"
+  description = "Secrets Manager ARN with REDIS_URL and KAFKA_BROKERS for reservation-service"
   value       = aws_secretsmanager_secret.reservation_service_env.arn
   sensitive   = true
 }
@@ -121,7 +121,7 @@ output "reservation_service_task_definition_arn" {
 }
 
 output "event_processor_service_env_secret_arn" {
-  description = "Secrets Manager ARN with DATABASE_URL, REDIS_URL and KAFKA_BROKERS for event-processor-service"
+  description = "Secrets Manager ARN with REDIS_URL and KAFKA_BROKERS for event-processor-service"
   value       = aws_secretsmanager_secret.event_processor_service_env.arn
   sensitive   = true
 }

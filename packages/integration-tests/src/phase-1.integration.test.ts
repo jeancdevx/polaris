@@ -34,9 +34,9 @@ describe('Phase 1 — integration (testcontainers)', () => {
 
       const seedResult = await runSeed()
       expect(seedResult).toEqual({
-        users: 2,
+        users: 11,
         parkingSpots: 10,
-        rfidTags: 2
+        rfidTags: 10
       })
 
       const dataSource = createDataSource()
@@ -50,7 +50,7 @@ describe('Phase 1 — integration (testcontainers)', () => {
           `SELECT COUNT(*)::text AS count FROM parking_spots WHERE status = 'free'`
         )
 
-        expect(users[0]?.count).toBe('2')
+        expect(users[0]?.count).toBe('11')
         expect(spots[0]?.count).toBe('10')
       } finally {
         await dataSource.destroy()

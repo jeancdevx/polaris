@@ -48,6 +48,21 @@ jobs:
       - name: Test (turbo)
         run: pnpm test
 
+  integration:
+    name: Integration tests (Docker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+
+      - name: Verify Docker daemon
+        run: docker info
+
+      - name: Run Testcontainers integration suite
+        run: pnpm test:integration
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -119,8 +134,55 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,scope=${{ matrix.service }},mode=max
 
+  db-bootstrap-docker:
+    name: Docker build (db-bootstrap)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build image (no push)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/db-bootstrap/Dockerfile
+          push: false
+          tags: polaris-db-bootstrap:pr
+          cache-from: type=gha,scope=db-bootstrap
+          cache-to: type=gha,scope=db-bootstrap,mode=max
+
+  firmware:
+    name: PlatformIO (${{ matrix.environment }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - entry_io
+          - entry_io_debug
+          - actuators
+          - leds_zone_a
+          - leds_zone_b
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install PlatformIO
+        run: python -m pip install platformio==6.1.18
+
+      - name: Build firmware environment
+        working-directory: firmware/esp32
+        run: pio run --environment "${{ matrix.environment }}"
+
   iac:
-    name: Terraform fmt · validate
+    name: Terraform fmt · validate · security
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: changes
@@ -139,14 +201,24 @@ jobs:
           terraform init -backend=false -input=false
           terraform validate
 
-      - name: Terraform validate (staging)
-        working-directory: iac/environments/staging
-        run: |
-          terraform init -backend=false -input=false
-          terraform validate
-
       - name: Terraform validate (prod)
         working-directory: iac/environments/prod
         run: |
           terraform init -backend=false -input=false
           terraform validate
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+
+      - name: TFLint
+        run: tflint --recursive --minimum-failure-severity=error
+
+      - name: Trivy Terraform security scan
+        # v0.36.0 pinned to its commit; do not use mutable release tags.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: config
+          scan-ref: iac
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          hide-progress: true

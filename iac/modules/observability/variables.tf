@@ -94,6 +94,57 @@ variable "rds_cluster_identifier" {
   default     = ""
 }
 
+variable "event_processor_log_group_name" {
+  description = "Event processor CloudWatch log group used for functional failure alarms"
+  type        = string
+  default     = ""
+}
+
+variable "kafka_broker_count" {
+  description = "Number of MSK brokers to monitor"
+  type        = number
+  default     = 0
+}
+
+variable "kafka_cluster_name" {
+  description = "MSK cluster name for broker and consumer lag alarms"
+  type        = string
+  default     = ""
+}
+
+variable "kafka_consumer_group" {
+  description = "Kafka consumer group monitored for processing lag"
+  type        = string
+  default     = "event-processor-service"
+}
+
+variable "kafka_topics" {
+  description = "Kafka topics monitored for consumer lag"
+  type        = set(string)
+  default = [
+    "audit.events",
+    "reservation.cancelled",
+    "reservation.created",
+    "rfid.validation",
+    "sensor.occupancy",
+    "sensor.proximity",
+    "vehicle.entry",
+    "vehicle.exit",
+  ]
+}
+
+variable "redis_cache_cluster_ids" {
+  description = "Provisioned ElastiCache cluster IDs for node-level alarms"
+  type        = set(string)
+  default     = []
+}
+
+variable "redis_serverless_cache_name" {
+  description = "Serverless ElastiCache name for capacity alarms"
+  type        = string
+  default     = ""
+}
+
 variable "lambda_function_names" {
   description = "Lambda function names for error alarms"
   type        = list(string)
@@ -116,6 +167,30 @@ variable "rds_cpu_threshold" {
   description = "RDS CPU utilization alarm threshold (percent)"
   type        = number
   default     = 80
+}
+
+variable "kafka_consumer_lag_threshold" {
+  description = "Maximum consumer group offset lag before alarming"
+  type        = number
+  default     = 1000
+}
+
+variable "rds_connections_threshold" {
+  description = "Aurora database connection count before alarming"
+  type        = number
+  default     = 500
+}
+
+variable "redis_memory_threshold" {
+  description = "Provisioned Redis database memory usage threshold (percent)"
+  type        = number
+  default     = 80
+}
+
+variable "redis_serverless_data_storage_threshold_bytes" {
+  description = "Serverless Redis bytes used before alarming; zero disables the alarm"
+  type        = number
+  default     = 0
 }
 
 variable "api_5xx_threshold" {

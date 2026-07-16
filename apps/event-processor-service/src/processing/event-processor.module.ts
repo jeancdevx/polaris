@@ -10,6 +10,7 @@ import { VehicleEntryHandler } from './handlers/vehicle-entry.handler.js'
 import { VehicleExitHandler } from './handlers/vehicle-exit.handler.js'
 import { WalkInSessionHandler } from './handlers/walk-in-session.handler.js'
 
+import { ConsumedEventService } from './consumed-event.service.js'
 import { EventDispatcherService } from './event-dispatcher.service.js'
 import { eventProcessorConfig } from './event-processor.config.js'
 import { AuditLogRepository } from './infrastructure/audit-log.repository.js'
@@ -44,6 +45,7 @@ import { ParkingRepository } from './parking/parking.repository.js'
     WalkInSessionHandler,
     EntryProximityHandler,
     EventDispatcherService,
+    ConsumedEventService,
     KafkaConsumerService
   ],
   exports: [EventDispatcherService, KafkaConsumerService]

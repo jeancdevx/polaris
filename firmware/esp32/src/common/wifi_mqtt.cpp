@@ -49,6 +49,15 @@ bool WifiMqttClient::connectMqtt() {
     return false;
   }
 
+  const String thingName(config_.thingName);
+  if (strlen(config_.deviceId) == 0 || !thingName.endsWith(config_.deviceId)) {
+    Serial.printf(
+        "[mqtt] Refusing TLS connect — Thing %s does not match firmware device %s\n",
+        config_.thingName,
+        config_.deviceId);
+    return false;
+  }
+
   network_.setCACert(config_.rootCaPem);
   network_.setCertificate(config_.deviceCertPem);
   network_.setPrivateKey(config_.deviceKeyPem);
@@ -96,6 +105,14 @@ bool WifiMqttClient::publish(const char* topic, const char* payload, bool retain
 
 bool WifiMqttClient::publishJson(const char* topic, const JsonDocument& doc, bool retained) {
   char buffer[512];
+  const size_t required = measureJson(doc);
+  if (required >= sizeof(buffer)) {
+    Serial.printf("[mqtt] JSON too large topic=%s bytes=%u limit=%u\n",
+                  topic,
+                  static_cast<unsigned int>(required),
+                  static_cast<unsigned int>(sizeof(buffer) - 1));
+    return false;
+  }
   const size_t length = serializeJson(doc, buffer, sizeof(buffer));
   if (length == 0) {
     return false;

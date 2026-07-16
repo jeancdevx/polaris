@@ -64,6 +64,7 @@ describe('ReservationCancelledHandler', () => {
       publishIdleFreeSpots: vi.fn(async () => true)
     }
     const parkingRedisStore = {
+      markReservationCancelled: vi.fn(async () => undefined),
       getTotalAvailable: vi.fn(async () => 8)
     }
 
@@ -84,6 +85,9 @@ describe('ReservationCancelledHandler', () => {
       reason: 'user_cancelled'
     })
 
+    expect(parkingRedisStore.markReservationCancelled).toHaveBeenCalledWith(
+      'spot-03'
+    )
     expect(eventBridgePublisher.publishReservationEvent).toHaveBeenCalledWith({
       detailType: KAFKA_TOPICS.RESERVATION_CANCELLED,
       eventName: KAFKA_TOPICS.RESERVATION_CANCELLED,

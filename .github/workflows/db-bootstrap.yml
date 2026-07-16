@@ -75,8 +75,8 @@ jobs:
       - name: Run db-bootstrap ECS task
         id: run
         run: |
-          # DB credentials come from the live task definition secrets. Do not
-          # override DATABASE_URL: a composed secret can become stale after
+          # The task resolves username/password at runtime from DB_SECRET_ARN.
+          # Do not override DATABASE_URL: a composed URL becomes stale after
           # an RDS password rotation.
           subnets=$(aws ec2 describe-subnets \
             --filters "Name=tag:Name,Values=${NAME_PREFIX}-private-*" \

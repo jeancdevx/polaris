@@ -1,6 +1,6 @@
 import { runMigrations } from '../migrations/run-migrations.js'
 
-import { createDataSource } from '../config/create-data-source.js'
+import { createDataSourceAsync } from '../config/create-data-source.js'
 
 import { flushParkingRedis } from '../redis/flush-parking-redis.js'
 import { syncParkingRedis } from '../redis/sync-parking-redis.js'
@@ -15,7 +15,7 @@ export type DevResetResult = Readonly<{
 export const runDevReset = async (): Promise<DevResetResult> => {
   await runMigrations()
 
-  const dataSource = createDataSource()
+  const dataSource = await createDataSourceAsync()
   await dataSource.initialize()
 
   try {

@@ -48,35 +48,15 @@ resource "aws_ecs_task_definition" "db_bootstrap" {
       image     = "${var.db_bootstrap_ecr_repository_url}:${var.db_bootstrap_image_tag}"
       essential = true
 
-      environment = [
+      environment = concat([
         { name = "NODE_ENV", value = "production" },
         { name = "AWS_REGION", value = var.aws_region },
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
         { name = "BOOTSTRAP_ADMIN_EMAIL", value = var.bootstrap_admin_email },
         { name = "BOOTSTRAP_ADMIN_USER_ID", value = var.bootstrap_admin_user_id }
-      ]
+      ], local.database_environment)
 
       secrets = [
-        {
-          name      = "DB_HOST"
-          valueFrom = "${var.rds_master_user_secret_arn}:host::"
-        },
-        {
-          name      = "DB_PORT"
-          valueFrom = "${var.rds_master_user_secret_arn}:port::"
-        },
-        {
-          name      = "DB_NAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
-        },
-        {
-          name      = "DB_USERNAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:username::"
-        },
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = "${var.rds_master_user_secret_arn}:password::"
-        },
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.db_bootstrap_env.arn}:REDIS_URL::"

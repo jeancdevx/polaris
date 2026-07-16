@@ -28,6 +28,13 @@ locals {
     try(random_password.bootstrap_admin[0].result, null)
   )
 
+  database_environment = [
+    { name = "DB_HOST", value = var.rds_cluster_endpoint },
+    { name = "DB_PORT", value = tostring(var.rds_cluster_port) },
+    { name = "DB_NAME", value = var.rds_database_name },
+    { name = "DB_SECRET_ARN", value = var.rds_master_user_secret_arn },
+  ]
+
   common_tags = merge(
     var.tags,
     {

@@ -21,7 +21,7 @@ resource "aws_ecs_task_definition" "api_service" {
         }
       ]
 
-      environment = [
+      environment = concat([
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = tostring(var.container_port) },
         { name = "HOST", value = "0.0.0.0" },
@@ -29,29 +29,9 @@ resource "aws_ecs_task_definition" "api_service" {
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
         { name = "COGNITO_CLIENT_ID", value = var.cognito_app_client_id },
         { name = "COGNITO_ISSUER_URL", value = var.cognito_issuer_url }
-      ]
+      ], local.database_environment)
 
       secrets = [
-        {
-          name      = "DB_HOST"
-          valueFrom = "${var.rds_master_user_secret_arn}:host::"
-        },
-        {
-          name      = "DB_PORT"
-          valueFrom = "${var.rds_master_user_secret_arn}:port::"
-        },
-        {
-          name      = "DB_NAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
-        },
-        {
-          name      = "DB_USERNAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:username::"
-        },
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = "${var.rds_master_user_secret_arn}:password::"
-        },
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.api_service_env.arn}:REDIS_URL::"
@@ -106,35 +86,15 @@ resource "aws_ecs_task_definition" "admin_service" {
         }
       ]
 
-      environment = [
+      environment = concat([
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = tostring(var.admin_service_container_port) },
         { name = "HOST", value = "0.0.0.0" },
         { name = "AWS_REGION", value = var.aws_region },
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id }
-      ]
+      ], local.database_environment)
 
       secrets = [
-        {
-          name      = "DB_HOST"
-          valueFrom = "${var.rds_master_user_secret_arn}:host::"
-        },
-        {
-          name      = "DB_PORT"
-          valueFrom = "${var.rds_master_user_secret_arn}:port::"
-        },
-        {
-          name      = "DB_NAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
-        },
-        {
-          name      = "DB_USERNAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:username::"
-        },
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = "${var.rds_master_user_secret_arn}:password::"
-        },
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.admin_service_env.arn}:REDIS_URL::"
@@ -193,36 +153,16 @@ resource "aws_ecs_task_definition" "reservation_service" {
         }
       ]
 
-      environment = [
+      environment = concat([
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = tostring(var.reservation_service_container_port) },
         { name = "HOST", value = "0.0.0.0" },
         { name = "AWS_REGION", value = var.aws_region },
         { name = "KAFKA_AUTH_MODE", value = "iam" },
         { name = "KAFKA_CLIENT_ID", value = "reservation-service" }
-      ]
+      ], local.database_environment)
 
       secrets = [
-        {
-          name      = "DB_HOST"
-          valueFrom = "${var.rds_master_user_secret_arn}:host::"
-        },
-        {
-          name      = "DB_PORT"
-          valueFrom = "${var.rds_master_user_secret_arn}:port::"
-        },
-        {
-          name      = "DB_NAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
-        },
-        {
-          name      = "DB_USERNAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:username::"
-        },
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = "${var.rds_master_user_secret_arn}:password::"
-        },
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.reservation_service_env.arn}:REDIS_URL::"
@@ -281,7 +221,7 @@ resource "aws_ecs_task_definition" "event_processor_service" {
         }
       ]
 
-      environment = [
+      environment = concat([
         { name = "NODE_ENV", value = "production" },
         { name = "PORT", value = tostring(var.event_processor_service_container_port) },
         { name = "HOST", value = "0.0.0.0" },
@@ -293,29 +233,9 @@ resource "aws_ecs_task_definition" "event_processor_service" {
         { name = "EVENTBRIDGE_BUS_NAME", value = var.eventbridge_bus_name },
         { name = "LED_COMMANDS_ENABLED", value = tostring(var.led_commands_enabled) },
         { name = "IOT_DATA_ENDPOINT", value = var.iot_data_endpoint }
-      ]
+      ], local.database_environment)
 
       secrets = [
-        {
-          name      = "DB_HOST"
-          valueFrom = "${var.rds_master_user_secret_arn}:host::"
-        },
-        {
-          name      = "DB_PORT"
-          valueFrom = "${var.rds_master_user_secret_arn}:port::"
-        },
-        {
-          name      = "DB_NAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:dbname::"
-        },
-        {
-          name      = "DB_USERNAME"
-          valueFrom = "${var.rds_master_user_secret_arn}:username::"
-        },
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = "${var.rds_master_user_secret_arn}:password::"
-        },
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.event_processor_service_env.arn}:REDIS_URL::"

@@ -5,7 +5,7 @@ import {
   parkingSpotKey
 } from '@polaris/shared-utils'
 
-import { createDataSource, type ParkingSpotRow } from '../index.js'
+import { createDataSourceAsync, type ParkingSpotRow } from '../index.js'
 
 export type SyncParkingRedisResult = Readonly<{
   spotsSynced: number
@@ -29,7 +29,7 @@ export const parkingRedisHashForRow = (
 export const syncParkingRedis = async (
   redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379'
 ): Promise<SyncParkingRedisResult> => {
-  const dataSource = createDataSource()
+  const dataSource = await createDataSourceAsync()
   await dataSource.initialize()
 
   let rows: ParkingSpotRow[]

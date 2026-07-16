@@ -1,7 +1,7 @@
-import { createDataSource } from '../config/create-data-source.js'
+import { createDataSourceAsync } from '../config/create-data-source.js'
 
 const revertLastMigration = async (): Promise<void> => {
-  const dataSource = createDataSource()
+  const dataSource = await createDataSourceAsync()
 
   await dataSource.initialize()
   await dataSource.undoLastMigration()

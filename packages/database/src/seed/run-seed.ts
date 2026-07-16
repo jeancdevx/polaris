@@ -4,7 +4,7 @@ import {
   userSchema
 } from '../entities/index.js'
 
-import { createDataSource } from '../config/create-data-source.js'
+import { createDataSourceAsync } from '../config/create-data-source.js'
 
 import { buildSeedData } from './seed-data.js'
 
@@ -15,7 +15,7 @@ export type SeedResult = Readonly<{
 }>
 
 export const runSeed = async (): Promise<SeedResult> => {
-  const dataSource = createDataSource()
+  const dataSource = await createDataSourceAsync()
 
   await dataSource.initialize()
 

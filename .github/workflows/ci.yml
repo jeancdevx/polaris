@@ -214,7 +214,8 @@ jobs:
         run: tflint --recursive --minimum-failure-severity=error
 
       - name: Trivy Terraform security scan
-        uses: aquasecurity/trivy-action@0.33.1
+        # v0.36.0 pinned to its commit; do not use mutable release tags.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: config
           scan-ref: iac

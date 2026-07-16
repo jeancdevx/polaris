@@ -17,7 +17,7 @@
     "format:check": "prettier --check .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "test:integration": "pnpm --filter @polaris/integration-tests test:integration",
+    "test:integration": "turbo run build --filter='@polaris/integration-tests^...' && pnpm --filter @polaris/integration-tests test:integration",
     "test:integration:auth": "pnpm --filter api-service test:integration:auth",
     "test:integration:parking": "pnpm --filter api-service test:integration:parking",
     "test:integration:reservation": "pnpm --filter reservation-service test:integration:reservation",

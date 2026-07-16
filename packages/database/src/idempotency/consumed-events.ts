@@ -22,12 +22,12 @@ export const processConsumedEventOnce = async (
 ): Promise<'processed' | 'duplicate'> => {
   const claimedRows = await dataSource.query<Array<{ status: string }>>(
     `INSERT INTO consumed_events (
-       consumer_name, event_id, topic, partition, offset, status
+       consumer_name, event_id, topic, "partition", "offset", status
      ) VALUES ($1, $2, $3, $4, $5, 'processing')
      ON CONFLICT (consumer_name, event_id) DO UPDATE
        SET topic = EXCLUDED.topic,
-           partition = EXCLUDED.partition,
-           offset = EXCLUDED.offset,
+           "partition" = EXCLUDED."partition",
+           "offset" = EXCLUDED."offset",
            status = 'processing',
            processed_at = NULL,
            created_at = NOW()

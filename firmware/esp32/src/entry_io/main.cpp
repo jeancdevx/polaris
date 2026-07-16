@@ -204,6 +204,30 @@ void closeEntryGateSafe(const char* reason) {
   Serial.printf("[entry_io] Entry gate close requested (%s)\n", reason);
 }
 
+void clearPendingClose(const char* servoId) {
+  PendingCloseCommand& pending = pendingCloseFor(servoId);
+  if (pending.active) {
+    Serial.printf("[entry_io] Cleared pending close for %s (attempts=%u)\n",
+                  servoId,
+                  pending.attempts);
+  }
+  pending.active = false;
+  pending.attempts = 0;
+  pending.commandId[0] = '\0';
+  pending.lastPublishMs = 0;
+}
+
+void armExitPassage(const char* reason) {
+  // Entry close retries with force=true were twitching the entry SG90 while
+  // exit opened on a shared 5V rail — cancel them before exit motion.
+  clearPendingClose(POLARIS_ENTRY_SERVO_ID);
+  gEntryGateOpenAssumed = false;
+  gExitPassageArmed = true;
+  gExitGateOpenAssumed = false;
+  gExitGateOpenedMs = 0;
+  Serial.printf("[entry_io] Exit passage armed (%s)\n", reason);
+}
+
 void closeExitGate(const char* reason) {
   gExitPassageArmed = false;
   gExitGateOpenAssumed = false;
@@ -441,6 +465,12 @@ void publishPassageStalled() {
 }
 
 void handleUltrasonic(unsigned long nowMs) {
+  // While exit is armed/open, freeze entry HC logic so we never publish
+  // entry-servo open/close and fight the exit barrier on shared power.
+  if (gExitPassageArmed) {
+    return;
+  }
+
   if (nowMs - gLastUltrasonicMs < polaris::hw::kUltrasonicPollMs) {
     return;
   }
@@ -665,10 +695,7 @@ void handleExitRfid() {
     return;
   }
 
-  gExitPassageArmed = true;
-  gExitGateOpenAssumed = false;
-  gExitGateOpenedMs = 0;
-
+  armExitPassage("rfid_exit");
   Serial.printf("[entry_io] RFID exit detected uid=%s\n", uid.c_str());
   publishRfidScan(uid, "exit");
 }
@@ -752,8 +779,10 @@ void setup() {
 void loop() {
   ensureMqtt();
   const unsigned long nowMs = millis();
-  servicePendingClose(
-      POLARIS_ENTRY_SERVO_ID, gPendingEntryClose, nowMs);
+  // Never retry entry closes while exit passage is in progress.
+  if (!gExitPassageArmed) {
+    servicePendingClose(POLARIS_ENTRY_SERVO_ID, gPendingEntryClose, nowMs);
+  }
   servicePendingClose(POLARIS_EXIT_SERVO_ID, gPendingExitClose, nowMs);
   handleUltrasonic(nowMs);
   // Entrada primero: critica para peaje; antenas mutuas en readUid.

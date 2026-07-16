@@ -20,23 +20,31 @@ export class ReservationCreatedHandler {
   ) {}
 
   async handle(event: ReservationCreatedEvent): Promise<void> {
-    await this.eventBridgePublisher.publishReservationEvent({
-      detailType: KAFKA_TOPICS.RESERVATION_CREATED,
-      eventName: event.eventName,
-      aggregateId: event.aggregateId,
-      occurredAt: event.occurredAt,
-      reservationId: event.reservationId,
-      userId: event.userId,
-      parkingSpotId: event.parkingSpotId,
-      previousStatus: 'free',
-      currentStatus: 'reserved',
-      expiresAt: event.expiresAt
-    })
-
+    // Physical actuators first — EventBridge must not block LED/LCD.
     await this.ledCommands.publishSpotMode(event.parkingSpotId, 'blink_blue')
     await this.displayCommands.publishIdleFreeSpots(
       await this.parkingRedisStore.getTotalAvailable()
     )
+
+    try {
+      await this.eventBridgePublisher.publishReservationEvent({
+        detailType: KAFKA_TOPICS.RESERVATION_CREATED,
+        eventName: event.eventName,
+        aggregateId: event.aggregateId,
+        occurredAt: event.occurredAt,
+        reservationId: event.reservationId,
+        userId: event.userId,
+        parkingSpotId: event.parkingSpotId,
+        previousStatus: 'free',
+        currentStatus: 'reserved',
+        expiresAt: event.expiresAt
+      })
+    } catch (error) {
+      this.logger.error(
+        `EventBridge publish failed for reservation ${event.reservationId}; LED/LCD already updated`,
+        error
+      )
+    }
 
     this.logger.log(
       `Reservation created forwarded for ${event.parkingSpotId} (${event.reservationId})`

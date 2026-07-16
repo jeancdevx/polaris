@@ -37,6 +37,11 @@ describe('ReservationCreatedHandler', () => {
       expiresAt: '2025-06-19T12:00:00.000Z'
     })
 
+    expect(ledCommands.publishSpotMode).toHaveBeenCalledWith(
+      'spot-03',
+      'blink_blue'
+    )
+    expect(displayCommands.publishIdleFreeSpots).toHaveBeenCalledWith(7)
     expect(eventBridgePublisher.publishReservationEvent).toHaveBeenCalledWith({
       detailType: KAFKA_TOPICS.RESERVATION_CREATED,
       eventName: KAFKA_TOPICS.RESERVATION_CREATED,
@@ -49,6 +54,47 @@ describe('ReservationCreatedHandler', () => {
       currentStatus: 'reserved',
       expiresAt: '2025-06-19T12:00:00.000Z'
     })
+  })
+
+  it('still updates LED/LCD when EventBridge fails', async () => {
+    const eventBridgePublisher = {
+      publishReservationEvent: vi.fn(async () => {
+        throw new Error('eventbridge down')
+      })
+    }
+    const ledCommands = {
+      publishSpotMode: vi.fn(async () => true)
+    }
+    const displayCommands = {
+      publishIdleFreeSpots: vi.fn(async () => true)
+    }
+    const parkingRedisStore = {
+      getTotalAvailable: vi.fn(async () => 7)
+    }
+
+    const handler = new ReservationCreatedHandler(
+      eventBridgePublisher as never,
+      ledCommands as never,
+      displayCommands as never,
+      parkingRedisStore as never
+    )
+
+    await expect(
+      handler.handle({
+        eventName: KAFKA_TOPICS.RESERVATION_CREATED,
+        aggregateId: 'res-001',
+        occurredAt: '2025-06-19T10:00:00.000Z',
+        reservationId: 'res-001',
+        userId: 'usr-12345',
+        parkingSpotId: 'spot-03',
+        expiresAt: '2025-06-19T12:00:00.000Z'
+      })
+    ).resolves.toBeUndefined()
+
+    expect(ledCommands.publishSpotMode).toHaveBeenCalledWith(
+      'spot-03',
+      'blink_blue'
+    )
   })
 })
 

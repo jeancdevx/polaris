@@ -76,6 +76,7 @@ export class OutboxDispatcherService implements OnModuleInit, OnModuleDestroy {
             lastError: undefined
           }
         )
+        this.logger.log(`Outbox published ${row.topic} eventId=${row.eventId}`)
       } catch (error) {
         const delaySeconds = Math.min(300, 2 ** Math.min(row.attempts + 1, 8))
         const exhausted = row.attempts + 1 >= 10

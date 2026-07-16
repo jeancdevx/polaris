@@ -22,6 +22,12 @@ export {
   parkingSpotKey,
   spotIdFromParkingSpotKey
 } from './redis/parking-keys.js'
+export {
+  PARKING_SPOT_COUNT,
+  clampFreeSpots,
+  recountAndSetParkingStats,
+  type ParkingStatsRecount
+} from './redis/recount-parking-stats.js'
 
 export const generateId = (prefix: string): string => {
   const timestamp = Date.now().toString(36)

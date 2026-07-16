@@ -1,4 +1,5 @@
 import type { AccessDenialReason } from '@polaris/domain'
+import { clampFreeSpots } from '@polaris/shared-utils'
 
 export type DisplayMessage = Readonly<{
   line1: string
@@ -7,19 +8,24 @@ export type DisplayMessage = Readonly<{
   freeSpots?: number
 }>
 
-export const displayMessageIdle = (freeSpots: number): DisplayMessage => ({
-  line1: 'Bienvenido',
-  line2: `Libres: ${freeSpots}`,
-  idle: true,
-  freeSpots
-})
+export const displayMessageIdle = (freeSpots: number): DisplayMessage => {
+  const clamped = clampFreeSpots(freeSpots)
+  return {
+    line1: 'Bienvenido',
+    line2: `Libres: ${clamped}`,
+    idle: true,
+    freeSpots: clamped
+  }
+}
 
 export const displayMessageForDenied = (
   reason: AccessDenialReason | string | undefined,
   freeSpots?: number
 ): DisplayMessage => {
+  const clamped =
+    freeSpots === undefined ? undefined : clampFreeSpots(freeSpots)
   const withFree = (message: DisplayMessage): DisplayMessage =>
-    freeSpots === undefined ? message : { ...message, freeSpots }
+    clamped === undefined ? message : { ...message, freeSpots: clamped }
 
   switch (reason) {
     case 'rfid_not_found_or_inactive':
@@ -66,10 +72,10 @@ export const displayMessageForAllowed = (input: {
   parkingSpotId?: string
   freeSpots?: number
 }): DisplayMessage => {
+  const clamped =
+    input.freeSpots === undefined ? undefined : clampFreeSpots(input.freeSpots)
   const withFree = (message: DisplayMessage): DisplayMessage =>
-    input.freeSpots === undefined
-      ? message
-      : { ...message, freeSpots: input.freeSpots }
+    clamped === undefined ? message : { ...message, freeSpots: clamped }
 
   if (input.readerLocation === 'exit') {
     return withFree({
@@ -81,10 +87,7 @@ export const displayMessageForAllowed = (input: {
   if (input.accessType === 'walk_in') {
     return withFree({
       line1: 'Bienvenido',
-      line2:
-        input.freeSpots === undefined
-          ? 'Busque plaza libre'
-          : `Libres: ${input.freeSpots}`
+      line2: clamped === undefined ? 'Busque plaza libre' : `Libres: ${clamped}`
     })
   }
 
@@ -97,9 +100,6 @@ export const displayMessageForAllowed = (input: {
 
   return withFree({
     line1: 'Bienvenido',
-    line2:
-      input.freeSpots === undefined
-        ? 'Acceso autorizado'
-        : `Libres: ${input.freeSpots}`
+    line2: clamped === undefined ? 'Acceso autorizado' : `Libres: ${clamped}`
   })
 }

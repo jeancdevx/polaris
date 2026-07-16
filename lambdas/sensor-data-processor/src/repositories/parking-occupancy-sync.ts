@@ -1,9 +1,11 @@
 import type { ParkingSpotStatus } from '@polaris/shared-types'
 import {
+  clampFreeSpots,
   connectRedis,
   disconnectRedis,
   PARKING_STATS_KEYS,
-  parkingSpotKey
+  parkingSpotKey,
+  recountAndSetParkingStats
 } from '@polaris/shared-utils'
 
 import { getLambdaDataSource } from '../database/lambda-data-source.js'
@@ -109,11 +111,10 @@ export class ParkingOccupancySync {
           await multi.exec()
         }
 
-        const available = await redis.get(PARKING_STATS_KEYS.totalAvailable)
-        freeSpots = Number.parseInt(available ?? '0', 10)
-        if (Number.isNaN(freeSpots) || freeSpots < 0) {
-          freeSpots = 0
-        }
+        // incr/decr drifts under dual writers (lambda + event-processor);
+        // always republish from a recount of spot hashes.
+        const recounted = await recountAndSetParkingStats(redis)
+        freeSpots = clampFreeSpots(recounted.totalAvailable)
       } finally {
         await disconnectRedis(redis)
       }

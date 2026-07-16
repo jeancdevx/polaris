@@ -44,23 +44,31 @@ const buildDeps = (
   kafkaPublisher: {
     publishOccupancyChanged: vi.fn().mockResolvedValue(undefined)
   } as unknown as KafkaOccupancyPublisher,
+  ledPublisher: {
+    publishSpotMode: vi.fn().mockResolvedValue(true)
+  } as never,
   ...overrides
 })
 
 describe('processSensorReading', () => {
-  it('persists to DynamoDB and publishes occupancy to Kafka', async () => {
+  it('persists to DynamoDB, publishes Kafka, and commands LEDs', async () => {
     const deps = buildDeps()
 
     const result = await processSensorReading(occupancyReading, deps)
 
     expect(result.dynamoPersisted).toBe(true)
     expect(result.kafkaPublished).toBe(true)
+    expect(result.ledCommandPublished).toBe(true)
     expect(result.spotId).toBe('spot-05')
     expect(deps.sensorReadings.saveOccupancyReading).toHaveBeenCalledWith(
       occupancyReading
     )
     expect(deps.kafkaPublisher.publishOccupancyChanged).toHaveBeenCalledWith(
       occupancyReading
+    )
+    expect(deps.ledPublisher.publishSpotMode).toHaveBeenCalledWith(
+      'spot-05',
+      'occupied'
     )
   })
 })

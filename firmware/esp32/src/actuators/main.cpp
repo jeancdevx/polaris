@@ -179,7 +179,7 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
 
     const int angle =
         slot.angle >= 0 ? slot.angle : polaris::hw::kServoOpenAngle;
-    if (!servo.setAngle(angle, slot.forceRewrite)) {
+    if (!servo.setAngle(angle, true)) {
       publishServoStatus(servoId,
                          servoState(servo),
                          "rejected",
@@ -212,7 +212,7 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
   if (strcmp(slot.action, "close") == 0) {
     const int angle =
         slot.angle >= 0 ? slot.angle : polaris::hw::kServoClosedAngle;
-    if (!servo.setAngle(angle, slot.forceRewrite)) {
+    if (!servo.setAngle(angle, true)) {
       publishServoStatus(servoId,
                          servoState(servo),
                          "rejected",

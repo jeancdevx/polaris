@@ -41,14 +41,14 @@ export const cognitoAdminExists = async (
   client = new CognitoIdentityProviderClient({ region: config.awsRegion })
 ): Promise<boolean> => {
   try {
-    await client.send(
+    const user = await client.send(
       new AdminGetUserCommand({
         UserPoolId: config.userPoolId,
         Username: config.adminEmail
       })
     )
 
-    return true
+    return user.UserStatus === 'CONFIRMED'
   } catch (error) {
     if (error instanceof UserNotFoundException) {
       return false
@@ -58,23 +58,10 @@ export const cognitoAdminExists = async (
   }
 }
 
-export const provisionCognitoAdmin = async (
+const setPermanentAdminPassword = async (
   config: CognitoAdminConfig,
-  client = new CognitoIdentityProviderClient({ region: config.awsRegion })
+  client: CognitoIdentityProviderClient
 ): Promise<void> => {
-  await client.send(
-    new AdminCreateUserCommand({
-      UserPoolId: config.userPoolId,
-      Username: config.adminEmail,
-      UserAttributes: [
-        { Name: 'email', Value: config.adminEmail },
-        { Name: 'email_verified', Value: 'true' },
-        { Name: 'preferred_username', Value: config.adminUserId }
-      ],
-      MessageAction: 'SUPPRESS'
-    })
-  )
-
   await client.send(
     new AdminSetUserPasswordCommand({
       UserPoolId: config.userPoolId,
@@ -83,12 +70,53 @@ export const provisionCognitoAdmin = async (
       Permanent: true
     })
   )
+}
 
-  await client.send(
-    new AdminAddUserToGroupCommand({
-      UserPoolId: config.userPoolId,
-      Username: config.adminEmail,
-      GroupName: 'admin'
-    })
-  )
+export const provisionCognitoAdmin = async (
+  config: CognitoAdminConfig,
+  client = new CognitoIdentityProviderClient({ region: config.awsRegion })
+): Promise<void> => {
+  let created = false
+
+  try {
+    await client.send(
+      new AdminCreateUserCommand({
+        UserPoolId: config.userPoolId,
+        Username: config.adminEmail,
+        TemporaryPassword: config.adminPassword,
+        UserAttributes: [
+          { Name: 'email', Value: config.adminEmail },
+          { Name: 'email_verified', Value: 'true' },
+          { Name: 'preferred_username', Value: config.adminUserId }
+        ],
+        MessageAction: 'SUPPRESS'
+      })
+    )
+    created = true
+  } catch (error) {
+    const name =
+      error && typeof error === 'object' && 'name' in error
+        ? String((error as { name: string }).name)
+        : ''
+    if (name !== 'UsernameExistsException') {
+      throw error
+    }
+  }
+
+  await setPermanentAdminPassword(config, client)
+
+  try {
+    await client.send(
+      new AdminAddUserToGroupCommand({
+        UserPoolId: config.userPoolId,
+        Username: config.adminEmail,
+        GroupName: 'admin'
+      })
+    )
+  } catch (error) {
+    if (created) {
+      throw error
+    }
+    // User already in group after a prior partial provision.
+  }
 }

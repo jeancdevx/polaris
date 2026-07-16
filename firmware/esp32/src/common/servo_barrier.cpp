@@ -85,23 +85,17 @@ bool ServoBarrier::setAngle(int angle, bool forceRewrite) {
     return false;
   }
 
-  if (forceRewrite && angle_ == angle) {
-    const int nudge =
-        angle == polaris::hw::kServoOpenAngle ? polaris::hw::kServoClosedAngle
-                                             : polaris::hw::kServoOpenAngle;
-    servo_.writeMicroseconds(angleToUs(nudge));
-    delay(20);
-  }
+  const int nudge = angle <= 45 ? 90 : 0;
+  servo_.writeMicroseconds(angleToUs(nudge));
+  delay(50);
 
   angle_ = angle;
   const int us = angleToUs(angle_);
-  // writeMicroseconds es más fiable que write() tras WiFi en ESP32.
   servo_.writeMicroseconds(us);
-  Serial.printf("[servo] write pin=%d angle=%d us=%d%s\n",
+  Serial.printf("[servo] write pin=%d angle=%d us=%d (nudged)\n",
                 pin_,
                 angle_,
-                us,
-                forceRewrite ? " force" : "");
+                us);
   return true;
 }
 

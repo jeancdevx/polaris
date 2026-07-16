@@ -1,8 +1,13 @@
 resource "random_password" "bootstrap_admin" {
   count = var.bootstrap_admin_password == null ? 1 : 0
 
-  length  = 24
-  special = true
+  length           = 24
+  special          = true
+  min_lower        = 1
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
+  override_special = "!@#$%^&*"
 }
 
 resource "aws_cloudwatch_log_group" "db_bootstrap" {

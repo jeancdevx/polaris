@@ -1,6 +1,8 @@
 import { SensorReadingsRepository } from './repositories/sensor-readings.repository.js'
 
 import type { OccupancyChangedIoTEvent } from './iot-event.js'
+import { ledModeForStatus } from './led-mode.js'
+import { IotLedCommandPublisher } from './publishers/iot-led-command.publisher.js'
 import { KafkaOccupancyPublisher } from './publishers/kafka-occupancy.publisher.js'
 import type { SensorDataProcessorEnv } from './read-env.js'
 
@@ -10,6 +12,7 @@ export type SensorDataProcessorResponse = Readonly<{
   deviceId: string
   dynamoPersisted: boolean
   kafkaPublished: boolean
+  ledCommandPublished: boolean
   timestamp: string
 }>
 
@@ -17,6 +20,7 @@ export type ProcessSensorReadingDependencies = Readonly<{
   env: SensorDataProcessorEnv
   sensorReadings: SensorReadingsRepository
   kafkaPublisher: KafkaOccupancyPublisher
+  ledPublisher: IotLedCommandPublisher
 }>
 
 export const createProcessSensorReadingDependencies = (
@@ -27,7 +31,8 @@ export const createProcessSensorReadingDependencies = (
     tableName: env.sensorReadingsTableName,
     ttlDays: env.sensorReadingsTtlDays
   }),
-  kafkaPublisher: new KafkaOccupancyPublisher(env.kafkaClientId)
+  kafkaPublisher: new KafkaOccupancyPublisher(env.kafkaClientId),
+  ledPublisher: new IotLedCommandPublisher(env)
 })
 
 export const processSensorReading = async (
@@ -37,12 +42,24 @@ export const processSensorReading = async (
   const record = await deps.sensorReadings.saveOccupancyReading(reading)
   await deps.kafkaPublisher.publishOccupancyChanged(reading)
 
+  // Publish LED immediately so zone ESP32s update even if event-processor /
+  // Kafka consumers are delayed or unhealthy.
+  const status =
+    reading.status === 'occupied' || reading.status === 'reserved'
+      ? reading.status
+      : 'free'
+  const ledCommandPublished = await deps.ledPublisher.publishSpotMode(
+    reading.spotId,
+    ledModeForStatus(status)
+  )
+
   return {
     spotId: reading.spotId,
     status: reading.status,
     deviceId: reading.deviceId,
     dynamoPersisted: true,
     kafkaPublished: true,
+    ledCommandPublished,
     timestamp: record.timestamp
   }
 }

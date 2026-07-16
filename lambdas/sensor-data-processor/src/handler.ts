@@ -59,7 +59,8 @@ export const handler: Handler<
         status: result.status,
         deviceId: result.deviceId,
         dynamoPersisted: result.dynamoPersisted,
-        kafkaPublished: result.kafkaPublished
+        kafkaPublished: result.kafkaPublished,
+        ledCommandPublished: result.ledCommandPublished
       })
 
       return result

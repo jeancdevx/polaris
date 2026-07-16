@@ -60,11 +60,12 @@ export class SensorOccupancyHandler {
         !result.spot.userId
       ) {
         await this.auditLogRepository.insert({
-          eventType: 'anomaly_reserved_occupancy_without_user',
+          eventType: 'anomaly_unregistered_occupancy',
           parkingSpotId: event.spotId,
           metadata: {
             deviceId: event.deviceId,
-            sensorType: event.sensorType
+            sensorType: event.sensorType,
+            previousStatus: result.previousStatus
           },
           timestamp: new Date(event.occurredAt)
         })

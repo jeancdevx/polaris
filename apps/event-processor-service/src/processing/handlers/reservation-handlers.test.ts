@@ -19,12 +19,16 @@ describe('ReservationCreatedHandler', () => {
     const parkingRedisStore = {
       getTotalAvailable: vi.fn(async () => 7)
     }
+    const auditLogRepository = {
+      insert: vi.fn(async () => undefined)
+    }
 
     const handler = new ReservationCreatedHandler(
       eventBridgePublisher as never,
       ledCommands as never,
       displayCommands as never,
-      parkingRedisStore as never
+      parkingRedisStore as never,
+      auditLogRepository as never
     )
 
     await handler.handle({
@@ -42,6 +46,12 @@ describe('ReservationCreatedHandler', () => {
       'blink_blue'
     )
     expect(displayCommands.publishIdleFreeSpots).toHaveBeenCalledWith(7)
+    expect(auditLogRepository.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: KAFKA_TOPICS.RESERVATION_CREATED,
+        parkingSpotId: 'spot-03'
+      })
+    )
     expect(eventBridgePublisher.publishReservationEvent).toHaveBeenCalledWith({
       detailType: KAFKA_TOPICS.RESERVATION_CREATED,
       eventName: KAFKA_TOPICS.RESERVATION_CREATED,
@@ -71,12 +81,16 @@ describe('ReservationCreatedHandler', () => {
     const parkingRedisStore = {
       getTotalAvailable: vi.fn(async () => 7)
     }
+    const auditLogRepository = {
+      insert: vi.fn(async () => undefined)
+    }
 
     const handler = new ReservationCreatedHandler(
       eventBridgePublisher as never,
       ledCommands as never,
       displayCommands as never,
-      parkingRedisStore as never
+      parkingRedisStore as never,
+      auditLogRepository as never
     )
 
     await expect(
@@ -113,12 +127,16 @@ describe('ReservationCancelledHandler', () => {
       markReservationCancelled: vi.fn(async () => undefined),
       getTotalAvailable: vi.fn(async () => 8)
     }
+    const auditLogRepository = {
+      insert: vi.fn(async () => undefined)
+    }
 
     const handler = new ReservationCancelledHandler(
       eventBridgePublisher as never,
       ledCommands as never,
       displayCommands as never,
-      parkingRedisStore as never
+      parkingRedisStore as never,
+      auditLogRepository as never
     )
 
     await handler.handle({

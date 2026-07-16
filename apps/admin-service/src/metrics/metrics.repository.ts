@@ -42,7 +42,7 @@ export class MetricsRepository {
         repository
           .createQueryBuilder('reservation')
           .where('reservation.status = :status', { status: 'cancelled' })
-          .andWhere('reservation.cancelled_at BETWEEN :from AND :to', {
+          .andWhere('reservation.cancelledAt BETWEEN :from AND :to', {
             from: query.from,
             to: query.to
           })
@@ -50,7 +50,7 @@ export class MetricsRepository {
         repository
           .createQueryBuilder('reservation')
           .where('reservation.status = :status', { status: 'expired' })
-          .andWhere('reservation.expired_at BETWEEN :from AND :to', {
+          .andWhere('reservation.expiredAt BETWEEN :from AND :to', {
             from: query.from,
             to: query.to
           })
@@ -82,14 +82,14 @@ export class MetricsRepository {
 
     const grouped = await repository
       .createQueryBuilder('audit')
-      .select('audit.event_type', 'eventType')
+      .select('audit.eventType', 'eventType')
       .addSelect('COUNT(*)', 'count')
       .where('audit.timestamp BETWEEN :from AND :to', {
         from: query.from,
         to: query.to
       })
-      .groupBy('audit.event_type')
-      .orderBy('audit.event_type', 'ASC')
+      .groupBy('audit.eventType')
+      .orderBy('audit.eventType', 'ASC')
       .getRawMany<EventTypeCountRow>()
 
     const byEventType: Record<string, number> = {}

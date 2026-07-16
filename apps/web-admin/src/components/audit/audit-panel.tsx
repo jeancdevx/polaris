@@ -34,6 +34,10 @@ import { useEffect, useState, type FormEvent } from 'react'
 import type { AuditLog } from '@polaris/shared-types'
 
 import { listAuditLogs } from '@/lib/admin/audit-api'
+import {
+  AUDIT_EVENT_TYPE_OPTIONS,
+  formatAuditEventType
+} from '@/lib/admin/audit-event-labels'
 
 export const AuditPanel = () => {
   const [items, setItems] = useState<AuditLog[]>([])
@@ -109,12 +113,26 @@ export const AuditPanel = () => {
             <FieldGroup className='grid gap-4 md:grid-cols-3'>
               <Field>
                 <FieldLabel htmlFor='eventType'>Tipo de evento</FieldLabel>
-                <Input
-                  id='eventType'
-                  placeholder='eventType'
-                  value={eventType}
-                  onChange={event => setEventType(event.target.value)}
-                />
+                <Select
+                  value={eventType || 'all'}
+                  onValueChange={value =>
+                    setEventType(value === 'all' ? '' : value)
+                  }
+                >
+                  <SelectTrigger id='eventType'>
+                    <SelectValue placeholder='Todos' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value='all'>Todos</SelectItem>
+                      {AUDIT_EVENT_TYPE_OPTIONS.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </Field>
               <Field>
                 <FieldLabel htmlFor='userId'>Usuario</FieldLabel>
@@ -220,7 +238,9 @@ export const AuditPanel = () => {
                     <TableCell className='text-muted-foreground'>
                       {new Date(item.timestamp).toLocaleString('es-ES')}
                     </TableCell>
-                    <TableCell>{item.eventType}</TableCell>
+                    <TableCell>
+                      {formatAuditEventType(item.eventType)}
+                    </TableCell>
                     <TableCell className='font-mono text-xs'>
                       {item.userId ?? '—'}
                     </TableCell>

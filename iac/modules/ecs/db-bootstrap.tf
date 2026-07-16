@@ -61,7 +61,7 @@ resource "aws_ecs_task_definition" "db_bootstrap" {
         { name = "BOOTSTRAP_ADMIN_USER_ID", value = var.bootstrap_admin_user_id }
       ], local.database_environment)
 
-      secrets = [
+      secrets = concat([
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.db_bootstrap_env.arn}:REDIS_URL::"
@@ -70,7 +70,7 @@ resource "aws_ecs_task_definition" "db_bootstrap" {
           name      = "BOOTSTRAP_ADMIN_PASSWORD"
           valueFrom = "${aws_secretsmanager_secret.db_bootstrap_env.arn}:BOOTSTRAP_ADMIN_PASSWORD::"
         }
-      ]
+      ], local.database_credential_secrets)
 
       logConfiguration = {
         logDriver = "awslogs"

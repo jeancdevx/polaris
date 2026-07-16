@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select'
 import { useEffect, useState, type FormEvent } from 'react'
 
+import { formatAuditEventType } from '@/lib/admin/audit-event-labels'
 import { getMetrics } from '@/lib/admin/metrics-api'
 import type { AdminMetricsResponse } from '@/lib/admin/types'
 
@@ -223,7 +224,9 @@ export const MetricsPanel = () => {
                 ([type, count]) => (
                   <Card key={type} size='sm'>
                     <CardContent className='flex items-center justify-between pt-4'>
-                      <span className='font-mono text-xs'>{type}</span>
+                      <span className='text-xs'>
+                        {formatAuditEventType(type)}
+                      </span>
                       <span className='font-semibold tabular-nums'>
                         {count}
                       </span>

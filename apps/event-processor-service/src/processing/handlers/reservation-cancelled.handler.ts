@@ -3,6 +3,8 @@ import { Injectable, Logger } from '@nestjs/common'
 import type { ReservationCancelledEvent } from '@polaris/kafka'
 import { KAFKA_TOPICS } from '@polaris/shared-types'
 
+import { AuditLogRepository } from '../infrastructure/audit-log.repository.js'
+import { insertAuditLogSafe } from '../infrastructure/audit-log.safe.js'
 import { EventBridgePublisherService } from '../infrastructure/eventbridge-publisher.service.js'
 import { IotDisplayCommandPublisher } from '../infrastructure/iot-display-command.publisher.js'
 import { IotLedCommandPublisher } from '../infrastructure/iot-led-command.publisher.js'
@@ -17,7 +19,8 @@ export class ReservationCancelledHandler {
     private readonly eventBridgePublisher: EventBridgePublisherService,
     private readonly ledCommands: IotLedCommandPublisher,
     private readonly displayCommands: IotDisplayCommandPublisher,
-    private readonly parkingRedisStore: ParkingRedisStore
+    private readonly parkingRedisStore: ParkingRedisStore,
+    private readonly auditLogRepository: AuditLogRepository
   ) {}
 
   async handle(event: ReservationCancelledEvent): Promise<void> {
@@ -27,6 +30,20 @@ export class ReservationCancelledHandler {
     await this.displayCommands.publishIdleFreeSpots(
       await this.parkingRedisStore.getTotalAvailable()
     )
+
+    const expired = event.reason === 'expired'
+    await insertAuditLogSafe(this.auditLogRepository, {
+      eventType: expired
+        ? 'reservation_expired'
+        : KAFKA_TOPICS.RESERVATION_CANCELLED,
+      userId: event.userId,
+      parkingSpotId: event.parkingSpotId,
+      metadata: {
+        reservationId: event.reservationId,
+        reason: event.reason
+      },
+      timestamp: new Date(event.occurredAt)
+    })
 
     try {
       await this.eventBridgePublisher.publishReservationEvent({

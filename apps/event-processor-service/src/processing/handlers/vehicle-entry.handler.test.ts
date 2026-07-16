@@ -30,13 +30,17 @@ describe('VehicleEntryHandler', () => {
     const displayCommands = {
       publishIdleFreeSpots: vi.fn(async () => true)
     }
+    const auditLogRepository = {
+      insert: vi.fn(async () => undefined)
+    }
 
     const handler = new VehicleEntryHandler(
       parkingRepository as never,
       parkingRedisStore as never,
       eventBridgePublisher as never,
       ledCommands as never,
-      displayCommands as never
+      displayCommands as never,
+      auditLogRepository as never
     )
 
     await handler.handle({
@@ -52,6 +56,13 @@ describe('VehicleEntryHandler', () => {
     })
 
     expect(parkingRedisStore.syncSpotTransition).toHaveBeenCalled()
+    expect(auditLogRepository.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: KAFKA_TOPICS.VEHICLE_ENTRY,
+        parkingSpotId: 'spot-01',
+        userId: 'usr-12345'
+      })
+    )
     expect(
       eventBridgePublisher.publishProcessedParkingEvent
     ).toHaveBeenCalledWith(

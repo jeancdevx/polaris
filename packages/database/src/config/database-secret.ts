@@ -116,6 +116,25 @@ const hasCompleteDatabaseEnv = (env: NodeJS.ProcessEnv): boolean =>
     env.DB_PASSWORD != null
   )
 
+const missingDatabaseKeys = (env: NodeJS.ProcessEnv): string[] => {
+  const missing: string[] = []
+
+  if (!env.DB_HOST?.trim()) {
+    missing.push('DB_HOST')
+  }
+  if (!env.DB_NAME?.trim()) {
+    missing.push('DB_NAME')
+  }
+  if (!env.DB_USERNAME?.trim()) {
+    missing.push('DB_USERNAME')
+  }
+  if (env.DB_PASSWORD == null) {
+    missing.push('DB_PASSWORD')
+  }
+
+  return missing
+}
+
 export const hydrateDatabaseEnv = async (
   options: HydrateDatabaseEnvOptions = {}
 ): Promise<void> => {
@@ -141,6 +160,13 @@ export const hydrateDatabaseEnv = async (
   setIfMissing(env, 'DB_NAME', secret.databaseName)
   setIfMissing(env, 'DB_USERNAME', secret.username)
   setIfMissing(env, 'DB_PASSWORD', secret.password)
+
+  const missing = missingDatabaseKeys(env)
+  if (missing.length > 0) {
+    throw new Error(
+      `Database secret hydrated incompletely; missing ${missing.join(', ')} (DB_SECRET_ARN is set)`
+    )
+  }
 }
 
 export const resetDatabaseSecretCacheForTests = (): void => {

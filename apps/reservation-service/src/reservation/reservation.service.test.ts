@@ -4,7 +4,6 @@ import { Test, type TestingModule } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RedisService } from './redis.service.js'
-import { ReservationEventPublisher } from './reservation-event.publisher.js'
 import { reservationConfig } from './reservation.config.js'
 import { parkingLockKey } from './reservation.constants.js'
 import { ReservationRepository } from './reservation.repository.js'
@@ -64,13 +63,6 @@ describe('ReservationService', () => {
         {
           provide: ReservationRepository,
           useValue: repository
-        },
-        {
-          provide: ReservationEventPublisher,
-          useValue: {
-            publishCreated: vi.fn().mockResolvedValue(undefined),
-            publishCancelled: vi.fn().mockResolvedValue(undefined)
-          }
         }
       ]
     }).compile()
@@ -88,46 +80,6 @@ describe('ReservationService', () => {
     expect(reservation.parkingSpotId).toBe('spot-07')
     expect(repository.insertActiveReservation).toHaveBeenCalledOnce()
     expect(redisClient.del).toHaveBeenCalledWith(parkingLockKey('spot-07'))
-  })
-
-  it('returns reservation when Kafka publish fails after persistence', async () => {
-    const publisher = {
-      publishCreated: vi.fn().mockRejectedValue(new Error('kafka down')),
-      publishCancelled: vi.fn()
-    }
-
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule.forRoot({ load: [reservationConfig] })],
-      providers: [
-        ReservationService,
-        {
-          provide: RedisService,
-          useValue: {
-            getClient: vi.fn().mockResolvedValue(redisClient)
-          }
-        },
-        {
-          provide: ReservationRepository,
-          useValue: repository
-        },
-        {
-          provide: ReservationEventPublisher,
-          useValue: publisher
-        }
-      ]
-    }).compile()
-
-    const resilientService = moduleRef.get(ReservationService)
-
-    await expect(
-      resilientService.create('usr-12345', {
-        parkingSpotId: 'spot-07',
-        reservationDate: '2025-06-19T14:00:00.000Z'
-      })
-    ).resolves.toMatchObject({
-      reservationId: 'res-test0001',
-      userId: 'usr-12345'
-    })
   })
 
   it('returns reservation when lock release fails after persistence', async () => {

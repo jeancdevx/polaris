@@ -8,7 +8,7 @@ import { IotDisplayCommandPublisher } from '../infrastructure/iot-display-comman
 import { IotLedCommandPublisher } from '../infrastructure/iot-led-command.publisher.js'
 import { ParkingRedisStore } from '../parking/parking-redis.store.js'
 
-/** RDS/Redis ya los actualiza reservation-service; aquí solo reenviamos a EventBridge. */
+/** RDS/Redis ya los actualiza reservation-service; aquí reenviamos LED/LCD + EventBridge. */
 @Injectable()
 export class ReservationCancelledHandler {
   private readonly logger = new Logger(ReservationCancelledHandler.name)
@@ -23,23 +23,30 @@ export class ReservationCancelledHandler {
   async handle(event: ReservationCancelledEvent): Promise<void> {
     await this.parkingRedisStore.markReservationCancelled(event.parkingSpotId)
 
-    await this.eventBridgePublisher.publishReservationEvent({
-      detailType: KAFKA_TOPICS.RESERVATION_CANCELLED,
-      eventName: event.eventName,
-      aggregateId: event.aggregateId,
-      occurredAt: event.occurredAt,
-      reservationId: event.reservationId,
-      userId: event.userId,
-      parkingSpotId: event.parkingSpotId,
-      previousStatus: 'reserved',
-      currentStatus: 'free',
-      reason: event.reason
-    })
-
     await this.ledCommands.publishSpotMode(event.parkingSpotId, 'free')
     await this.displayCommands.publishIdleFreeSpots(
       await this.parkingRedisStore.getTotalAvailable()
     )
+
+    try {
+      await this.eventBridgePublisher.publishReservationEvent({
+        detailType: KAFKA_TOPICS.RESERVATION_CANCELLED,
+        eventName: event.eventName,
+        aggregateId: event.aggregateId,
+        occurredAt: event.occurredAt,
+        reservationId: event.reservationId,
+        userId: event.userId,
+        parkingSpotId: event.parkingSpotId,
+        previousStatus: 'reserved',
+        currentStatus: 'free',
+        reason: event.reason
+      })
+    } catch (error) {
+      this.logger.error(
+        `EventBridge publish failed for cancelled reservation ${event.reservationId}; LED/LCD already updated`,
+        error
+      )
+    }
 
     this.logger.log(
       `Reservation cancelled forwarded for ${event.parkingSpotId} (${event.reservationId})`

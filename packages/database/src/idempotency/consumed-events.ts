@@ -10,6 +10,11 @@ export type ConsumedEventIdentity = Readonly<{
   offset: string
 }>
 
+const sleep = (ms: number): Promise<void> =>
+  new Promise(resolve => {
+    setTimeout(resolve, ms)
+  })
+
 export const processConsumedEventOnce = async (
   dataSource: DataSource,
   identity: ConsumedEventIdentity,
@@ -39,6 +44,29 @@ export const processConsumedEventOnce = async (
   )
 
   if (claimedRows.length === 0) {
+    // Another in-flight attempt (often after a Kafka rebalance). Wait briefly
+    // for completion instead of throwing immediately and poisoning the consumer.
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const existing = await dataSource
+        .getRepository<ConsumedEventRow>('ConsumedEvent')
+        .findOne({
+          where: {
+            consumerName: identity.consumerName,
+            eventId: identity.eventId
+          }
+        })
+
+      if (existing?.status === 'completed') {
+        return 'duplicate'
+      }
+
+      if (!existing) {
+        break
+      }
+
+      await sleep(500)
+    }
+
     const existing = await dataSource
       .getRepository<ConsumedEventRow>('ConsumedEvent')
       .findOne({

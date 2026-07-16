@@ -77,24 +77,57 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
       this.config.get<string>('eventProcessor.clientId') ??
       'event-processor-service'
 
-    const kafka = createKafka({ clientId, logLevel: 0 })
-    this.consumer = await createConsumer(groupId, kafka)
+    const kafka = createKafka({ clientId, logLevel: 1 })
+    // Longer session than default 30s so MSK IAM token refresh / short DB
+    // stalls do not eject the member mid-handler.
+    this.consumer = await createConsumer(groupId, kafka, {
+      sessionTimeout: 90_000,
+      rebalanceTimeout: 120_000,
+      heartbeatInterval: 3_000,
+      maxWaitTimeInMs: 5_000
+    })
 
     this.consumer.on(this.consumer.events.GROUP_JOIN, event => {
       this.groupJoined = true
       this.logger.log(
-        `Joined consumer group ${event.payload.groupId} as member ${event.payload.memberId}`,
-        KafkaConsumerService.name
+        `Joined consumer group ${event.payload.groupId} as member ${event.payload.memberId}`
       )
       this.readyResolve?.()
       this.readyResolve = undefined
     })
 
+    this.consumer.on(this.consumer.events.REBALANCING, () => {
+      this.logger.warn('Kafka consumer rebalancing')
+    })
+
+    this.consumer.on(this.consumer.events.DISCONNECT, () => {
+      this.logger.warn('Kafka consumer disconnected')
+    })
+
+    this.consumer.on(this.consumer.events.CRASH, event => {
+      this.stoppedUnexpectedly = true
+      this.groupJoined = false
+      this.logger.error('Kafka consumer crashed', event.payload.error)
+    })
+
     const handler: KafkaMessageHandler = async (event, context) => {
-      await this.consumedEvents.processOnce(event, context, () =>
-        this.dispatcher.dispatch(event, context)
-      )
-      this.lastProcessedAt = new Date()
+      try {
+        const result = await this.consumedEvents.processOnce(
+          event,
+          context,
+          () => this.dispatcher.dispatch(event, context)
+        )
+        this.lastProcessedAt = new Date()
+        this.logger.log(
+          `Handled ${context.topic}:${context.partition}:${context.offset} (${result})`
+        )
+      } catch (error) {
+        this.logger.error(
+          `Handler failed for ${context.topic}:${context.partition}:${context.offset}`,
+          error
+        )
+        throw error
+      }
     }
 
     this.runPromise = runConsumer(this.consumer, ALL_KAFKA_TOPICS, handler, {

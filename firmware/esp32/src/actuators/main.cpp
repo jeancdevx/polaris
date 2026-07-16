@@ -282,6 +282,17 @@ void publishServoReady(const char* reason) {
                      true);
 }
 
+bool topicEndsWithServoId(const char* topic, const char* servoId) {
+  const size_t topicLen = strlen(topic);
+  const size_t idLen = strlen(servoId);
+  if (topicLen < idLen + 1) {
+    return false;
+  }
+  // Require "/<id>" exact suffix so "exit-servo" never matches "entry-servo".
+  return topic[topicLen - idLen - 1] == '/' &&
+         strcmp(topic + topicLen - idLen, servoId) == 0;
+}
+
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   // Status feedback must not be treated as a command.
   if (strstr(topic, "/status") != nullptr) {
@@ -301,24 +312,33 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   const bool hasAngle = doc["angle"].is<int>();
   const int angle = hasAngle ? doc["angle"].as<int>() : -1;
   const char* commandId = doc["commandId"] | "";
+  const char* payloadDeviceId = doc["deviceId"] | "";
 
   const char* servoId = nullptr;
   PendingServoCommand* pending = nullptr;
   ServoBarrier* servo = nullptr;
 
-  if (strstr(topic, "/" POLARIS_ENTRY_SERVO_ID) != nullptr ||
-      strcmp(topic + strlen(topic) - strlen(POLARIS_ENTRY_SERVO_ID),
-             POLARIS_ENTRY_SERVO_ID) == 0) {
+  // Prefer payload deviceId (source of truth from cloud / entry_io).
+  if (strcmp(payloadDeviceId, POLARIS_ENTRY_SERVO_ID) == 0) {
     servoId = POLARIS_ENTRY_SERVO_ID;
     pending = &gPendingEntry;
     servo = &gEntryServo;
-  } else if (strstr(topic, "/" POLARIS_EXIT_SERVO_ID) != nullptr ||
-             strcmp(topic + strlen(topic) - strlen(POLARIS_EXIT_SERVO_ID),
-                    POLARIS_EXIT_SERVO_ID) == 0) {
+  } else if (strcmp(payloadDeviceId, POLARIS_EXIT_SERVO_ID) == 0) {
+    servoId = POLARIS_EXIT_SERVO_ID;
+    pending = &gPendingExit;
+    servo = &gExitServo;
+  } else if (topicEndsWithServoId(topic, POLARIS_ENTRY_SERVO_ID)) {
+    servoId = POLARIS_ENTRY_SERVO_ID;
+    pending = &gPendingEntry;
+    servo = &gEntryServo;
+  } else if (topicEndsWithServoId(topic, POLARIS_EXIT_SERVO_ID)) {
     servoId = POLARIS_EXIT_SERVO_ID;
     pending = &gPendingExit;
     servo = &gExitServo;
   } else {
+    Serial.printf("[actuators] Ignored servo command (unknown target topic=%s deviceId=%s)\n",
+                  topic,
+                  payloadDeviceId[0] != '\0' ? payloadDeviceId : "(none)");
     return;
   }
 
@@ -544,8 +564,15 @@ void loop() {
   const unsigned long nowMs = millis();
   ensureMqtt();
 
-  applyServoCommand(POLARIS_ENTRY_SERVO_ID, gEntryServo, gPendingEntry);
-  applyServoCommand(POLARIS_EXIT_SERVO_ID, gExitServo, gPendingExit);
+  // Serialize motion: never move both SG90s in the same tick (shared 5V).
+  // Prefer exit when both are queued so exit RFID is not starved by entry close.
+  if (gPendingExit.pending) {
+    gEntryServo.reassertLastCommand();
+    applyServoCommand(POLARIS_EXIT_SERVO_ID, gExitServo, gPendingExit);
+  } else if (gPendingEntry.pending) {
+    gExitServo.reassertLastCommand();
+    applyServoCommand(POLARIS_ENTRY_SERVO_ID, gEntryServo, gPendingEntry);
+  }
 
   if (nowMs - gLastZonePollMs >= polaris::hw::kZonePollMs) {
     gLastZonePollMs = nowMs;

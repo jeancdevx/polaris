@@ -61,6 +61,7 @@ struct PendingServoCommand {
   char action[8] = {};
   char commandId[96] = {};
   bool hasCommandId = false;
+  bool forceRewrite = false;
   int angle = -1;  // <0 → use hardware default for action
 };
 
@@ -138,11 +139,13 @@ const char* servoState(const ServoBarrier& servo) {
 void queueServoCommand(PendingServoCommand& slot,
                        const char* action,
                        int angle,
-                       const char* commandId) {
+                       const char* commandId,
+                       bool forceRewrite = false) {
   slot.pending = true;
   strncpy(slot.action, action, sizeof(slot.action) - 1);
   slot.action[sizeof(slot.action) - 1] = '\0';
   slot.hasCommandId = commandId != nullptr && commandId[0] != '\0';
+  slot.forceRewrite = forceRewrite;
   if (slot.hasCommandId) {
     strncpy(slot.commandId, commandId, sizeof(slot.commandId) - 1);
     slot.commandId[sizeof(slot.commandId) - 1] = '\0';
@@ -176,7 +179,7 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
 
     const int angle =
         slot.angle >= 0 ? slot.angle : polaris::hw::kServoOpenAngle;
-    if (!servo.setAngle(angle)) {
+    if (!servo.setAngle(angle, slot.forceRewrite)) {
       publishServoStatus(servoId,
                          servoState(servo),
                          "rejected",
@@ -209,7 +212,7 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
   if (strcmp(slot.action, "close") == 0) {
     const int angle =
         slot.angle >= 0 ? slot.angle : polaris::hw::kServoClosedAngle;
-    if (!servo.setAngle(angle)) {
+    if (!servo.setAngle(angle, slot.forceRewrite)) {
       publishServoStatus(servoId,
                          servoState(servo),
                          "rejected",
@@ -316,7 +319,8 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   }
 
   const bool legacy = commandId[0] == '\0';
-  if (!legacy && hasSeenCommandId(commandId)) {
+  const bool force = doc["force"] | false;
+  if (!legacy && !force && hasSeenCommandId(commandId)) {
     publishServoStatus(servoId,
                        servoState(*servo),
                        "duplicate",
@@ -379,7 +383,7 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
                 action,
                 angle,
                 legacy ? "legacy-missing" : commandId);
-  queueServoCommand(*pending, action, angle, commandId);
+  queueServoCommand(*pending, action, angle, commandId, force);
 }
 
 WifiMqttConfig makeConfig() {
@@ -464,6 +468,8 @@ void ensureMqtt() {
       // Re-attach tras reconexión WiFi (LEDC puede quedar inválido).
       gEntryServo.begin();
       gExitServo.begin();
+      gEntryServo.reassertLastCommand();
+      gExitServo.reassertLastCommand();
       if (gClient->connectMqtt()) {
         subscribeCommands(*gClient);
         publishServoReady("mqtt_reconnect");

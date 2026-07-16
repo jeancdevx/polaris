@@ -55,6 +55,18 @@ void LcdDisplay::showProximityPrompt() {
   writeLines("Acerque su", "tarjeta RFID");
 }
 
+void LcdDisplay::showVehicleDetected() {
+  writeLines("Vehiculo", "detectado");
+}
+
+void LcdDisplay::showValidating() {
+  writeLines("Validando...", "Espere");
+}
+
+void LcdDisplay::showPassageInProgress() {
+  writeLines("Paso en curso", "Espere salida");
+}
+
 void LcdDisplay::showLines(const char* line1, const char* line2, bool backlight) {
   setBacklight(backlight);
   writeLines(line1, line2);

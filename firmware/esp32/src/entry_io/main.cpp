@@ -60,6 +60,26 @@ struct PendingCloseCommand {
 PendingCloseCommand gPendingEntryClose;
 PendingCloseCommand gPendingExitClose;
 constexpr unsigned long kCloseRetryMs = 2'000;
+unsigned long gCloudLcdUntilMs = 0;
+bool gCloudLcdActive = false;
+constexpr unsigned long kCloudLcdHoldMs = 8'000;
+
+bool shouldPreserveCloudLcd(unsigned long nowMs) {
+  if (!gCloudLcdActive) {
+    return false;
+  }
+  if (nowMs >= gCloudLcdUntilMs) {
+    gCloudLcdActive = false;
+    return false;
+  }
+  return true;
+}
+
+void showLocalLcd(void (*showFn)()) {
+  if (!shouldPreserveCloudLcd(millis())) {
+    showFn();
+  }
+}
 
 bool isDistanceUnknown(int distanceCm) {
   return distanceCm <= 0 || distanceCm >= 900;
@@ -109,7 +129,8 @@ void noteGoodApproach(unsigned long nowMs, int distanceCm) {
 
 bool publishServoCommandWithId(const char* servoId,
                                const char* action,
-                               const char* commandId) {
+                               const char* commandId,
+                               bool force = false) {
   if (gClient == nullptr || !gClient->isMqttConnected()) {
     return false;
   }
@@ -119,13 +140,17 @@ bool publishServoCommandWithId(const char* servoId,
   doc["action"] = action;
   doc["commandId"] = commandId;
   doc["timestamp"] = polaris::time::nowEpochMs();
+  if (force) {
+    doc["force"] = true;
+  }
 
   const bool published =
       gClient->publishJson(polaris::mqtt::servoCommandTopic(servoId).c_str(), doc);
-  Serial.printf("[entry_io] Servo command %s action=%s id=%s publish=%s\n",
+  Serial.printf("[entry_io] Servo command %s action=%s id=%s force=%d publish=%s\n",
                 servoId,
                 action,
                 commandId,
+                force ? 1 : 0,
                 published ? "ok" : "failed");
   return published;
 }
@@ -138,20 +163,24 @@ PendingCloseCommand& pendingCloseFor(const char* servoId) {
 
 bool requestServoClose(const char* servoId) {
   PendingCloseCommand& pending = pendingCloseFor(servoId);
+  const bool isRetry = pending.active;
+
   if (!pending.active) {
-    snprintf(pending.commandId,
-             sizeof(pending.commandId),
-             "%s:%08lx:%lu",
-             POLARIS_DEVICE_ID,
-             static_cast<unsigned long>(gCommandBootNonce),
-             static_cast<unsigned long>(++gCommandSequence));
     pending.active = true;
     pending.attempts = 0;
   }
 
+  snprintf(pending.commandId,
+           sizeof(pending.commandId),
+           "%s:%08lx:%lu",
+           POLARIS_DEVICE_ID,
+           static_cast<unsigned long>(gCommandBootNonce),
+           static_cast<unsigned long>(++gCommandSequence));
+
   pending.lastPublishMs = millis();
   pending.attempts++;
-  return publishServoCommandWithId(servoId, "close", pending.commandId);
+  return publishServoCommandWithId(
+      servoId, "close", pending.commandId, isRetry && pending.attempts > 1);
 }
 
 void servicePendingClose(const char* servoId,
@@ -167,7 +196,11 @@ void closeEntryGateSafe(const char* reason) {
   requestServoClose(POLARIS_ENTRY_SERVO_ID);
   gClearedSinceMs = 0;
   gPassageStalledPublished = false;
-  gLcd.showIdle();
+  if (isEntryPresenceLatched(millis())) {
+    showLocalLcd([]() { gLcd.showPassageInProgress(); });
+  } else {
+    showLocalLcd([]() { gLcd.showIdle(); });
+  }
   Serial.printf("[entry_io] Entry gate close requested (%s)\n", reason);
 }
 
@@ -246,10 +279,11 @@ void handleServoStatus(const char* servoId, JsonDocument& doc) {
         isWithinApproachRelease(gLastGoodDistanceCm);
     if (!vehicleStillThere) {
       resetEntryPresenceCycle("entry_gate_closed");
-      gLcd.showIdle();
+      showLocalLcd([]() { gLcd.showIdle(); });
     } else {
       gVehiclePresent = true;
       gEntryRfidConsumed = true;
+      showLocalLcd([]() { gLcd.showPassageInProgress(); });
       Serial.println(
           "[entry_io] Entry gate closed — RFID still locked until vehicle leaves");
     }
@@ -306,9 +340,11 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
     const char* line2 = doc["line2"] | "";
     const bool backlight = doc["backlight"] | true;
     if (line1[0] != '\0' || line2[0] != '\0') {
+      gCloudLcdActive = true;
+      gCloudLcdUntilMs = millis() + kCloudLcdHoldMs;
       gLcd.showLines(line1, line2, backlight);
-    } else {
-      gLcd.showIdle();
+    } else if (!idle) {
+      showLocalLcd([]() { gLcd.showIdle(); });
     }
   }
 }
@@ -450,7 +486,7 @@ void handleUltrasonic(unsigned long nowMs) {
       if (!gEntryRfidConsumed && !gProximityActive) {
         gProximityActive = true;
         publishProximity(distance);
-        gLcd.showProximityPrompt();
+        showLocalLcd([]() { gLcd.showVehicleDetected(); });
         Serial.printf("[entry_io] Proximity detected %d cm (RFID armed)\n", distance);
       }
       gProximitySinceMs = nowMs;
@@ -471,7 +507,7 @@ void handleUltrasonic(unsigned long nowMs) {
       if (gProximityClearReads >= polaris::hw::kProximityClearConfirmReads &&
           (nowMs - gProximityGoneSinceMs) >= polaris::hw::kProximityClearHoldMs) {
         resetEntryPresenceCycle("vehicle_left");
-        gLcd.showIdle();
+        showLocalLcd([]() { gLcd.showIdle(); });
         Serial.printf("[entry_io] Proximity cleared %d cm\n", distance);
       }
     }
@@ -507,9 +543,14 @@ void handleUltrasonic(unsigned long nowMs) {
   }
 
   const bool clearedLongEnough = (nowMs - gClearedSinceMs) >= polaris::hw::kClearedHoldMs;
-  const bool safetyClear = (nowMs - gLastSafetyBlockMs) >= polaris::hw::kClearedHoldMs;
+  const bool openLongEnough =
+      gGateOpenedMs > 0 &&
+      (nowMs - gGateOpenedMs) >= polaris::hw::kEntryMinOpenBeforeClearMs;
+  const bool safetyClear =
+      gLastSafetyBlockMs == 0 ||
+      (nowMs - gLastSafetyBlockMs) >= polaris::hw::kSafetyClearAfterBlockMs;
 
-  if (clearedLongEnough && safetyClear) {
+  if (clearedLongEnough && openLongEnough && safetyClear) {
     closeEntryGateSafe("ultrasonic_cleared");
   }
 }
@@ -571,6 +612,7 @@ bool tryConsumeEntryRfid(const String& uid, const char* via) {
   gEntryRfidConsumed = true;
   gProximityActive = false;
   publishRfidScan(uid, "entry");
+  showLocalLcd([]() { gLcd.showValidating(); });
   Serial.printf(
       "[entry_io] Entry RFID consumed via=%s uid=%s dist=%dcm good=%dcm\n",
       via,
@@ -595,6 +637,14 @@ void handleExitRfid() {
   }
 
   const unsigned long nowMs = millis();
+
+  if (gEntryRfidConsumed && isEntryPresenceLatched(nowMs)) {
+    Serial.printf(
+        "[entry_io] Exit RFID ignored — entry passage locked until vehicle leaves uid=%s\n",
+        uid.c_str());
+    return;
+  }
+
   // Con presencia de entrada armada, el RC522 de salida a menudo captura la
   // misma tarjeta (antenas cerca / bus SPI). Tratarla como lectura de entrada.
   if (isEntryPresenceLatched(nowMs) && !gEntryRfidConsumed) {

@@ -104,3 +104,27 @@ variable "iot_data_endpoint" {
   type        = string
   default     = null
 }
+
+variable "rds_cluster_endpoint" {
+  description = "Aurora cluster endpoint for authoritative LED sync"
+  type        = string
+  default     = null
+}
+
+variable "rds_cluster_port" {
+  description = "Aurora cluster port"
+  type        = number
+  default     = 5432
+}
+
+variable "rds_database_name" {
+  description = "Aurora database name"
+  type        = string
+  default     = null
+}
+
+variable "rds_master_secret_arn" {
+  description = "RDS master user secret ARN for runtime credential hydration"
+  type        = string
+  default     = null
+}

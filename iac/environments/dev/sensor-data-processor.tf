@@ -9,6 +9,10 @@ module "sensor_data_processor" {
   sensor_readings_table_name = module.dynamodb.table_names.SensorReadings
   redis_url                  = module.redis.redis_url
   led_commands_enabled       = true
+  rds_cluster_endpoint       = module.rds.cluster_endpoint
+  rds_cluster_port           = module.rds.cluster_port
+  rds_database_name          = module.rds.database_name
+  rds_master_secret_arn      = module.rds.master_user_secret_arn
 
   subnet_ids         = module.vpc.private_subnet_ids
   security_group_ids = [module.security_groups.lambda_security_group_id]

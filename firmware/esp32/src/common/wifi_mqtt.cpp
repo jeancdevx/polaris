@@ -1,8 +1,38 @@
 #include "wifi_mqtt.h"
 
 #include <WiFi.h>
+#include <cstring>
 
 #include <ArduinoJson.h>
+
+namespace {
+
+const char* trimPem(const char* pem) {
+  if (pem == nullptr) {
+    return "";
+  }
+  while (*pem == ' ' || *pem == '\t' || *pem == '\r' || *pem == '\n') {
+    ++pem;
+  }
+  return pem;
+}
+
+bool pemLooksValid(const char* pem, const char* label) {
+  pem = trimPem(pem);
+  if (strncmp(pem, "-----BEGIN ", 11) != 0) {
+    Serial.printf("[mqtt] Invalid %s PEM: must start with -----BEGIN\n", label);
+    return false;
+  }
+  if (strstr(pem, "-----END ") == nullptr) {
+    Serial.printf("[mqtt] Invalid %s PEM: missing -----END\n", label);
+    return false;
+  }
+  Serial.printf("[mqtt] %s PEM bytes=%u\n", label,
+                static_cast<unsigned int>(strlen(pem)));
+  return true;
+}
+
+}  // namespace
 
 WifiMqttClient* WifiMqttClient::active_ = nullptr;
 
@@ -44,7 +74,11 @@ bool WifiMqttClient::connectWifi() {
 }
 
 bool WifiMqttClient::connectMqtt() {
-  if (strlen(config_.deviceCertPem) == 0 || strlen(config_.deviceKeyPem) == 0) {
+  const char* deviceCert = trimPem(config_.deviceCertPem);
+  const char* deviceKey = trimPem(config_.deviceKeyPem);
+  const char* rootCa = trimPem(config_.rootCaPem);
+
+  if (strlen(deviceCert) == 0 || strlen(deviceKey) == 0) {
     Serial.println("[mqtt] Skipping TLS connect — no device cert in config (compile-check mode)");
     return false;
   }
@@ -58,9 +92,15 @@ bool WifiMqttClient::connectMqtt() {
     return false;
   }
 
-  network_.setCACert(config_.rootCaPem);
-  network_.setCertificate(config_.deviceCertPem);
-  network_.setPrivateKey(config_.deviceKeyPem);
+  if (!pemLooksValid(deviceCert, "device cert") ||
+      !pemLooksValid(deviceKey, "device key") ||
+      !pemLooksValid(rootCa, "root CA")) {
+    return false;
+  }
+
+  network_.setCACert(rootCa);
+  network_.setCertificate(deviceCert);
+  network_.setPrivateKey(deviceKey);
 
   mqtt_.setServer(config_.iotEndpoint, 8883);
   mqtt_.setBufferSize(4096);

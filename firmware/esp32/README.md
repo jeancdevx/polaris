@@ -166,6 +166,30 @@ alimentar el ESP (pines flotantes → falsas ocupaciones en AWS).
    `POLARIS_SERVO_SELF_TEST`, despejar físicamente ambas barreras y repetir con
    supervisión. Retirar la flag al terminar.
 
+#### Checklist HIL `entry_io` (RFID + HC + LCD)
+
+1. Con vehículo a ≤12 cm, LCD muestra `Vehiculo detectado` / `Acerque tarjeta`.
+2. Primera tarjeta válida → `Validando...` / `Espere`; solo una lectura por
+   ciclo de presencia (reintentos ignorados hasta que el HC confirme salida).
+3. Tras abrir/cerrar barrera con vehículo aún presente, LCD muestra
+   `Paso en curso` / `Espere salida` y el lector de salida no publica otra
+   tarjeta.
+4. Cuando el HC confirma salida (`Proximity cleared`), el ciclo se resetea y el
+   LCD vuelve a idle con libres.
+5. Denegaciones cloud (`Tarjeta no registrada`, etc.) permanecen ~8 s sin ser
+   pisadas por mensajes locales.
+
+#### Checklist HIL LEDs (`leds_zone_a` / `leds_zone_b`)
+
+1. Serial debe mostrar `[mqtt] Connected`, subscribe
+   `parking/commands/led/+ -> ok` y `cloud sync requested`.
+2. Tras reservar una plaza en web/app, serial debe mostrar
+   `[leds] cloud spot-XX -> blink_blue (blue)`.
+3. Tras ocupación FC-51 o ingreso RFID, serial debe mostrar `occupied (red)`.
+4. Al liberar plaza, serial debe mostrar `free (green/off)`.
+5. Si los LEDs siguen verdes pero el serial recibe comandos, revisar cableado
+   RGB (cátodo común, HIGH = encendido) contra `pins_leds.h`.
+
 ### `leds_zone_a` / `leds_zone_b` — RGB por plaza
 
 Cada plaza usa los 3 canales del LED (cátodo común: HIGH = encendido):

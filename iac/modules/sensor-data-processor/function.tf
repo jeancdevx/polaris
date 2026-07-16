@@ -23,6 +23,12 @@ resource "aws_lambda_function" "main" {
         LED_COMMANDS_ENABLED         = tostring(var.led_commands_enabled)
       },
       var.redis_url != null ? { REDIS_URL = var.redis_url } : {},
+      var.rds_cluster_endpoint != null ? {
+        DB_HOST       = var.rds_cluster_endpoint
+        DB_PORT       = tostring(var.rds_cluster_port)
+        DB_NAME       = var.rds_database_name
+        DB_SECRET_ARN = var.rds_master_secret_arn
+      } : {},
       var.led_commands_enabled ? {
         IOT_DATA_ENDPOINT = coalesce(
           var.iot_data_endpoint,

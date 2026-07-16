@@ -1,6 +1,10 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common'
 
-import { createDataSource, type ParkingSpotRow } from '@polaris/database'
+import {
+  createDataSource,
+  createDataSourceAsync,
+  type ParkingSpotRow
+} from '@polaris/database'
 import type { ParkingStatus } from '@polaris/shared-types'
 
 import { buildParkingStatus, mapParkingSpotRow } from './parking.mapper.js'
@@ -30,7 +34,7 @@ export class RdsAvailabilityReader implements OnModuleDestroy {
       return this.dataSource
     }
 
-    this.dataSource = createDataSource()
+    this.dataSource = await createDataSourceAsync()
     await this.dataSource.initialize()
     return this.dataSource
   }

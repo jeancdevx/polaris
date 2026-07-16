@@ -1,6 +1,6 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common'
 
-import { createDataSource } from '@polaris/database'
+import { createDataSource, createDataSourceAsync } from '@polaris/database'
 
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
@@ -17,7 +17,7 @@ export class DatabaseService implements OnModuleDestroy {
       return this.dataSource
     }
 
-    this.dataSource = createDataSource()
+    this.dataSource = await createDataSourceAsync()
     await this.dataSource.initialize()
     return this.dataSource
   }

@@ -18,10 +18,11 @@ Cluster Fargate, ALB interno y despliegue de servicios ECS.
 | `moved.tf`         | State migration para reglas ALB         |
 
 Los secretos derivados de cada servicio solo contienen configuración no-RDS
-(`REDIS_URL`, `KAFKA_BROKERS`, etc.). Las task definitions inyectan `DB_HOST`,
-`DB_PORT`, `DB_NAME`, `DB_USERNAME` y `DB_PASSWORD` directamente desde las keys
-del secret administrado por RDS, por lo que una rotación no deja copias
-obsoletas.
+(`REDIS_URL`, `KAFKA_BROKERS`, etc.). Las task definitions pasan `DB_HOST`,
+`DB_PORT` y `DB_NAME` como metadata no sensible, y `DB_SECRET_ARN` como
+referencia. Cada proceso obtiene `username` y `password` del secret administrado
+por RDS usando su task role. El secret administrado no contiene `host`, `port`
+ni `dbname`.
 
 ## Routing ALB
 
@@ -47,7 +48,7 @@ Las reglas explícitas se definen en `local.alb_listener_rules` (`locals.tf`).
 
 | Secret                                 | Keys                                       |
 | -------------------------------------- | ------------------------------------------ |
-| Secret administrado por RDS            | `host`, `port`, `dbname`, credenciales     |
+| Secret administrado por RDS            | `username`, `password`                     |
 | `{prefix}-api-service-env`             | `REDIS_URL`                                |
 | `{prefix}-reservation-service-env`     | `REDIS_URL`, `KAFKA_BROKERS`               |
 | `{prefix}-event-processor-service-env` | `REDIS_URL`, `KAFKA_BROKERS`               |

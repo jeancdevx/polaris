@@ -2,7 +2,7 @@ import { userSchema } from '../entities/index.js'
 
 import { runMigrations } from '../migrations/run-migrations.js'
 
-import { createDataSource } from '../config/create-data-source.js'
+import { createDataSourceAsync } from '../config/create-data-source.js'
 
 import { syncParkingRedis } from '../redis/sync-parking-redis.js'
 import { runSeed, type SeedResult } from '../seed/run-seed.js'
@@ -37,7 +37,7 @@ export type BootstrapState = Readonly<{
 }>
 
 const countUsersAndFindAdmin = async (): Promise<BootstrapState> => {
-  const dataSource = createDataSource()
+  const dataSource = await createDataSourceAsync()
   await dataSource.initialize()
 
   try {

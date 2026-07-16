@@ -11,6 +11,7 @@ struct WifiMqttConfig {
   const char* wifiPassword;
   const char* iotEndpoint;
   const char* thingName;
+  const char* deviceId;
   const char* deviceCertPem;
   const char* deviceKeyPem;
   const char* rootCaPem;

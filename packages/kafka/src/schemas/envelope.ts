@@ -1,6 +1,7 @@
 import { kafkaMessageError } from '../errors/kafka-message-error.js'
 
 export type KafkaEventEnvelope = Readonly<{
+  eventId?: string
   eventName: string
   aggregateId: string
   occurredAt: string
@@ -44,6 +45,7 @@ export const parseKafkaEnvelope = (raw: unknown): KafkaEventEnvelope => {
   }
 
   return {
+    ...(isNonEmptyString(raw.eventId) ? { eventId: raw.eventId } : {}),
     eventName: raw.eventName,
     aggregateId: raw.aggregateId,
     occurredAt: raw.occurredAt

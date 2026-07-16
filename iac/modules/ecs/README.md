@@ -4,23 +4,24 @@ Cluster Fargate, ALB interno y despliegue de servicios ECS.
 
 ## Organización
 
-| Archivo            | Responsabilidad                            |
-| ------------------ | ------------------------------------------ |
-| `cluster.tf`       | ECS cluster                                |
-| `alb.tf`           | Application Load Balancer                  |
-| `target-groups.tf` | Target groups por servicio                 |
-| `listeners.tf`     | Listener HTTP + reglas ALB (`for_each`)    |
-| `data.tf`          | Lectura credenciales RDS (Secrets Manager) |
-| `locals.tf`        | Naming, env secrets, mapa de reglas ALB    |
-| `secrets.tf`       | Secrets Manager por servicio               |
-| `log-groups.tf`    | CloudWatch Logs por servicio               |
-| `tasks.tf`         | Task definitions                           |
-| `services.tf`      | ECS services (ALB + workers internos)      |
-| `moved.tf`         | State migration para reglas ALB            |
+| Archivo            | Responsabilidad                         |
+| ------------------ | --------------------------------------- |
+| `cluster.tf`       | ECS cluster                             |
+| `alb.tf`           | Application Load Balancer               |
+| `target-groups.tf` | Target groups por servicio              |
+| `listeners.tf`     | Listener HTTP + reglas ALB (`for_each`) |
+| `locals.tf`        | Naming, env secrets, mapa de reglas ALB |
+| `secrets.tf`       | Secrets Manager por servicio            |
+| `log-groups.tf`    | CloudWatch Logs por servicio            |
+| `tasks.tf`         | Task definitions                        |
+| `services.tf`      | ECS services (ALB + workers internos)   |
+| `moved.tf`         | State migration para reglas ALB         |
 
-Los **data sources** viven en `data.tf`. La composición de secretos
-(DATABASE_URL, REDIS_URL, KAFKA_BROKERS) vive en `locals.tf` + `secrets.tf` — no
-en archivos por servicio.
+Los secretos derivados de cada servicio solo contienen configuración no-RDS
+(`REDIS_URL`, `KAFKA_BROKERS`, etc.). Las task definitions inyectan `DB_HOST`,
+`DB_PORT`, `DB_NAME`, `DB_USERNAME` y `DB_PASSWORD` directamente desde las keys
+del secret administrado por RDS, por lo que una rotación no deja copias
+obsoletas.
 
 ## Routing ALB
 
@@ -35,21 +36,22 @@ Las reglas explícitas se definen en `local.alb_listener_rules` (`locals.tf`).
 
 ## Servicios ECS
 
-| Servicio                  | Puerto | ALB | Secrets keys                                      |
-| ------------------------- | ------ | --- | ------------------------------------------------- |
-| `api-service`             | 3001   | Sí  | `DATABASE_URL`, `REDIS_URL`                       |
-| `reservation-service`     | 3002   | Sí  | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`      |
-| `admin-service`           | 3004   | Sí  | `DATABASE_URL`, `REDIS_URL`, `RFID_VALIDATIONS_*` |
-| `event-processor-service` | 3003   | No  | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`      |
+| Servicio                  | Puerto | ALB | Secrets keys                                  |
+| ------------------------- | ------ | --- | --------------------------------------------- |
+| `api-service`             | 3001   | Sí  | `DB_*` (RDS), `REDIS_URL`                     |
+| `reservation-service`     | 3002   | Sí  | `DB_*` (RDS), `REDIS_URL`, `KAFKA_BROKERS`    |
+| `admin-service`           | 3004   | Sí  | `DB_*` (RDS), `REDIS_URL`, `RFID_VALIDATIONS` |
+| `event-processor-service` | 3003   | No  | `DB_*` (RDS), `REDIS_URL`, `KAFKA_BROKERS`    |
 
 ## Secrets
 
-| Secret                                 | Keys                                                       |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `{prefix}-api-service-env`             | `DATABASE_URL`, `REDIS_URL`                                |
-| `{prefix}-reservation-service-env`     | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`               |
-| `{prefix}-event-processor-service-env` | `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`               |
-| `{prefix}-admin-service-env`           | `DATABASE_URL`, `REDIS_URL`, `RFID_VALIDATIONS_TABLE_NAME` |
+| Secret                                 | Keys                                       |
+| -------------------------------------- | ------------------------------------------ |
+| Secret administrado por RDS            | `host`, `port`, `dbname`, credenciales     |
+| `{prefix}-api-service-env`             | `REDIS_URL`                                |
+| `{prefix}-reservation-service-env`     | `REDIS_URL`, `KAFKA_BROKERS`               |
+| `{prefix}-event-processor-service-env` | `REDIS_URL`, `KAFKA_BROKERS`               |
+| `{prefix}-admin-service-env`           | `REDIS_URL`, `RFID_VALIDATIONS_TABLE_NAME` |
 
 En **dev**, `recovery_window_in_days = 0` permite recrear el secret tras
 `terraform destroy` sin esperar la ventana de borrado de AWS.

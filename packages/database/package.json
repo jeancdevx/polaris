@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "3.1075.0",
+    "@aws-sdk/client-secrets-manager": "^3.1087.0",
     "@polaris/domain": "workspace:*",
     "@polaris/shared-types": "workspace:*",
     "@polaris/shared-utils": "workspace:*",

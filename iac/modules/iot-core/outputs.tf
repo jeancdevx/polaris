@@ -4,8 +4,10 @@ output "data_endpoint" {
 }
 
 output "device_policy_name" {
-  description = "IoT policy attached to ESP32 device certificates"
-  value       = aws_iot_policy.device.name
+  description = "Least-privilege IoT policy names keyed by ESP32 device"
+  value = {
+    for key, policy in aws_iot_policy.device : key => policy.name
+  }
 }
 
 output "device_ids" {

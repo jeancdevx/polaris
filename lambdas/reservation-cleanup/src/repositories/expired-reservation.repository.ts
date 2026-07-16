@@ -1,6 +1,12 @@
-import type { ReservationRow } from '@polaris/database'
-import { createDataSource } from '@polaris/database'
 import {
+  createDataSourceAsync,
+  enqueueOutboxEvent,
+  outboxPayload,
+  type ParkingSpotRow,
+  type ReservationRow
+} from '@polaris/database'
+import {
+  createReservationCancelledEvent,
   createReservationId,
   createSpotId,
   createUserId,
@@ -12,7 +18,7 @@ import { mapDomainReservationToRow } from '../reservation.mapper.js'
 
 export class ExpiredReservationRepository {
   async findExpiredActive(at: Date): Promise<Reservation[]> {
-    const dataSource = createDataSource()
+    const dataSource = await createDataSourceAsync()
     await dataSource.initialize()
 
     try {
@@ -45,13 +51,15 @@ export class ExpiredReservationRepository {
   }
 
   async persistExpiration(expired: Reservation): Promise<ReservationRow> {
-    const dataSource = createDataSource()
+    const dataSource = await createDataSourceAsync()
     await dataSource.initialize()
 
     try {
       return dataSource.transaction(async manager => {
         const reservationRepository =
           manager.getRepository<ReservationRow>('Reservation')
+        const spotRepository =
+          manager.getRepository<ParkingSpotRow>('ParkingSpot')
         const row = mapDomainReservationToRow(expired)
 
         const updateResult = await reservationRepository.update(
@@ -67,6 +75,33 @@ export class ExpiredReservationRepository {
             `Reservation ${row.reservationId} could not be expired`
           )
         }
+
+        await spotRepository.update(
+          {
+            spotId: row.parkingSpotId,
+            status: 'reserved',
+            reservationId: row.reservationId
+          },
+          {
+            status: 'free',
+            reservationId: undefined,
+            userId: undefined,
+            occupiedSince: undefined
+          }
+        )
+
+        const event = createReservationCancelledEvent({
+          reservationId: row.reservationId,
+          userId: row.userId,
+          parkingSpotId: row.parkingSpotId,
+          reason: 'expired',
+          occurredAt: row.expiredAt
+        })
+        await enqueueOutboxEvent(manager, {
+          topic: event.eventName,
+          partitionKey: event.aggregateId,
+          payload: outboxPayload(event)
+        })
 
         return row
       })

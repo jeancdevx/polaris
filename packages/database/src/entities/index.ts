@@ -1,4 +1,6 @@
 import { auditLogSchema } from './schemas/audit-log.schema.js'
+import { consumedEventSchema } from './schemas/consumed-event.schema.js'
+import { outboxEventSchema } from './schemas/outbox-event.schema.js'
 import { parkingSessionSchema } from './schemas/parking-session.schema.js'
 import { parkingSpotSchema } from './schemas/parking-spot.schema.js'
 import { reservationSchema } from './schemas/reservation.schema.js'
@@ -7,6 +9,15 @@ import { sensorDataSchema } from './schemas/sensor-data.schema.js'
 import { userSchema } from './schemas/user.schema.js'
 
 export { auditLogSchema, type AuditLogRow } from './schemas/audit-log.schema.js'
+export {
+  consumedEventSchema,
+  type ConsumedEventRow
+} from './schemas/consumed-event.schema.js'
+export {
+  outboxEventSchema,
+  type OutboxEventRow,
+  type OutboxEventStatus
+} from './schemas/outbox-event.schema.js'
 export {
   parkingSessionSchema,
   type ParkingSessionRow
@@ -37,5 +48,7 @@ export const entitySchemas = [
   rfidTagSchema,
   parkingSessionSchema,
   auditLogSchema,
-  sensorDataSchema
+  sensorDataSchema,
+  outboxEventSchema,
+  consumedEventSchema
 ] as const

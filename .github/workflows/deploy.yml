@@ -1,14 +1,14 @@
-name: Deploy (reusable)
+name: Environment release (reusable)
 
 on:
   workflow_call:
     inputs:
       environment:
-        description: GitHub environment y sufijo de recursos AWS (dev, prod)
+        description: GitHub environment and AWS resource suffix (dev, prod)
         required: true
         type: string
       force_all:
-        description: Redesplegar todos los servicios aunque no tengan cambios
+        description: Run every conditional release step
         required: false
         type: boolean
         default: false
@@ -18,50 +18,232 @@ permissions:
   id-token: write
 
 env:
-  PROJECT_NAME: polaris
   ALL_SERVICES:
     '["api-service", "reservation-service", "event-processor-service",
     "admin-service"]'
 
 jobs:
   changes:
-    name: Detect changed services
+    name: Plan release
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      services: ${{ steps.services.outputs.list }}
+      services: ${{ steps.release.outputs.services }}
+      iac: ${{ steps.release.outputs.iac }}
+      database: ${{ steps.release.outputs.database }}
+      web_admin: ${{ steps.release.outputs.web_admin }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Filter service paths
+      - name: Detect release paths
         id: filter
         if: ${{ !inputs.force_all }}
         uses: dorny/paths-filter@v4
         with:
-          filters: .github/filters/services.yml
+          filters: |
+            api-service:
+              - '.github/actions/**'
+              - '.github/workflows/deploy*.yml'
+              - 'apps/api-service/**'
+              - 'packages/build-config/**'
+              - 'packages/database/**'
+              - 'packages/domain/**'
+              - 'packages/shared-types/**'
+              - 'packages/shared-utils/**'
+              - 'packages/tsconfig/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            reservation-service:
+              - '.github/actions/**'
+              - '.github/workflows/deploy*.yml'
+              - 'apps/reservation-service/**'
+              - 'packages/build-config/**'
+              - 'packages/database/**'
+              - 'packages/domain/**'
+              - 'packages/kafka/**'
+              - 'packages/shared-types/**'
+              - 'packages/shared-utils/**'
+              - 'packages/tsconfig/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            event-processor-service:
+              - '.github/actions/**'
+              - '.github/workflows/deploy*.yml'
+              - 'apps/event-processor-service/**'
+              - 'packages/build-config/**'
+              - 'packages/database/**'
+              - 'packages/domain/**'
+              - 'packages/eventbridge/**'
+              - 'packages/kafka/**'
+              - 'packages/shared-types/**'
+              - 'packages/shared-utils/**'
+              - 'packages/tsconfig/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            admin-service:
+              - '.github/actions/**'
+              - '.github/workflows/deploy*.yml'
+              - 'apps/admin-service/**'
+              - 'packages/build-config/**'
+              - 'packages/database/**'
+              - 'packages/domain/**'
+              - 'packages/shared-types/**'
+              - 'packages/shared-utils/**'
+              - 'packages/tsconfig/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            database:
+              - '.github/actions/**'
+              - '.github/workflows/db-bootstrap*.yml'
+              - 'apps/db-bootstrap/**'
+              - 'packages/build-config/**'
+              - 'packages/database/**'
+              - 'packages/shared-types/**'
+              - 'packages/shared-utils/**'
+              - 'packages/tsconfig/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            web-admin:
+              - '.github/actions/**'
+              - '.github/workflows/deploy*.yml'
+              - 'apps/web-admin/**'
+              - 'packages/shared-types/**'
+              - 'packages/tsconfig/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            dev:
+              - '.github/actions/**'
+              - '.github/workflows/iac-apply*.yml'
+              - 'atlantis.yaml'
+              - 'iac/bootstrap/**'
+              - 'iac/environments/dev/**'
+              - 'iac/modules/**'
+            prod:
+              - '.github/actions/**'
+              - '.github/workflows/iac-apply*.yml'
+              - 'atlantis.yaml'
+              - 'iac/bootstrap/**'
+              - 'iac/environments/prod/**'
+              - 'iac/modules/**'
+            lambda:
+              - 'lambdas/**'
+              - 'packages/build-config/**'
+              - 'packages/lambda-core/**'
+              - 'packages/shared-types/**'
+              - 'packages/shared-utils/**'
+              - 'packages/tsconfig/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
 
-      - name: Build service matrix
-        id: services
+      - name: Build release plan
+        id: release
         env:
           FORCE_ALL: ${{ inputs.force_all }}
           CHANGES: ${{ steps.filter.outputs.changes || '[]' }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
           if [ "$FORCE_ALL" = "true" ]; then
-            list=$ALL_SERVICES
+            services=$ALL_SERVICES
+            iac=true
+            database=true
+            web_admin=$([ "$ENVIRONMENT" = "prod" ] && echo true || echo false)
           else
-            list=$(echo "$CHANGES" | jq -c '[.[] | select(. == ("api-service", "reservation-service", "event-processor-service", "admin-service"))]')
+            infrastructure=$(echo "$CHANGES" | jq -r --arg env "$ENVIRONMENT" \
+              'index($env) != null')
+            lambda=$(echo "$CHANGES" | jq -r 'index("lambda") != null')
+            iac=$(jq -nr --argjson infrastructure "$infrastructure" \
+              --argjson lambda "$lambda" '$infrastructure or $lambda')
+            database=$(echo "$CHANGES" | jq -r 'index("database") != null')
+            web_admin=$(echo "$CHANGES" | jq -r --arg env "$ENVIRONMENT" \
+              '$env == "prod" and index("web-admin") != null')
+            services=$(echo "$CHANGES" | jq -c \
+              '[.[] | select(. == ("api-service", "reservation-service", "event-processor-service", "admin-service"))]')
+
+            # Infrastructure can replace task definitions, repositories,
+            # services, or the database. Lambda-only applies do not need this.
+            if [ "$infrastructure" = "true" ]; then
+              services=$ALL_SERVICES
+              database=true
+            fi
           fi
-          echo "list=$(echo "$list" | jq -c .)" >> "$GITHUB_OUTPUT"
-          echo "Services to deploy: $list"
+          echo "services=$(echo "$services" | jq -c .)" >> "$GITHUB_OUTPUT"
+          echo "iac=$iac" >> "$GITHUB_OUTPUT"
+          echo "database=$database" >> "$GITHUB_OUTPUT"
+          echo "web_admin=$web_admin" >> "$GITHUB_OUTPUT"
+          echo "Release plan: iac=$iac database=$database web_admin=$web_admin services=$services"
+
+  validate:
+    name: Validate and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: changes
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+
+      - name: Lint, typecheck, test, and build
+        run: |
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+          pnpm build
+
+  iac:
+    name: Apply IaC and Lambdas
+    needs: [changes, validate]
+    if: needs.changes.outputs.iac == 'true'
+    uses: ./.github/workflows/iac-apply.yml
+    with:
+      environment: ${{ inputs.environment }}
+      terraform_directory:
+        iac/environments/${{ inputs.environment == 'prod' && 'prod' || 'dev' }}
+      var_file:
+        ${{ inputs.environment == 'prod' && 'prod.ci.tfvars' || 'dev.ci.tfvars'
+        }}
+      state_key:
+        env/${{ inputs.environment == 'prod' && 'prod' || 'dev'
+        }}/terraform.tfstate
+    secrets: inherit
+
+  database:
+    name: Migrate and bootstrap database
+    needs: [changes, validate, iac]
+    if: >-
+      always() && needs.validate.result == 'success' && (needs.iac.result ==
+      'success' || needs.iac.result == 'skipped') &&
+      needs.changes.outputs.database == 'true'
+    uses: ./.github/workflows/db-bootstrap.yml
+    with:
+      environment: ${{ inputs.environment }}
+    secrets: inherit
 
   deploy:
     name: Deploy ${{ matrix.service }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: changes
-    if: needs.changes.outputs.services != '[]'
+    needs: [changes, validate, iac, database]
+    if: >-
+      always() && needs.validate.result == 'success' && (needs.iac.result ==
+      'success' || needs.iac.result == 'skipped') && (needs.database.result ==
+      'success' || needs.database.result == 'skipped') &&
+      needs.changes.outputs.services != '[]'
     environment: ${{ inputs.environment }}
     strategy:
       fail-fast: false
@@ -86,30 +268,181 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build and push image
+      - name: Build and push SHA image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.service }}/Dockerfile
           push: true
-          tags: |
-            ${{ steps.ecr.outputs.registry }}/${{ env.NAME_PREFIX }}-${{ matrix.service }}:${{ github.sha }}
-            ${{ steps.ecr.outputs.registry }}/${{ env.NAME_PREFIX }}-${{ matrix.service }}:latest
-          cache-from: type=gha,scope=${{ matrix.service }}
-          cache-to: type=gha,scope=${{ matrix.service }},mode=max
+          tags:
+            ${{ steps.ecr.outputs.registry }}/${{ env.NAME_PREFIX }}-${{
+            matrix.service }}:${{ github.sha }}
+          cache-from:
+            type=gha,scope=${{ inputs.environment }}-${{ matrix.service }}
+          cache-to:
+            type=gha,scope=${{ inputs.environment }}-${{ matrix.service
+            }},mode=max
 
-      - name: Force new ECS deployment
+      - name: Register immutable task definition
+        id: task
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+          SERVICE: ${{ matrix.service }}
+        run: |
+          service_name="${NAME_PREFIX}-${SERVICE}"
+          image="${ECR_REGISTRY}/${service_name}:${GITHUB_SHA}"
+          current_arn=$(aws ecs describe-services \
+            --cluster "${NAME_PREFIX}-cluster" \
+            --services "$service_name" \
+            --query 'services[0].taskDefinition' \
+            --output text)
+          current=$(aws ecs describe-task-definition \
+            --task-definition "$current_arn" \
+            --query taskDefinition \
+            --output json)
+
+          matches=$(echo "$current" | jq --arg service "$SERVICE" \
+            '[.containerDefinitions[] | select(.name == $service)] | length')
+          if [ "$matches" != "1" ]; then
+            echo "::error::Expected one container named $SERVICE, found $matches"
+            exit 1
+          fi
+
+          definition=$(echo "$current" | jq --arg service "$SERVICE" --arg image "$image" \
+            '(.containerDefinitions[] | select(.name == $service).image) = $image
+             | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                   .compatibilities, .registeredAt, .registeredBy)')
+          task_definition_arn=$(aws ecs register-task-definition \
+            --cli-input-json "$definition" \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "arn=$task_definition_arn" >> "$GITHUB_OUTPUT"
+          echo "Registered $task_definition_arn with $image"
+
+      - name: Update ECS service to immutable revision
+        env:
+          SERVICE: ${{ matrix.service }}
         run: |
           aws ecs update-service \
             --cluster "${NAME_PREFIX}-cluster" \
-            --service "${NAME_PREFIX}-${{ matrix.service }}" \
-            --force-new-deployment \
-            --query 'service.{service: serviceName, taskDef: taskDefinition, desired: desiredCount}' \
+            --service "${NAME_PREFIX}-${SERVICE}" \
+            --task-definition "${{ steps.task.outputs.arn }}" \
+            --query 'service.{service:serviceName,taskDefinition:taskDefinition,desired:desiredCount}' \
             --output table
 
       - name: Wait for service stability
+        env:
+          SERVICE: ${{ matrix.service }}
         run: |
           aws ecs wait services-stable \
             --cluster "${NAME_PREFIX}-cluster" \
-            --services "${NAME_PREFIX}-${{ matrix.service }}"
-          echo "${NAME_PREFIX}-${{ matrix.service }} estable con la nueva imagen (${GITHUB_SHA})"
+            --services "${NAME_PREFIX}-${SERVICE}"
+
+      - name: ECS diagnostics on failure
+        if: failure()
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          service_name="${NAME_PREFIX}-${SERVICE}"
+          aws ecs describe-services \
+            --cluster "${NAME_PREFIX}-cluster" \
+            --services "$service_name" \
+            --query 'services[0].{status:status,desired:desiredCount,running:runningCount,pending:pendingCount,deployments:deployments,events:events[:10]}' \
+            --output json || true
+          task_arns=$(aws ecs list-tasks \
+            --cluster "${NAME_PREFIX}-cluster" \
+            --service-name "$service_name" \
+            --desired-status STOPPED \
+            --max-items 5 \
+            --query 'taskArns' \
+            --output text)
+          if [ -n "$task_arns" ] && [ "$task_arns" != "None" ]; then
+            aws ecs describe-tasks \
+              --cluster "${NAME_PREFIX}-cluster" \
+              --tasks $task_arns \
+              --query 'tasks[].{task:taskArn,stopCode:stopCode,reason:stoppedReason,containers:containers[].{name:name,exitCode:exitCode,reason:reason}}' \
+              --output json || true
+          fi
+          aws logs tail "/ecs/${service_name}" --since 15m --format short || true
+
+  health:
+    name: Post-deploy health
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [changes, deploy]
+    if: >-
+      always() && needs.deploy.result == 'success' &&
+      needs.changes.outputs.services != '[]'
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+      NAME_PREFIX: polaris-${{ inputs.environment }}
+      SERVICES: ${{ needs.changes.outputs.services }}
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify running services and SHA images
+        run: |
+          for service in $(echo "$SERVICES" | jq -r '.[]'); do
+            service_name="${NAME_PREFIX}-${service}"
+            state=$(aws ecs describe-services \
+              --cluster "${NAME_PREFIX}-cluster" \
+              --services "$service_name" \
+              --query 'services[0]' \
+              --output json)
+            desired=$(echo "$state" | jq -r '.desiredCount')
+            running=$(echo "$state" | jq -r '.runningCount')
+            rollout=$(echo "$state" | jq -r \
+              '.deployments[] | select(.status == "PRIMARY") | .rolloutState')
+            task_definition=$(echo "$state" | jq -r '.taskDefinition')
+            image=$(aws ecs describe-task-definition \
+              --task-definition "$task_definition" \
+              --query "taskDefinition.containerDefinitions[?name=='${service}'].image | [0]" \
+              --output text)
+
+            echo "$service_name desired=$desired running=$running rollout=$rollout image=$image"
+            if [ "$running" != "$desired" ] || [ "$rollout" != "COMPLETED" ]; then
+              echo "::error::$service_name is not healthy"
+              exit 1
+            fi
+            case "$image" in
+              *:"$GITHUB_SHA") ;;
+              *)
+                echo "::error::$service_name is not running image tag $GITHUB_SHA"
+                exit 1
+                ;;
+            esac
+          done
+
+      - name: Health diagnostics on failure
+        if: failure()
+        run: |
+          for service in $(echo "$SERVICES" | jq -r '.[]'); do
+            service_name="${NAME_PREFIX}-${service}"
+            aws ecs describe-services \
+              --cluster "${NAME_PREFIX}-cluster" \
+              --services "$service_name" \
+              --query 'services[0].{deployments:deployments,events:events[:10]}' \
+              --output json || true
+            aws logs tail "/ecs/${service_name}" --since 15m --format short || true
+          done
+
+  web_admin:
+    name: Deploy web-admin
+    needs: [changes, validate, iac, database, deploy, health]
+    if: >-
+      always() && needs.validate.result == 'success' && (needs.iac.result ==
+      'success' || needs.iac.result == 'skipped') && (needs.database.result ==
+      'success' || needs.database.result == 'skipped') && (needs.deploy.result
+      == 'success' || needs.deploy.result == 'skipped') && (needs.health.result
+      == 'success' || needs.health.result == 'skipped') &&
+      needs.changes.outputs.web_admin == 'true'
+    uses: ./.github/workflows/deploy-web-admin.yml
+    with:
+      environment: ${{ inputs.environment }}
+    secrets: inherit

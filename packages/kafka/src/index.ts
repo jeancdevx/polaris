@@ -23,8 +23,10 @@ export {
   disconnectConsumer,
   parseKafkaMessage,
   runConsumer,
+  type KafkaConsumerRunOptions,
   type KafkaMessageContext,
-  type KafkaMessageHandler
+  type KafkaMessageHandler,
+  type MalformedMessagePolicy
 } from './consumer/create-consumer.js'
 
 export {

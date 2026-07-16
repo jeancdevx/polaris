@@ -1,4 +1,4 @@
-import { createDataSource } from '@polaris/database'
+import { createDataSourceAsync } from '@polaris/database'
 import { connectRedis, disconnectRedis } from '@polaris/shared-utils'
 
 export type HealthCheckResult = Readonly<{
@@ -8,7 +8,7 @@ export type HealthCheckResult = Readonly<{
 }>
 
 export const checkRds = async (): Promise<HealthCheckResult> => {
-  const dataSource = createDataSource()
+  const dataSource = await createDataSourceAsync()
 
   try {
     await dataSource.initialize()

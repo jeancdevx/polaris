@@ -59,11 +59,17 @@ unsigned long gBootMs = 0;
 struct PendingServoCommand {
   bool pending = false;
   char action[8] = {};
+  char commandId[96] = {};
+  bool hasCommandId = false;
   int angle = -1;  // <0 → use hardware default for action
 };
 
 PendingServoCommand gPendingEntry;
 PendingServoCommand gPendingExit;
+
+constexpr size_t kRecentCommandCount = 16;
+char gRecentCommandIds[kRecentCommandCount][96] = {};
+size_t gRecentCommandNext = 0;
 
 String spotIdFromNumber(int spotNumber) {
   char buffer[12];
@@ -71,7 +77,14 @@ String spotIdFromNumber(int spotNumber) {
   return String(buffer);
 }
 
-void publishServoStatus(const char* servoId, const char* status, const char* reason) {
+void publishServoStatus(const char* servoId,
+                        const char* status,
+                        const char* result,
+                        const char* reason,
+                        const char* action,
+                        int angle,
+                        const char* commandId,
+                        bool legacy) {
   if (gClient == nullptr || !gClient->isMqttConnected()) {
     return;
   }
@@ -79,15 +92,63 @@ void publishServoStatus(const char* servoId, const char* status, const char* rea
   JsonDocument doc;
   doc["deviceId"] = servoId;
   doc["status"] = status;
+  doc["result"] = result;
   doc["close_reason"] = reason;
+  doc["action"] = action;
+  doc["angle"] = angle;
+  if (commandId != nullptr && commandId[0] != '\0') {
+    doc["commandId"] = commandId;
+  }
+  doc["commandIdSource"] = legacy ? "legacy-missing" : "provided";
   doc["timestamp"] = polaris::time::nowEpochMs();
   gClient->publishJson(polaris::mqtt::servoStatusTopic(servoId).c_str(), doc);
 }
 
-void queueServoCommand(PendingServoCommand& slot, const char* action, int angle) {
+bool hasSeenCommandId(const char* commandId) {
+  if (commandId == nullptr || commandId[0] == '\0') {
+    return false;
+  }
+  for (const auto& recent : gRecentCommandIds) {
+    if (strcmp(recent, commandId) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void rememberCommandId(const char* commandId) {
+  if (commandId == nullptr || commandId[0] == '\0') {
+    return;
+  }
+  strncpy(gRecentCommandIds[gRecentCommandNext],
+          commandId,
+          sizeof(gRecentCommandIds[gRecentCommandNext]) - 1);
+  gRecentCommandIds[gRecentCommandNext]
+                   [sizeof(gRecentCommandIds[gRecentCommandNext]) - 1] = '\0';
+  gRecentCommandNext = (gRecentCommandNext + 1) % kRecentCommandCount;
+}
+
+const char* servoState(const ServoBarrier& servo) {
+  if (servo.angle() < 0) {
+    return "unknown";
+  }
+  return servo.isOpen() ? "open" : "closed";
+}
+
+void queueServoCommand(PendingServoCommand& slot,
+                       const char* action,
+                       int angle,
+                       const char* commandId) {
   slot.pending = true;
   strncpy(slot.action, action, sizeof(slot.action) - 1);
   slot.action[sizeof(slot.action) - 1] = '\0';
+  slot.hasCommandId = commandId != nullptr && commandId[0] != '\0';
+  if (slot.hasCommandId) {
+    strncpy(slot.commandId, commandId, sizeof(slot.commandId) - 1);
+    slot.commandId[sizeof(slot.commandId) - 1] = '\0';
+  } else {
+    slot.commandId[0] = '\0';
+  }
   slot.angle = angle;
 }
 
@@ -99,17 +160,45 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
 
   if (strcmp(slot.action, "open") == 0) {
     if (millis() - gBootMs < polaris::hw::kServoBootGraceMs) {
-      Serial.printf("[actuators] Ignored open for %s during boot grace\n", servoId);
+      publishServoStatus(servoId,
+                         servoState(servo),
+                         "rejected",
+                         "boot_grace",
+                         slot.action,
+                         slot.angle,
+                         slot.commandId,
+                         !slot.hasCommandId);
+      Serial.printf("[actuators] Rejected open for %s during boot grace id=%s\n",
+                    servoId,
+                    slot.hasCommandId ? slot.commandId : "legacy-missing");
       return;
     }
 
     const int angle =
         slot.angle >= 0 ? slot.angle : polaris::hw::kServoOpenAngle;
     if (!servo.setAngle(angle)) {
+      publishServoStatus(servoId,
+                         servoState(servo),
+                         "rejected",
+                         "pwm_not_attached",
+                         slot.action,
+                         angle,
+                         slot.commandId,
+                         !slot.hasCommandId);
       Serial.printf("[actuators] Servo %s OPEN failed (PWM not attached)\n", servoId);
       return;
     }
-    publishServoStatus(servoId, "open", "command");
+    if (slot.hasCommandId) {
+      rememberCommandId(slot.commandId);
+    }
+    publishServoStatus(servoId,
+                       "open",
+                       "applied",
+                       "command",
+                       slot.action,
+                       angle,
+                       slot.commandId,
+                       !slot.hasCommandId);
     Serial.printf("[actuators] Servo %s opened (angle=%d pin=%d)\n",
                   servoId,
                   angle,
@@ -121,10 +210,28 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
     const int angle =
         slot.angle >= 0 ? slot.angle : polaris::hw::kServoClosedAngle;
     if (!servo.setAngle(angle)) {
+      publishServoStatus(servoId,
+                         servoState(servo),
+                         "rejected",
+                         "pwm_not_attached",
+                         slot.action,
+                         angle,
+                         slot.commandId,
+                         !slot.hasCommandId);
       Serial.printf("[actuators] Servo %s CLOSE failed (PWM not attached)\n", servoId);
       return;
     }
-    publishServoStatus(servoId, "closed", "command");
+    if (slot.hasCommandId) {
+      rememberCommandId(slot.commandId);
+    }
+    publishServoStatus(servoId,
+                       "closed",
+                       "applied",
+                       "command",
+                       slot.action,
+                       angle,
+                       slot.commandId,
+                       !slot.hasCommandId);
     Serial.printf("[actuators] Servo %s closed (angle=%d pin=%d)\n",
                   servoId,
                   angle,
@@ -132,24 +239,44 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
     return;
   }
 
-  Serial.printf("[actuators] Ignored servo command for %s (action=%s)\n",
-                servoId,
-                slot.action);
 }
 
-void forceServosClosedOnBoot(const char* reason) {
-  const bool entryOk = gEntryServo.close();
-  const bool exitOk = gExitServo.close();
-  if (entryOk) {
-    publishServoStatus(POLARIS_ENTRY_SERVO_ID, "closed", reason);
-  }
-  if (exitOk) {
-    publishServoStatus(POLARIS_EXIT_SERVO_ID, "closed", reason);
-  }
-  Serial.printf("[actuators] Servos forced closed (%s) entry_ok=%d exit_ok=%d\n",
-                reason,
-                entryOk ? 1 : 0,
-                exitOk ? 1 : 0);
+#if defined(POLARIS_SERVO_SELF_TEST)
+// Movimiento visible para verificar cableado/alimentación sin MQTT.
+void runServoSelfTest() {
+  Serial.println("[actuators] Servo self-test: open then close both...");
+  gEntryServo.setAngle(polaris::hw::kServoOpenAngle);
+  gExitServo.setAngle(polaris::hw::kServoOpenAngle);
+  delay(900);
+  gEntryServo.setAngle(polaris::hw::kServoClosedAngle);
+  gExitServo.setAngle(polaris::hw::kServoClosedAngle);
+  delay(400);
+  Serial.println("[actuators] Servo self-test done (si no se movieron: 5V/GND/señal)");
+}
+#endif
+
+void publishServoReady(const char* reason) {
+  Serial.printf(
+      "[actuators] Servo control ready state=unknown reason=%s entry_pin=%d exit_pin=%d\n",
+      reason,
+      gEntryServo.pin(),
+      gExitServo.pin());
+  publishServoStatus(POLARIS_ENTRY_SERVO_ID,
+                     "unknown",
+                     "ready",
+                     reason,
+                     "none",
+                     -1,
+                     nullptr,
+                     true);
+  publishServoStatus(POLARIS_EXIT_SERVO_ID,
+                     "unknown",
+                     "ready",
+                     reason,
+                     "none",
+                     -1,
+                     nullptr,
+                     true);
 }
 
 void onMqttMessage(char* topic, byte* payload, unsigned int length) {
@@ -168,24 +295,91 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   }
 
   const char* action = doc["action"] | "";
-  const int angle = doc["angle"] | -1;
+  const bool hasAngle = doc["angle"].is<int>();
+  const int angle = hasAngle ? doc["angle"].as<int>() : -1;
+  const char* commandId = doc["commandId"] | "";
+
+  const char* servoId = nullptr;
+  PendingServoCommand* pending = nullptr;
+  ServoBarrier* servo = nullptr;
 
   if (strstr(topic, POLARIS_ENTRY_SERVO_ID) != nullptr) {
-    Serial.printf("[actuators] Cmd queued %s action=%s angle=%d\n",
-                  POLARIS_ENTRY_SERVO_ID,
-                  action,
-                  angle);
-    queueServoCommand(gPendingEntry, action, angle);
+    servoId = POLARIS_ENTRY_SERVO_ID;
+    pending = &gPendingEntry;
+    servo = &gEntryServo;
+  } else if (strstr(topic, POLARIS_EXIT_SERVO_ID) != nullptr) {
+    servoId = POLARIS_EXIT_SERVO_ID;
+    pending = &gPendingExit;
+    servo = &gExitServo;
+  } else {
     return;
   }
 
-  if (strstr(topic, POLARIS_EXIT_SERVO_ID) != nullptr) {
-    Serial.printf("[actuators] Cmd queued %s action=%s angle=%d\n",
-                  POLARIS_EXIT_SERVO_ID,
-                  action,
-                  angle);
-    queueServoCommand(gPendingExit, action, angle);
+  const bool legacy = commandId[0] == '\0';
+  if (!legacy && hasSeenCommandId(commandId)) {
+    publishServoStatus(servoId,
+                       servoState(*servo),
+                       "duplicate",
+                       "command_id_seen",
+                       action,
+                       angle,
+                       commandId,
+                       false);
+    Serial.printf("[actuators] Duplicate command ignored servo=%s id=%s\n",
+                  servoId,
+                  commandId);
+    return;
   }
+
+  const bool validAction =
+      strcmp(action, "open") == 0 || strcmp(action, "close") == 0;
+  const bool validAngle = !hasAngle || (angle >= 0 && angle <= 180);
+  const bool validCommandId =
+      legacy || strlen(commandId) < sizeof(gRecentCommandIds[0]);
+  if (!validAction || !validAngle || !validCommandId) {
+    const char* reason = !validAction
+                             ? "invalid_action"
+                             : (!validAngle ? "angle_out_of_range"
+                                            : "command_id_too_long");
+    publishServoStatus(servoId,
+                       servoState(*servo),
+                       "rejected",
+                       reason,
+                       action,
+                       angle,
+                       commandId,
+                       legacy);
+    Serial.printf(
+        "[actuators] Rejected command servo=%s action=%s angle=%d id=%s reason=%s\n",
+        servoId,
+        action,
+        angle,
+        legacy ? "legacy-missing" : commandId,
+        reason);
+    return;
+  }
+
+  if (pending->pending) {
+    publishServoStatus(servoId,
+                       servoState(*servo),
+                       "rejected",
+                       "command_queue_busy",
+                       action,
+                       angle,
+                       commandId,
+                       legacy);
+    Serial.printf("[actuators] Rejected command servo=%s id=%s reason=queue_busy\n",
+                  servoId,
+                  legacy ? "legacy-missing" : commandId);
+    return;
+  }
+
+  Serial.printf("[actuators] Cmd queued %s action=%s angle=%d id=%s\n",
+                servoId,
+                action,
+                angle,
+                legacy ? "legacy-missing" : commandId);
+  queueServoCommand(*pending, action, angle, commandId);
 }
 
 WifiMqttConfig makeConfig() {
@@ -194,6 +388,7 @@ WifiMqttConfig makeConfig() {
       .wifiPassword = POLARIS_WIFI_PASSWORD,
       .iotEndpoint = POLARIS_IOT_ENDPOINT,
       .thingName = POLARIS_IOT_THING_NAME,
+      .deviceId = POLARIS_DEVICE_ID,
       .deviceCertPem = POLARIS_IOT_DEVICE_CERT,
       .deviceKeyPem = POLARIS_IOT_DEVICE_PRIVATE_KEY,
       .rootCaPem = POLARIS_IOT_ROOT_CA,
@@ -266,8 +461,12 @@ void ensureMqtt() {
   if (!gClient->isMqttConnected()) {
     if (gClient->connectWifi()) {
       polaris::time::syncFromNtp();
+      // Re-attach tras reconexión WiFi (LEDC puede quedar inválido).
+      gEntryServo.begin();
+      gExitServo.begin();
       if (gClient->connectMqtt()) {
         subscribeCommands(*gClient);
+        publishServoReady("mqtt_reconnect");
         republishAllSpotStates();
       }
     }
@@ -284,10 +483,6 @@ void setup() {
 
   Serial.printf("\nPolaris ESP32 — role=%s deviceId=%s\n", kRoleName, POLARIS_DEVICE_ID);
 
-  gEntryServo.begin();
-  gExitServo.begin();
-  forceServosClosedOnBoot("setup");
-
   for (auto& spot : gSpots) {
     spot.sensor.begin();
   }
@@ -295,12 +490,22 @@ void setup() {
   static WifiMqttClient client(makeConfig());
   gClient = &client;
 
-  if (client.connectWifi()) {
+  // WiFi/LEDC: adjuntar servos DESPUÉS de WiFi o el PWM queda mudo.
+  const bool wifiOk = client.connectWifi();
+  if (wifiOk) {
     polaris::time::syncFromNtp();
-    if (client.connectMqtt()) {
-      subscribeCommands(client);
-      republishAllSpotStates();
-    }
+  }
+
+  gEntryServo.begin();
+  gExitServo.begin();
+#if defined(POLARIS_SERVO_SELF_TEST)
+  runServoSelfTest();
+#endif
+
+  if (wifiOk && client.connectMqtt()) {
+    subscribeCommands(client);
+    publishServoReady("boot_attach");
+    republishAllSpotStates();
   }
 
   Serial.println("[actuators] Ready — 2× servo + FC-51 occupancy (spots 1..10)");
@@ -318,6 +523,11 @@ void setup() {
                 gExitServo.pin(),
                 gEntryServo.isAttached() ? 1 : 0,
                 gExitServo.isAttached() ? 1 : 0);
+  Serial.println(
+      "[actuators] Wiring: SG90 VCC=5V externo, GND común ESP, señal entry=GPIO13 exit=GPIO22");
+#if !defined(POLARIS_SERVO_SELF_TEST)
+  Serial.println("[actuators] Boot servo movement disabled (POLARIS_SERVO_SELF_TEST not set)");
+#endif
 }
 
 void loop() {

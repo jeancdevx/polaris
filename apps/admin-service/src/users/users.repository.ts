@@ -8,6 +8,8 @@ import type {
   UserRole,
   UserRow
 } from '@polaris/database'
+import { enqueueOutboxEvent, outboxPayload } from '@polaris/database'
+import { createReservationCancelledEvent } from '@polaris/domain'
 import type { UserType } from '@polaris/shared-types'
 
 import { DatabaseService } from '../infrastructure/database.service.js'
@@ -30,6 +32,11 @@ export type UpdateAdminUserInput = Readonly<{
   userType?: UserType
   role?: UserRole
   isActive?: boolean
+}>
+
+export type UserReservationTransitionResult = Readonly<{
+  user: UserRow
+  cancelledReservations: ReservationRow[]
 }>
 
 @Injectable()
@@ -71,19 +78,21 @@ export class UsersRepository {
     return repository.findOne({ where: { rfidUid } })
   }
 
-  async insertUserWithRfidTag(input: InsertAdminUserInput): Promise<UserRow> {
+  async insertUserWithRfidTag(
+    input: InsertAdminUserInput
+  ): Promise<UserReservationTransitionResult> {
     const dataSource = await this.databaseService.getDataSource()
     const now = new Date()
 
     return dataSource.transaction(async manager => {
-      if (input.reclaimRfidFromUserId) {
-        await this.reclaimVisitorRfidInTransaction(
-          manager,
-          input.reclaimRfidFromUserId,
-          input.rfidUid,
-          now
-        )
-      }
+      const cancelledReservations = input.reclaimRfidFromUserId
+        ? await this.reclaimVisitorRfidInTransaction(
+            manager,
+            input.reclaimRfidFromUserId,
+            input.rfidUid,
+            now
+          )
+        : []
 
       const userRepository = manager.getRepository<UserRow>('User')
       const rfidRepository = manager.getRepository<RfidTagRow>('RfidTag')
@@ -128,14 +137,14 @@ export class UsersRepository {
         })
       }
 
-      return row
+      return { user: row, cancelledReservations }
     })
   }
 
   async updateUser(
     userId: string,
     input: UpdateAdminUserInput
-  ): Promise<UserRow | null> {
+  ): Promise<UserReservationTransitionResult | null> {
     const dataSource = await this.databaseService.getDataSource()
     const now = new Date()
 
@@ -157,6 +166,10 @@ export class UsersRepository {
         isActive: input.isActive ?? existing.isActive,
         updatedAt: now
       }
+      const cancelledReservations =
+        existing.isActive && nextUser.isActive === false
+          ? await this.cancelActiveReservationsForUser(manager, userId, now)
+          : []
 
       await userRepository.save(nextUser)
 
@@ -168,11 +181,13 @@ export class UsersRepository {
 
       await rfidRepository.update({ rfidUid: existing.rfidUid }, rfidUpdate)
 
-      return nextUser
+      return { user: nextUser, cancelledReservations }
     })
   }
 
-  async deactivateUser(userId: string): Promise<UserRow | null> {
+  async deactivateUser(
+    userId: string
+  ): Promise<UserReservationTransitionResult | null> {
     const dataSource = await this.databaseService.getDataSource()
     const now = new Date()
 
@@ -186,10 +201,14 @@ export class UsersRepository {
       }
 
       if (!existing.isActive) {
-        return existing
+        return { user: existing, cancelledReservations: [] }
       }
 
-      await this.cancelActiveReservationsForUser(manager, userId, now)
+      const cancelledReservations = await this.cancelActiveReservationsForUser(
+        manager,
+        userId,
+        now
+      )
 
       const deactivated: UserRow = {
         ...existing,
@@ -203,7 +222,7 @@ export class UsersRepository {
         { isActive: false }
       )
 
-      return deactivated
+      return { user: deactivated, cancelledReservations }
     })
   }
 
@@ -212,7 +231,7 @@ export class UsersRepository {
     visitorUserId: string,
     rfidUid: string,
     now: Date
-  ): Promise<void> {
+  ): Promise<ReservationRow[]> {
     const userRepository = manager.getRepository<UserRow>('User')
     const visitor = await userRepository.findOne({
       where: { userId: visitorUserId }
@@ -236,7 +255,11 @@ export class UsersRepository {
       )
     }
 
-    await this.cancelActiveReservationsForUser(manager, visitorUserId, now)
+    const cancelledReservations = await this.cancelActiveReservationsForUser(
+      manager,
+      visitorUserId,
+      now
+    )
 
     await userRepository.update(
       { userId: visitorUserId },
@@ -246,13 +269,15 @@ export class UsersRepository {
         updatedAt: now
       }
     )
+
+    return cancelledReservations
   }
 
   private async cancelActiveReservationsForUser(
     manager: EntityManager,
     userId: string,
     now: Date
-  ): Promise<void> {
+  ): Promise<ReservationRow[]> {
     const reservationRepository =
       manager.getRepository<ReservationRow>('Reservation')
     const spotRepository = manager.getRepository<ParkingSpotRow>('ParkingSpot')
@@ -260,15 +285,19 @@ export class UsersRepository {
     const activeReservations = await reservationRepository.find({
       where: { userId, status: 'active' }
     })
+    const cancelledReservations: ReservationRow[] = []
 
     for (const reservation of activeReservations) {
-      await reservationRepository.update(
+      const updateResult = await reservationRepository.update(
         { reservationId: reservation.reservationId, status: 'active' },
         {
           status: 'cancelled',
           cancelledAt: now
         }
       )
+      if (!updateResult.affected) {
+        continue
+      }
 
       const spot = await spotRepository.findOne({
         where: { spotId: reservation.parkingSpotId }
@@ -285,6 +314,27 @@ export class UsersRepository {
           }
         )
       }
+
+      const cancelled: ReservationRow = {
+        ...reservation,
+        status: 'cancelled',
+        cancelledAt: now
+      }
+      const event = createReservationCancelledEvent({
+        reservationId: cancelled.reservationId,
+        userId: cancelled.userId,
+        parkingSpotId: cancelled.parkingSpotId,
+        reason: 'admin',
+        occurredAt: now
+      })
+      await enqueueOutboxEvent(manager, {
+        topic: event.eventName,
+        partitionKey: event.aggregateId,
+        payload: outboxPayload(event)
+      })
+      cancelledReservations.push(cancelled)
     }
+
+    return cancelledReservations
   }
 }

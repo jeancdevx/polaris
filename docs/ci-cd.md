@@ -24,14 +24,15 @@ secrets de GitHub, primer apply local):** [`deploy-environments.md`](./deploy-en
 │   └── iac.yml                   # Terraform: qué entorno aplicar
 └── workflows/
     ├── ci.yml                    # PR: lint, test, build, docker, iac validate
-    ├── deploy.yml                # CD apps (reusable)
-    ├── deploy-dev.yml
-    ├── deploy-production.yml
+    ├── deploy.yml                # release ordenado (reusable)
+    ├── deploy-dev.yml            # único trigger push develop
+    ├── deploy-production.yml     # único trigger push production
     ├── iac-apply.yml             # terraform apply (reusable)
-    ├── iac-apply-dev.yml
-    ├── iac-apply-production.yml
-    ├── db-bootstrap-dev.yml
-    ├── db-bootstrap-production.yml
+    ├── iac-apply-dev.yml         # apply manual de emergencia
+    ├── iac-apply-production.yml  # apply manual de emergencia
+    ├── db-bootstrap.yml          # migración/bootstrap (reusable)
+    ├── db-bootstrap-dev.yml      # ejecución manual
+    ├── db-bootstrap-production.yml # ejecución manual
     └── db-reset-dev.yml
 
 atlantis.yaml                     # Plan en PR (servidor Atlantis en ECS)
@@ -45,7 +46,7 @@ flowchart TB
   CI[ci.yml: lint test build]
   Atl[Atlantis: terraform plan en comentario PR]
   Merge[Merge a develop]
-  AppCD[iac-apply-dev + deploy-dev]
+  AppCD[deploy-dev: release ordenado]
   PR --> CI
   PR --> Atl
   Merge --> AppCD
@@ -55,8 +56,8 @@ flowchart TB
 | ---- | ----------- | ------ |
 | Validación sintaxis `.tf` | CI `iac` job | PR si cambió `iac/**` |
 | **Plan** (impacto real) | **Atlantis** | PR: autoplan o `atlantis plan` |
-| **Apply** infra | **GitHub Actions** | Push a `develop` / `production` si cambió IaC |
-| Deploy contenedores | GitHub Actions | Push si cambió código de servicios |
+| **Apply** infra | **GitHub Actions** | Dentro del release si cambió IaC o una Lambda |
+| Deploy contenedores | GitHub Actions | Dentro del mismo release, después de IaC y DB |
 
 Atlantis tiene `ATLANTIS_DISABLE_APPLY_ALL=true`: rechaza `atlantis apply`. El
 apply solo ocurre en GitHub Actions con rol OIDC dedicado y environment
@@ -78,20 +79,35 @@ Tests de integración (testcontainers): `pnpm test:integration` local / manual.
 Los tests unitarios no requieren `DATABASE_URL` en GitHub Secrets: `@polaris/database`
 inicializa la conexión solo al llamar `createDataSource()`, no al importar el paquete.
 
-## CD apps (`deploy.yml`)
+## Release de entorno (`deploy.yml`)
 
-Solo redespliega servicios ECS cuyos paths cambiaron (`.github/filters/services.yml`):
-build → push ECR (`latest` + SHA) → `ecs update-service --force-new-deployment` → wait stable.
+`deploy-dev.yml` y `deploy-production.yml` son los únicos workflows AWS con
+trigger de push. Ambos llaman al orquestador reusable y comparten el lock
+`release-<entorno>` con todas las operaciones manuales.
+
+Orden determinista:
+
+1. lint, typecheck, tests y build;
+2. Terraform apply si cambió IaC o `lambdas/**`;
+3. migración/bootstrap si cambió la base de datos;
+4. build/push de imágenes ECS con tag inmutable `${GITHUB_SHA}`;
+5. registro de una nueva task definition y `update-service --task-definition`;
+6. estabilidad ECS, comprobación de conteos/rollout/tag SHA y web-admin en prod.
+
+Un cambio IaC redespliega todos los servicios para que ninguna task definition
+creada por Terraform quede apuntando a `latest`. Los pasos de fallo muestran
+eventos ECS, tasks detenidas y logs recientes de CloudWatch.
 
 ## DB bootstrap (`db-bootstrap-dev.yml`, `db-bootstrap-production.yml`)
 
 Task ECS **one-shot** (no servicio permanente) que corre después del primer deploy o cuando
 cambia `packages/database/**` o `apps/db-bootstrap/**`.
 
-| Workflow | Rama | Environment GHA |
-| -------- | ---- | ----------------- |
-| `db-bootstrap-dev.yml` | `develop` | `dev` |
-| `db-bootstrap-production.yml` | `production` | `prod` |
+| Camino | Trigger | Environment GHA |
+| ------ | ------- | --------------- |
+| `deploy-dev.yml` | push `develop` si cambió DB | `dev` |
+| `deploy-production.yml` | push `production` si cambió DB | `prod` |
+| wrappers `db-bootstrap-*` | solo manual | `dev` / `prod` |
 
 | Paso | Qué hace |
 | ---- | -------- |
@@ -106,9 +122,9 @@ una contraseña aleatoria si no defines `bootstrap_admin_password` en el `.tfvar
 El script sale en segundos con *"Bootstrap skipped"* si la BD ya tiene datos y el admin
 existe en RDS y Cognito.
 
-**Cuándo corre:** push a `develop` / `production` con cambios en database/db-bootstrap,
-o manualmente via `workflow_dispatch`. En prod respeta **required reviewers** del
-environment `prod`. Corre **después** de que IaC haya creado RDS/Redis/Cognito.
+**Cuándo corre:** el orquestador lo incluye cuando cambia database/db-bootstrap,
+o se puede lanzar manualmente vía `workflow_dispatch`. En prod respeta
+**required reviewers**. Siempre corre después de IaC y antes del deploy ECS.
 
 Credenciales admin inicial tras bootstrap:
 
@@ -163,15 +179,15 @@ En el PR verás el plan como comentario. Revisa creates/changes/destroys antes d
 
 ## IaC — GitHub Actions (apply)
 
-`iac-apply-dev.yml` (push a `develop`) / `iac-apply-production.yml` (push a `production`):
+El orquestador llama a `iac-apply.yml` cuando detecta cambios en IaC o Lambdas:
 
-1. Filtra cambios con `.github/filters/iac.yml`.
-2. Asume rol `AWS_TERRAFORM_APPLY_ROLE_ARN` (OIDC).
-3. `pnpm build:lambdas` — los módulos Terraform empaquetan `lambdas/*/dist` en zip.
-4. `terraform init` con backend desde vars de GitHub.
-5. `terraform apply -auto-approve` con `dev.ci.tfvars` (sin `aws_profile`).
+1. Asume rol `AWS_TERRAFORM_APPLY_ROLE_ARN` (OIDC).
+2. `pnpm build:lambdas` — Terraform empaqueta `lambdas/*/dist`.
+3. `terraform init`, `fmt -check` y `validate`.
+4. `terraform apply -auto-approve` con el `*.ci.tfvars` del entorno.
 
-Concurrencia `terraform-apply-<env>` sin cancelación: un apply a la vez.
+Los wrappers `iac-apply-dev.yml` e `iac-apply-production.yml` quedan disponibles
+solo para dispatch manual y usan el mismo lock que el release.
 
 ## OIDC — tres roles
 
@@ -286,8 +302,8 @@ Luego:
 
 1. PR con cambios en `iac/` → Atlantis autoplan (o comenta `atlantis plan`).
 2. Revisas el plan en el comentario del PR.
-3. Merge a `develop` → `iac-apply-dev.yml` corre `terraform apply` automáticamente.
-4. Cambios de apps → `deploy-dev.yml` en paralelo (solo servicios tocados).
+3. Merge a `develop` → `deploy-dev.yml` valida y ejecuta en serie IaC → DB → ECS → health.
+4. Los pasos sin cambios se omiten; nunca hay applies/deploys paralelos del mismo entorno.
 
 ---
 

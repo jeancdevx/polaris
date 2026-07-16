@@ -6,6 +6,19 @@ namespace {
 
 bool gTimersAllocated = false;
 
+constexpr int kPulseUsMin = 500;
+constexpr int kPulseUsMax = 2400;
+
+int angleToUs(int angle) {
+  if (angle < 0) {
+    angle = 0;
+  } else if (angle > 180) {
+    angle = 180;
+  }
+  return kPulseUsMin +
+         ((kPulseUsMax - kPulseUsMin) * angle) / 180;
+}
+
 void ensurePwmTimers() {
   if (gTimersAllocated) {
     return;
@@ -21,17 +34,27 @@ void ensurePwmTimers() {
 
 ServoBarrier::ServoBarrier(int pin) : pin_(pin) {}
 
-void ServoBarrier::begin() {
+void ServoBarrier::detach() {
   if (attached_) {
-    return;
+    servo_.detach();
+    attached_ = false;
   }
+}
 
+void ServoBarrier::begin() {
   ensurePwmTimers();
-  servo_.setPeriodHertz(50);
 
-  // SG90: 500–2400 µs pulse range maps write(0)..write(180).
-  // attach() may return 0 on failure OR as a valid LEDC channel — trust attached().
-  const int channel = servo_.attach(pin_, 500, 2400);
+  // WiFi/LEDC en ESP32 puede invalidar un attach previo: siempre re-attach.
+  // attach() alone must never infer or command a physical barrier position.
+  if (attached_) {
+    servo_.detach();
+    attached_ = false;
+    delay(20);
+  }
+  angle_ = -1;
+
+  servo_.setPeriodHertz(50);
+  const int channel = servo_.attach(pin_, kPulseUsMin, kPulseUsMax);
   if (!servo_.attached()) {
     attached_ = false;
     Serial.printf("[servo] attach FAILED pin=%d (channel=%d)\n", pin_, channel);
@@ -40,7 +63,6 @@ void ServoBarrier::begin() {
 
   attached_ = true;
   Serial.printf("[servo] attached pin=%d channel=%d\n", pin_, channel);
-  close();
 }
 
 bool ServoBarrier::open() { return setAngle(polaris::hw::kServoOpenAngle); }
@@ -48,6 +70,13 @@ bool ServoBarrier::open() { return setAngle(polaris::hw::kServoOpenAngle); }
 bool ServoBarrier::close() { return setAngle(polaris::hw::kServoClosedAngle); }
 
 bool ServoBarrier::setAngle(int angle) {
+  if (angle < 0 || angle > 180) {
+    Serial.printf("[servo] write rejected pin=%d angle=%d (valid=0..180)\n",
+                  pin_,
+                  angle);
+    return false;
+  }
+
   if (!attached_) {
     begin();
   }
@@ -56,15 +85,11 @@ bool ServoBarrier::setAngle(int angle) {
     return false;
   }
 
-  if (angle < 0) {
-    angle = 0;
-  } else if (angle > 180) {
-    angle = 180;
-  }
-
   angle_ = angle;
-  servo_.write(angle_);
-  Serial.printf("[servo] write pin=%d angle=%d\n", pin_, angle_);
+  const int us = angleToUs(angle_);
+  // writeMicroseconds es más fiable que write() tras WiFi en ESP32.
+  servo_.writeMicroseconds(us);
+  Serial.printf("[servo] write pin=%d angle=%d us=%d\n", pin_, angle_, us);
   return true;
 }
 
@@ -78,7 +103,10 @@ bool ServoBarrier::isOpen() const {
   return angle_ <= open + 5;
 }
 
-bool ServoBarrier::isAttached() const { return attached_; }
+bool ServoBarrier::isAttached() const {
+  // ESP32Servo::attached() no es const.
+  return attached_;
+}
 
 int ServoBarrier::angle() const { return angle_; }
 

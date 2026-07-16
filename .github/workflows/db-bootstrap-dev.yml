@@ -1,161 +1,19 @@
-name: DB bootstrap dev
+name: DB bootstrap dev (manual)
 
 on:
-  push:
-    branches: [develop]
-    paths:
-      - 'apps/db-bootstrap/**'
-      - 'packages/database/**'
-      - '.github/workflows/db-bootstrap-dev.yml'
   workflow_dispatch:
 
 concurrency:
-  group: db-bootstrap-dev
+  group: release-dev
   cancel-in-progress: false
 
 permissions:
   contents: read
   id-token: write
 
-env:
-  PROJECT_NAME: polaris
-  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
-
 jobs:
   bootstrap:
-    name: Run db-bootstrap task
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment: dev
-    env:
-      NAME_PREFIX: polaris-dev
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build and push db-bootstrap image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: apps/db-bootstrap/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.ecr.outputs.registry }}/${{ env.NAME_PREFIX }}-db-bootstrap:${{ github.sha }}
-            ${{ steps.ecr.outputs.registry }}/${{ env.NAME_PREFIX }}-db-bootstrap:latest
-          cache-from: type=gha,scope=db-bootstrap
-          cache-to: type=gha,scope=db-bootstrap,mode=max
-
-      - name: Register task definition with new image
-        id: task
-        run: |
-          FAMILY="${NAME_PREFIX}-db-bootstrap"
-          IMAGE="${{ steps.ecr.outputs.registry }}/${NAME_PREFIX}-db-bootstrap:${{ github.sha }}"
-
-          CURRENT=$(aws ecs describe-task-definition \
-            --task-definition "$FAMILY" \
-            --query 'taskDefinition' \
-            --output json)
-
-          NEW_DEF=$(echo "$CURRENT" | jq \
-            --arg IMAGE "$IMAGE" \
-            '.containerDefinitions[0].image = $IMAGE
-             | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
-
-          REV=$(aws ecs register-task-definition \
-            --cli-input-json "$NEW_DEF" \
-            --query 'taskDefinition.revision' \
-            --output text)
-
-          echo "family=$FAMILY" >> "$GITHUB_OUTPUT"
-          echo "revision=$REV" >> "$GITHUB_OUTPUT"
-          echo "Registered ${FAMILY}:${REV} with image ${IMAGE}"
-
-      - name: Run db-bootstrap ECS task
-        id: run
-        run: |
-          # Auth uses DB_HOST + DB_USERNAME/DB_PASSWORD from the live RDS master
-          # secret (task definition). Do not override DATABASE_URL here: ECS
-          # secrets win over RunTask environment overrides, so a stale composed
-          # DATABASE_URL secret would still be used and auth would fail after
-          # password rotation.
-          SUBNETS=$(aws ec2 describe-subnets \
-            --filters "Name=tag:Name,Values=${NAME_PREFIX}-private-*" \
-            --query 'Subnets[*].SubnetId' \
-            --output text | tr '\t' ',')
-
-          SG=$(aws ec2 describe-security-groups \
-            --filters "Name=tag:Name,Values=${NAME_PREFIX}-ecs-sg" \
-            --query 'SecurityGroups[0].GroupId' \
-            --output text)
-
-          TASK_ARN=$(aws ecs run-task \
-            --cluster "${NAME_PREFIX}-cluster" \
-            --task-definition "${{ steps.task.outputs.family }}:${{ steps.task.outputs.revision }}" \
-            --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[${SUBNETS}],securityGroups=[${SG}],assignPublicIp=DISABLED}" \
-            --query 'tasks[0].taskArn' \
-            --output text)
-
-          echo "task_arn=$TASK_ARN" >> "$GITHUB_OUTPUT"
-          echo "Started task: $TASK_ARN"
-
-      - name: Wait for task completion
-        run: |
-          aws ecs wait tasks-stopped \
-            --cluster "${NAME_PREFIX}-cluster" \
-            --tasks "${{ steps.run.outputs.task_arn }}"
-
-          EXIT_CODE=$(aws ecs describe-tasks \
-            --cluster "${NAME_PREFIX}-cluster" \
-            --tasks "${{ steps.run.outputs.task_arn }}" \
-            --query 'tasks[0].containers[0].exitCode' \
-            --output text)
-
-          STOP_REASON=$(aws ecs describe-tasks \
-            --cluster "${NAME_PREFIX}-cluster" \
-            --tasks "${{ steps.run.outputs.task_arn }}" \
-            --query 'tasks[0].stoppedReason' \
-            --output text)
-
-          echo "Exit code: $EXIT_CODE"
-          echo "Stop reason: $STOP_REASON"
-
-          if [ "$EXIT_CODE" != "0" ]; then
-            echo "::error::db-bootstrap task failed (exit $EXIT_CODE)"
-            exit 1
-          fi
-
-          echo "db-bootstrap completed successfully (idempotent no-op if already seeded)"
-
-      - name: Tail CloudWatch logs on failure
-        if: failure()
-        run: |
-          LOG_GROUP="/ecs/${NAME_PREFIX}-db-bootstrap"
-          STREAM=$(aws logs describe-log-streams \
-            --log-group-name "$LOG_GROUP" \
-            --order-by LastEventTime \
-            --descending \
-            --max-items 1 \
-            --query 'logStreams[0].logStreamName' \
-            --output text)
-
-          if [ "$STREAM" != "None" ] && [ -n "$STREAM" ]; then
-            aws logs get-log-events \
-              --log-group-name "$LOG_GROUP" \
-              --log-stream-name "$STREAM" \
-              --limit 50 \
-              --query 'events[*].message' \
-              --output text
-          fi
+    uses: ./.github/workflows/db-bootstrap.yml
+    with:
+      environment: dev
+    secrets: inherit

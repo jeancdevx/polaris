@@ -29,12 +29,13 @@ rds_reader_count            = 2
 rds_writer_instance_class   = "db.r6g.xlarge"
 rds_backup_retention_period = 30
 
-# Alinear con prod.tfvars al hacer teardown (evita que CI reactive protecciones).
-rds_deletion_protection              = false
-ecs_enable_deletion_protection       = false
-cognito_deletion_protection          = false
-dynamodb_deletion_protection_enabled = false
-s3_force_destroy                     = true
+# Production CI must preserve data-plane deletion protections. Teardown, when
+# explicitly approved, uses a separate one-time var file and runbook.
+rds_deletion_protection              = true
+ecs_enable_deletion_protection       = true
+cognito_deletion_protection          = true
+dynamodb_deletion_protection_enabled = true
+s3_force_destroy                     = false
 
 redis_capacity_mode              = "provisioned"
 redis_engine_version             = "7.1"

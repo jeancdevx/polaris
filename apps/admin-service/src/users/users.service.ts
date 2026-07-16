@@ -88,7 +88,7 @@ export class UsersService {
         userType: body.userType
       })
 
-      const row = await this.usersRepository.insertUserWithRfidTag({
+      const transition = await this.usersRepository.insertUserWithRfidTag({
         userId: domainUser.userId.value,
         name: domainUser.name,
         email: domainUser.email.value,
@@ -98,6 +98,7 @@ export class UsersService {
         role: body.role,
         reclaimRfidFromUserId
       })
+      const row = transition.user
 
       const rfidTag = createRfidTag({
         rfidUid: domainUser.rfidUid,
@@ -163,7 +164,7 @@ export class UsersService {
           )
         : domainUser
 
-    const row = await this.usersRepository.updateUser(userId, {
+    const transition = await this.usersRepository.updateUser(userId, {
       name: updatedProfile.name,
       vehiclePlate: updatedProfile.vehiclePlate.value,
       userType: body.userType,
@@ -171,9 +172,10 @@ export class UsersService {
       isActive: body.isActive
     })
 
-    if (!row) {
+    if (!transition) {
       throw new NotFoundException(`User ${userId} was not found`)
     }
+    const row = transition.user
 
     await this.rfidValidationStore.setActive(row.rfidUid, row.isActive)
 
@@ -187,11 +189,12 @@ export class UsersService {
       throw new NotFoundException(`User ${userId} was not found`)
     }
 
-    const row = await this.usersRepository.deactivateUser(userId)
+    const transition = await this.usersRepository.deactivateUser(userId)
 
-    if (!row) {
+    if (!transition) {
       throw new NotFoundException(`User ${userId} was not found`)
     }
+    const row = transition.user
 
     await this.cognitoAdminService.disableUser(existing.email)
     await this.rfidValidationStore.setActive(row.rfidUid, false)

@@ -20,6 +20,15 @@ export type GateCommandContext = Readonly<{
   freeSpots?: number
 }>
 
+export const gateCommandId = (scan: RfidScanEvent): string =>
+  [
+    'rfid',
+    scan.deviceId,
+    scan.readerLocation,
+    scan.rfidUid,
+    scan.occurredAt.getTime()
+  ].join(':')
+
 export class GateCommandPublisher {
   private readonly client?: IoTDataPlaneClient
 
@@ -57,6 +66,7 @@ export class GateCommandPublisher {
     await this.publish(`parking/commands/servo/${servoId}`, {
       deviceId: servoId,
       action: 'open',
+      commandId: gateCommandId(context.scan),
       timestamp: Date.now()
     })
 

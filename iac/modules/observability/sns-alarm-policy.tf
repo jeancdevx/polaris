@@ -11,6 +11,28 @@ data "aws_iam_policy_document" "sns_alerts_cloudwatch" {
     actions   = ["SNS:Publish"]
     resources = [var.sns_alerts_topic_arn]
   }
+
+  statement {
+    sid    = "AllowEventBridgeRotationAlerts"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    actions   = ["SNS:Publish"]
+    resources = [var.sns_alerts_topic_arn]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
+      values = [
+        aws_cloudwatch_event_rule.secrets_rotation_failed.arn,
+        aws_cloudwatch_event_rule.secrets_rotate_api_failed.arn,
+      ]
+    }
+  }
 }
 
 resource "aws_sns_topic_policy" "alerts_cloudwatch" {

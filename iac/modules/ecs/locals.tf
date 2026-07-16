@@ -38,36 +38,21 @@ locals {
     }
   )
 
-  rds_credentials = jsondecode(data.aws_secretsmanager_secret_version.rds_master.secret_string)
-
-  database_url = format(
-    "postgresql://%s:%s@%s:%s/%s?uselibpqcompat=true&sslmode=require",
-    urlencode(local.rds_credentials.username),
-    urlencode(local.rds_credentials.password),
-    var.rds_cluster_endpoint,
-    tostring(var.rds_cluster_port),
-    var.rds_database_name
-  )
-
   api_service_env = {
-    DATABASE_URL = local.database_url
-    REDIS_URL    = var.redis_url
+    REDIS_URL = var.redis_url
   }
 
   admin_service_env = {
-    DATABASE_URL                = local.database_url
     REDIS_URL                   = var.redis_url
     RFID_VALIDATIONS_TABLE_NAME = var.rfid_validations_table_name
   }
 
   reservation_service_env = {
-    DATABASE_URL  = local.database_url
     REDIS_URL     = var.redis_url
     KAFKA_BROKERS = var.kafka_bootstrap_brokers_sasl_iam
   }
 
   event_processor_service_env = {
-    DATABASE_URL  = local.database_url
     REDIS_URL     = var.redis_url
     KAFKA_BROKERS = var.kafka_bootstrap_brokers_sasl_iam
   }

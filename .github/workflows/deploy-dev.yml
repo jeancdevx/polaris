@@ -1,4 +1,4 @@
-name: Deploy dev
+name: Release dev
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
         default: false
 
 concurrency:
-  group: deploy-dev
+  group: release-dev
   cancel-in-progress: false
 
 permissions:
@@ -20,7 +20,7 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  release:
     uses: ./.github/workflows/deploy.yml
     with:
       environment: dev

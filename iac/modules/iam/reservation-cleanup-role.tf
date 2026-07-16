@@ -51,11 +51,6 @@ resource "aws_iam_role_policy_attachment" "reservation_cleanup_execution" {
   policy_arn = aws_iam_policy.reservation_cleanup_execution.arn
 }
 
-resource "aws_iam_role_policy_attachment" "reservation_cleanup_secrets_read" {
-  role       = aws_iam_role.reservation_cleanup.name
-  policy_arn = aws_iam_policy.secrets_read.arn
-}
-
 resource "aws_iam_role_policy_attachment" "reservation_cleanup_eventbridge_publish" {
   role       = aws_iam_role.reservation_cleanup.name
   policy_arn = aws_iam_policy.eventbridge_publish.arn

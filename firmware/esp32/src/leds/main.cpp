@@ -151,6 +151,7 @@ WifiMqttConfig makeConfig() {
       .wifiPassword = POLARIS_WIFI_PASSWORD,
       .iotEndpoint = POLARIS_IOT_ENDPOINT,
       .thingName = POLARIS_IOT_THING_NAME,
+      .deviceId = POLARIS_DEVICE_ID,
       .deviceCertPem = POLARIS_IOT_DEVICE_CERT,
       .deviceKeyPem = POLARIS_IOT_DEVICE_PRIVATE_KEY,
       .rootCaPem = POLARIS_IOT_ROOT_CA,

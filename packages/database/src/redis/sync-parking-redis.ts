@@ -14,6 +14,18 @@ export type SyncParkingRedisResult = Readonly<{
   totalReserved: number
 }>
 
+export const parkingRedisHashForRow = (
+  row: ParkingSpotRow
+): Record<string, string> => {
+  const hash: Record<string, string> = { status: row.status }
+  if (row.userId) hash.userId = row.userId
+  if (row.reservationId) hash.reservationId = row.reservationId
+  if (row.occupiedSince) {
+    hash.occupiedSince = String(row.occupiedSince.getTime())
+  }
+  return hash
+}
+
 export const syncParkingRedis = async (
   redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379'
 ): Promise<SyncParkingRedisResult> => {
@@ -38,21 +50,8 @@ export const syncParkingRedis = async (
     let totalReserved = 0
 
     for (const row of rows) {
-      const hash: Record<string, string> = { status: row.status }
-
-      if (row.userId) {
-        hash.userId = row.userId
-      }
-
-      if (row.reservationId) {
-        hash.reservationId = row.reservationId
-      }
-
-      if (row.occupiedSince) {
-        hash.occupiedSince = String(row.occupiedSince.getTime())
-      }
-
-      await redis.hSet(parkingSpotKey(row.spotId), hash)
+      const key = parkingSpotKey(row.spotId)
+      await redis.multi().del(key).hSet(key, parkingRedisHashForRow(row)).exec()
 
       if (row.status === 'free') {
         totalAvailable += 1
@@ -77,3 +76,6 @@ export const syncParkingRedis = async (
     await disconnectRedis(redis)
   }
 }
+
+/** RDS is authoritative; this alias makes the operational intent explicit. */
+export const reconcileParkingRedis = syncParkingRedis

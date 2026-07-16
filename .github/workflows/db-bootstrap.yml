@@ -1,0 +1,134 @@
+name: DB bootstrap (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub environment and AWS resource suffix (dev, prod)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  bootstrap:
+    name: Run db-bootstrap task
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.environment }}
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-2' }}
+      NAME_PREFIX: polaris-${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push SHA image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/db-bootstrap/Dockerfile
+          push: true
+          tags:
+            ${{ steps.ecr.outputs.registry }}/${{ env.NAME_PREFIX
+            }}-db-bootstrap:${{ github.sha }}
+          cache-from: type=gha,scope=db-bootstrap-${{ inputs.environment }}
+          cache-to:
+            type=gha,scope=db-bootstrap-${{ inputs.environment }},mode=max
+
+      - name: Register immutable task definition
+        id: task
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          family="${NAME_PREFIX}-db-bootstrap"
+          image="${ECR_REGISTRY}/${family}:${GITHUB_SHA}"
+          current=$(aws ecs describe-task-definition \
+            --task-definition "$family" \
+            --query taskDefinition \
+            --output json)
+          definition=$(echo "$current" | jq --arg image "$image" \
+            '(.containerDefinitions[0].image) = $image
+             | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                   .compatibilities, .registeredAt, .registeredBy)')
+          arn=$(aws ecs register-task-definition \
+            --cli-input-json "$definition" \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "arn=$arn" >> "$GITHUB_OUTPUT"
+          echo "Registered $arn with $image"
+
+      - name: Run db-bootstrap ECS task
+        id: run
+        run: |
+          # DB credentials come from the live task definition secrets. Do not
+          # override DATABASE_URL: a composed secret can become stale after
+          # an RDS password rotation.
+          subnets=$(aws ec2 describe-subnets \
+            --filters "Name=tag:Name,Values=${NAME_PREFIX}-private-*" \
+            --query 'Subnets[*].SubnetId' \
+            --output text | tr '\t' ',')
+          security_group=$(aws ec2 describe-security-groups \
+            --filters "Name=tag:Name,Values=${NAME_PREFIX}-ecs-sg" \
+            --query 'SecurityGroups[0].GroupId' \
+            --output text)
+          task_arn=$(aws ecs run-task \
+            --cluster "${NAME_PREFIX}-cluster" \
+            --task-definition "${{ steps.task.outputs.arn }}" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${subnets}],securityGroups=[${security_group}],assignPublicIp=DISABLED}" \
+            --query 'tasks[0].taskArn' \
+            --output text)
+          if [ -z "$task_arn" ] || [ "$task_arn" = "None" ]; then
+            echo "::error::ECS did not return a db-bootstrap task ARN"
+            exit 1
+          fi
+          echo "task_arn=$task_arn" >> "$GITHUB_OUTPUT"
+          echo "Started task: $task_arn"
+
+      - name: Wait for successful completion
+        run: |
+          aws ecs wait tasks-stopped \
+            --cluster "${NAME_PREFIX}-cluster" \
+            --tasks "${{ steps.run.outputs.task_arn }}"
+          task=$(aws ecs describe-tasks \
+            --cluster "${NAME_PREFIX}-cluster" \
+            --tasks "${{ steps.run.outputs.task_arn }}" \
+            --query 'tasks[0]' \
+            --output json)
+          exit_code=$(echo "$task" | jq -r '.containers[0].exitCode')
+          stop_reason=$(echo "$task" | jq -r '.stoppedReason')
+          echo "Exit code: $exit_code"
+          echo "Stop reason: $stop_reason"
+          if [ "$exit_code" != "0" ]; then
+            echo "::error::db-bootstrap task failed (exit $exit_code)"
+            exit 1
+          fi
+
+      - name: Database task diagnostics on failure
+        if: failure()
+        run: |
+          if [ -n "${{ steps.run.outputs.task_arn }}" ]; then
+            aws ecs describe-tasks \
+              --cluster "${NAME_PREFIX}-cluster" \
+              --tasks "${{ steps.run.outputs.task_arn }}" \
+              --query 'tasks[0].{stopCode:stopCode,reason:stoppedReason,containers:containers[].{name:name,exitCode:exitCode,reason:reason}}' \
+              --output json || true
+          fi
+          aws logs tail "/ecs/${NAME_PREFIX}-db-bootstrap" \
+            --since 15m \
+            --format short || true

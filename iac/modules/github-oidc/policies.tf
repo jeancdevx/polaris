@@ -67,6 +67,7 @@ data "aws_iam_policy_document" "deploy" {
     effect = "Allow"
     actions = [
       "logs:DescribeLogStreams",
+      "logs:FilterLogEvents",
       "logs:GetLogEvents"
     ]
     resources = [

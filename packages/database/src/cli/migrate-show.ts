@@ -1,7 +1,7 @@
-import { createDataSource } from '../config/create-data-source.js'
+import { createDataSourceAsync } from '../config/create-data-source.js'
 
 const showMigrations = async (): Promise<void> => {
-  const dataSource = createDataSource()
+  const dataSource = await createDataSourceAsync()
 
   await dataSource.initialize()
   const pending = await dataSource.showMigrations()

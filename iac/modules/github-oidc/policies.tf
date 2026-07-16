@@ -45,6 +45,7 @@ data "aws_iam_policy_document" "deploy" {
     actions = [
       "ecs:DescribeTaskDefinition",
       "ecs:DescribeTasks",
+      "ecs:ListTasks",
       "ecs:RegisterTaskDefinition",
       "ecs:RunTask",
       "ecs:StopTask"
@@ -63,7 +64,7 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
-    sid    = "CloudWatchLogsBootstrap"
+    sid    = "CloudWatchLogsServices"
     effect = "Allow"
     actions = [
       "logs:DescribeLogStreams",
@@ -71,7 +72,7 @@ data "aws_iam_policy_document" "deploy" {
       "logs:GetLogEvents"
     ]
     resources = [
-      "arn:aws:logs:${local.region}:${local.account_id}:log-group:/ecs/${local.name_prefix}-db-bootstrap:*"
+      "arn:aws:logs:${local.region}:${local.account_id}:log-group:/ecs/${local.name_prefix}-*:*"
     ]
   }
 
@@ -96,11 +97,15 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
-    sid     = "PassBootstrapTaskRoles"
+    sid     = "PassEcsTaskRoles"
     effect  = "Allow"
     actions = ["iam:PassRole"]
     resources = [
       "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-ecs-exec-*",
+      "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-ecs-api-task-*",
+      "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-ecs-admin-task-*",
+      "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-ecs-rsrv-task-*",
+      "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-ecs-evproc-task-*",
       "arn:aws:iam::${local.account_id}:role/${local.name_prefix}-ecs-db-bootstrap-task-*"
     ]
 

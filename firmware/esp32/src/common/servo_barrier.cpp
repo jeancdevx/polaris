@@ -44,6 +44,8 @@ void ServoBarrier::detach() {
 void ServoBarrier::begin() {
   ensurePwmTimers();
 
+  const int previousAngle = angle_;
+
   // WiFi/LEDC en ESP32 puede invalidar un attach previo: siempre re-attach.
   // attach() alone must never infer or command a physical barrier position.
   if (attached_) {
@@ -51,18 +53,27 @@ void ServoBarrier::begin() {
     attached_ = false;
     delay(20);
   }
-  angle_ = -1;
 
   servo_.setPeriodHertz(50);
   const int channel = servo_.attach(pin_, kPulseUsMin, kPulseUsMax);
   if (!servo_.attached()) {
     attached_ = false;
+    angle_ = -1;
     Serial.printf("[servo] attach FAILED pin=%d (channel=%d)\n", pin_, channel);
     return;
   }
 
   attached_ = true;
   Serial.printf("[servo] attached pin=%d channel=%d\n", pin_, channel);
+
+  // Restore holding torque after WiFi/LEDC reattach without a fake motion.
+  if (previousAngle >= 0) {
+    angle_ = previousAngle;
+    servo_.writeMicroseconds(angleToUs(angle_));
+    Serial.printf("[servo] hold pin=%d angle=%d\n", pin_, angle_);
+  } else {
+    angle_ = -1;
+  }
 }
 
 bool ServoBarrier::open() { return setAngle(polaris::hw::kServoOpenAngle); }
@@ -85,17 +96,26 @@ bool ServoBarrier::setAngle(int angle, bool forceRewrite) {
     return false;
   }
 
-  const int nudge = angle <= 45 ? 90 : 0;
-  servo_.writeMicroseconds(angleToUs(nudge));
-  delay(50);
+  // Only re-attach when forced; never nudge through intermediate angles —
+  // that caused both SG90s to twitch on a shared 5 V supply.
+  if (forceRewrite) {
+    servo_.detach();
+    attached_ = false;
+    delay(15);
+    begin();
+    if (!attached_) {
+      return false;
+    }
+  }
 
   angle_ = angle;
   const int us = angleToUs(angle_);
   servo_.writeMicroseconds(us);
-  Serial.printf("[servo] write pin=%d angle=%d us=%d (nudged)\n",
+  Serial.printf("[servo] write pin=%d angle=%d us=%d%s\n",
                 pin_,
                 angle_,
-                us);
+                us,
+                forceRewrite ? " force" : "");
   return true;
 }
 

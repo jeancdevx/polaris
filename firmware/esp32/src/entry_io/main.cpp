@@ -218,9 +218,8 @@ void clearPendingClose(const char* servoId) {
 }
 
 void armExitPassage(const char* reason) {
-  // Entry close retries with force=true were twitching the entry SG90 while
-  // exit opened on a shared 5V rail — cancel them before exit motion.
   clearPendingClose(POLARIS_ENTRY_SERVO_ID);
+  resetEntryPresenceCycle("exit_armed");
   gEntryGateOpenAssumed = false;
   gExitPassageArmed = true;
   gExitGateOpenAssumed = false;
@@ -653,8 +652,7 @@ bool tryConsumeEntryRfid(const String& uid, const char* via) {
 }
 
 void handleEntryRfid() {
-  // While exit passage is open, ignore entry reader noise.
-  if (gExitPassageArmed && gExitGateOpenAssumed) {
+  if (gExitPassageArmed) {
     return;
   }
   String uid;
@@ -667,12 +665,13 @@ void handleEntryRfid() {
 void handleExitRfid() {
   const unsigned long nowMs = millis();
 
-  // Do not even poll the exit RC522 while entry presence is locked — SPI
-  // thrashing here freezes entry_io and floods serial.
+  if (gEntryGateOpenAssumed) {
+    return;
+  }
   if (gEntryRfidConsumed && isEntryPresenceLatched(nowMs)) {
     return;
   }
-  if (gEntryGateOpenAssumed) {
+  if (gExitPassageArmed) {
     return;
   }
 
@@ -681,17 +680,12 @@ void handleExitRfid() {
     return;
   }
 
-  // Con presencia de entrada armada, el RC522 de salida a menudo captura la
-  // misma tarjeta (antenas cerca / bus SPI). Tratarla como lectura de entrada.
-  if (isEntryPresenceLatched(nowMs) && !gEntryRfidConsumed) {
+  if (gProximityActive && !gEntryRfidConsumed) {
     Serial.printf(
-        "[entry_io] Exit reader saw card during entry presence — routing to entry uid=%s\n",
+        "[entry_io] Exit reader saw card during active entry proximity — "
+        "routing to entry uid=%s\n",
         uid.c_str());
     tryConsumeEntryRfid(uid, "exit_reader_routed");
-    return;
-  }
-
-  if (gExitPassageArmed && gExitGateOpenAssumed) {
     return;
   }
 

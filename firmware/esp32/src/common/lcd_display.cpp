@@ -25,6 +25,9 @@ void LcdDisplay::setFreeSpots(int freeSpots) {
     freeSpots_ = -1;
     return;
   }
+  if (freeSpots > 10) {
+    freeSpots = 10;
+  }
   freeSpots_ = freeSpots;
 }
 

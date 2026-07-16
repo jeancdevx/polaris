@@ -3,6 +3,8 @@ import {
   PublishCommand
 } from '@aws-sdk/client-iot-data-plane'
 
+import { clampFreeSpots } from '@polaris/shared-utils'
+
 import type { SensorDataProcessorEnv } from '../read-env.js'
 
 export class IotDisplayCommandPublisher {
@@ -25,6 +27,7 @@ export class IotDisplayCommandPublisher {
       return false
     }
 
+    const clamped = clampFreeSpots(freeSpots)
     const displayId = process.env.ENTRY_DISPLAY_DEVICE_ID ?? 'entry-lcd'
 
     await this.client.send(
@@ -33,9 +36,9 @@ export class IotDisplayCommandPublisher {
         payload: Buffer.from(
           JSON.stringify({
             line1: 'Bienvenido',
-            line2: `Libres: ${freeSpots}`,
+            line2: `Libres: ${clamped}`,
             idle: true,
-            freeSpots,
+            freeSpots: clamped,
             backlight: true
           })
         ),

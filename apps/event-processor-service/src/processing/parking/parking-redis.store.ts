@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common'
 
 import type { ParkingSpot } from '@polaris/domain'
 import type { ParkingSpotStatus } from '@polaris/shared-types'
-import type { PolarisRedisClient } from '@polaris/shared-utils'
+import {
+  clampFreeSpots,
+  recountAndSetParkingStats,
+  type PolarisRedisClient
+} from '@polaris/shared-utils'
 
 import {
   PARKING_STATS_KEYS,
@@ -84,9 +88,8 @@ export class ParkingRedisStore {
 
   async getTotalAvailable(): Promise<number> {
     const client = await this.redisService.getClient()
-    const value = await client.get(PARKING_STATS_KEYS.totalAvailable)
-    const parsed = Number.parseInt(value ?? '0', 10)
-    return Number.isNaN(parsed) ? 0 : parsed
+    const recounted = await recountAndSetParkingStats(client)
+    return clampFreeSpots(recounted.totalAvailable)
   }
 
   async markReservationCancelled(spotId: string): Promise<void> {

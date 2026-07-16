@@ -5,6 +5,8 @@ import {
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
+import { clampFreeSpots } from '@polaris/shared-utils'
+
 import {
   EVENT_PROCESSOR_CONFIG_KEY,
   type EventProcessorConfig
@@ -26,6 +28,7 @@ export class IotDisplayCommandPublisher {
       return false
     }
 
+    const clamped = clampFreeSpots(freeSpots)
     const displayId = process.env.ENTRY_DISPLAY_DEVICE_ID ?? 'entry-lcd'
     const client = this.getClient(config)
 
@@ -35,9 +38,9 @@ export class IotDisplayCommandPublisher {
         payload: Buffer.from(
           JSON.stringify({
             line1: 'Bienvenido',
-            line2: `Libres: ${freeSpots}`,
+            line2: `Libres: ${clamped}`,
             idle: true,
-            freeSpots,
+            freeSpots: clamped,
             backlight: true
           })
         ),
@@ -46,7 +49,7 @@ export class IotDisplayCommandPublisher {
       })
     )
 
-    this.logger.log(`LCD idle free spots -> ${freeSpots}`)
+    this.logger.log(`LCD idle free spots -> ${clamped}`)
     return true
   }
 

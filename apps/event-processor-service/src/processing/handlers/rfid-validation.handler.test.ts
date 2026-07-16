@@ -30,11 +30,15 @@ describe('RfidValidationHandler', () => {
     const walkInSessionHandler = {
       handle: vi.fn()
     } as unknown as WalkInSessionHandler
+    const auditLogRepository = {
+      insert: vi.fn()
+    }
 
     const handler = new RfidValidationHandler(
       vehicleEntryHandler,
       vehicleExitHandler,
-      walkInSessionHandler
+      walkInSessionHandler,
+      auditLogRepository as never
     )
 
     await handler.handle({
@@ -58,11 +62,15 @@ describe('RfidValidationHandler', () => {
     const walkInSessionHandler = {
       handle: vi.fn().mockResolvedValue(undefined)
     } as unknown as WalkInSessionHandler
+    const auditLogRepository = {
+      insert: vi.fn()
+    }
 
     const handler = new RfidValidationHandler(
       vehicleEntryHandler,
       vehicleExitHandler,
-      walkInSessionHandler
+      walkInSessionHandler,
+      auditLogRepository as never
     )
 
     await handler.handle({
@@ -75,7 +83,7 @@ describe('RfidValidationHandler', () => {
     expect(vehicleEntryHandler.handle).not.toHaveBeenCalled()
   })
 
-  it('ignores denied validations', async () => {
+  it('records denied validations in audit_logs', async () => {
     const vehicleEntryHandler = {
       handle: vi.fn()
     } as unknown as VehicleEntryHandler
@@ -85,11 +93,15 @@ describe('RfidValidationHandler', () => {
     const walkInSessionHandler = {
       handle: vi.fn()
     } as unknown as WalkInSessionHandler
+    const auditLogRepository = {
+      insert: vi.fn(async () => undefined)
+    }
 
     const handler = new RfidValidationHandler(
       vehicleEntryHandler,
       vehicleExitHandler,
-      walkInSessionHandler
+      walkInSessionHandler,
+      auditLogRepository as never
     )
 
     await handler.handle({
@@ -100,5 +112,12 @@ describe('RfidValidationHandler', () => {
 
     expect(vehicleEntryHandler.handle).not.toHaveBeenCalled()
     expect(walkInSessionHandler.handle).not.toHaveBeenCalled()
+    expect(auditLogRepository.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'rfid_denied',
+        gate: 'entry',
+        metadata: expect.objectContaining({ reason: 'parking_full' })
+      })
+    )
   })
 })

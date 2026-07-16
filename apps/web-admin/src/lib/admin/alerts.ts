@@ -1,6 +1,7 @@
 import type { AuditLog } from '@polaris/shared-types'
 
 import { listAuditLogs } from '@/lib/admin/audit-api'
+import { formatAuditEventType } from '@/lib/admin/audit-event-labels'
 
 export const OPERATIONAL_ALERT_TYPES = [
   'anomaly_unregistered_occupancy',
@@ -16,9 +17,11 @@ export const isOperationalAlert = (eventType: string): boolean =>
   alertTypeSet.has(eventType)
 
 export const alertTypeLabel: Record<OperationalAlertType, string> = {
-  anomaly_unregistered_occupancy: 'Ocupación sin ingreso',
-  passage_stalled: 'Vehículo estancado en entrada',
-  exit_barrier_timeout: 'Barrera de salida abierta demasiado tiempo'
+  anomaly_unregistered_occupancy: formatAuditEventType(
+    'anomaly_unregistered_occupancy'
+  ),
+  passage_stalled: formatAuditEventType('passage_stalled'),
+  exit_barrier_timeout: formatAuditEventType('exit_barrier_timeout')
 }
 
 export const loadOperationalAlerts = async (

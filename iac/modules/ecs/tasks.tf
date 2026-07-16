@@ -31,12 +31,12 @@ resource "aws_ecs_task_definition" "api_service" {
         { name = "COGNITO_ISSUER_URL", value = var.cognito_issuer_url }
       ], local.database_environment)
 
-      secrets = [
+      secrets = concat([
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.api_service_env.arn}:REDIS_URL::"
         }
-      ]
+      ], local.database_credential_secrets)
 
       logConfiguration = {
         logDriver = "awslogs"
@@ -94,7 +94,7 @@ resource "aws_ecs_task_definition" "admin_service" {
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id }
       ], local.database_environment)
 
-      secrets = [
+      secrets = concat([
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.admin_service_env.arn}:REDIS_URL::"
@@ -103,7 +103,7 @@ resource "aws_ecs_task_definition" "admin_service" {
           name      = "RFID_VALIDATIONS_TABLE_NAME"
           valueFrom = "${aws_secretsmanager_secret.admin_service_env.arn}:RFID_VALIDATIONS_TABLE_NAME::"
         }
-      ]
+      ], local.database_credential_secrets)
 
       logConfiguration = {
         logDriver = "awslogs"
@@ -162,7 +162,7 @@ resource "aws_ecs_task_definition" "reservation_service" {
         { name = "KAFKA_CLIENT_ID", value = "reservation-service" }
       ], local.database_environment)
 
-      secrets = [
+      secrets = concat([
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.reservation_service_env.arn}:REDIS_URL::"
@@ -171,7 +171,7 @@ resource "aws_ecs_task_definition" "reservation_service" {
           name      = "KAFKA_BROKERS"
           valueFrom = "${aws_secretsmanager_secret.reservation_service_env.arn}:KAFKA_BROKERS::"
         }
-      ]
+      ], local.database_credential_secrets)
 
       logConfiguration = {
         logDriver = "awslogs"
@@ -235,7 +235,7 @@ resource "aws_ecs_task_definition" "event_processor_service" {
         { name = "IOT_DATA_ENDPOINT", value = var.iot_data_endpoint }
       ], local.database_environment)
 
-      secrets = [
+      secrets = concat([
         {
           name      = "REDIS_URL"
           valueFrom = "${aws_secretsmanager_secret.event_processor_service_env.arn}:REDIS_URL::"
@@ -244,7 +244,7 @@ resource "aws_ecs_task_definition" "event_processor_service" {
           name      = "KAFKA_BROKERS"
           valueFrom = "${aws_secretsmanager_secret.event_processor_service_env.arn}:KAFKA_BROKERS::"
         }
-      ]
+      ], local.database_credential_secrets)
 
       logConfiguration = {
         logDriver = "awslogs"

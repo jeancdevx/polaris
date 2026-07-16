@@ -35,6 +35,19 @@ locals {
     { name = "DB_SECRET_ARN", value = var.rds_master_user_secret_arn },
   ]
 
+  # Inject live username/password from the Aurora-managed secret at task start.
+  # Runtime hydrate (DB_SECRET_ARN) remains as a rotation fallback.
+  database_credential_secrets = [
+    {
+      name      = "DB_USERNAME"
+      valueFrom = "${var.rds_master_user_secret_arn}:username::"
+    },
+    {
+      name      = "DB_PASSWORD"
+      valueFrom = "${var.rds_master_user_secret_arn}:password::"
+    }
+  ]
+
   common_tags = merge(
     var.tags,
     {

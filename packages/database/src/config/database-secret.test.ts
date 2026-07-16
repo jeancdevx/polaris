@@ -68,8 +68,16 @@ describe('hydrateDatabaseEnv', () => {
 
   it('caches the secret fetch across cold-start consumers', async () => {
     const secretArn = 'arn:aws:secretsmanager:region:account:secret:rds'
-    const firstEnv: NodeJS.ProcessEnv = { DB_SECRET_ARN: secretArn }
-    const secondEnv: NodeJS.ProcessEnv = { DB_SECRET_ARN: secretArn }
+    const firstEnv: NodeJS.ProcessEnv = {
+      DB_SECRET_ARN: secretArn,
+      DB_HOST: 'terraform.cluster',
+      DB_NAME: 'parking_db'
+    }
+    const secondEnv: NodeJS.ProcessEnv = {
+      DB_SECRET_ARN: secretArn,
+      DB_HOST: 'terraform.cluster',
+      DB_NAME: 'parking_db'
+    }
     const loadSecretString = vi.fn().mockResolvedValue(
       JSON.stringify({
         username: 'parking_admin',
@@ -96,6 +104,8 @@ describe('hydrateDatabaseEnv', () => {
       .mockRejectedValueOnce(new Error('temporary failure'))
       .mockResolvedValueOnce(
         JSON.stringify({
+          host: 'secret.cluster',
+          dbname: 'parking_db',
           username: 'parking_admin',
           password: 'secret-password'
         })
@@ -107,5 +117,21 @@ describe('hydrateDatabaseEnv', () => {
     await hydrateDatabaseEnv({ env, loadSecretString })
 
     expect(loadSecretString).toHaveBeenCalledTimes(2)
+  })
+
+  it('throws when DB_SECRET_ARN is set but required parts stay missing', async () => {
+    const env: NodeJS.ProcessEnv = {
+      DB_SECRET_ARN: 'arn:aws:secretsmanager:region:account:secret:rds'
+    }
+    const loadSecretString = vi.fn().mockResolvedValue(
+      JSON.stringify({
+        username: 'parking_admin',
+        password: 'secret-password'
+      })
+    )
+
+    await expect(hydrateDatabaseEnv({ env, loadSecretString })).rejects.toThrow(
+      /missing DB_HOST, DB_NAME/
+    )
   })
 })

@@ -19,17 +19,17 @@ export class AuditRepository {
       .createQueryBuilder('audit')
 
     if (query.eventType) {
-      qb.andWhere('audit.event_type = :eventType', {
+      qb.andWhere('audit.eventType = :eventType', {
         eventType: query.eventType
       })
     }
 
     if (query.userId) {
-      qb.andWhere('audit.user_id = :userId', { userId: query.userId })
+      qb.andWhere('audit.userId = :userId', { userId: query.userId })
     }
 
     if (query.parkingSpotId) {
-      qb.andWhere('audit.parking_spot_id = :parkingSpotId', {
+      qb.andWhere('audit.parkingSpotId = :parkingSpotId', {
         parkingSpotId: query.parkingSpotId
       })
     }
@@ -39,7 +39,7 @@ export class AuditRepository {
     }
 
     if (query.userType) {
-      qb.andWhere('audit.user_type = :userType', { userType: query.userType })
+      qb.andWhere('audit.userType = :userType', { userType: query.userType })
     }
 
     if (query.from) {

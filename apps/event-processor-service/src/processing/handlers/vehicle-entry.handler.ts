@@ -4,6 +4,8 @@ import { isBusinessRuleViolationError } from '@polaris/domain'
 import type { VehicleEntryEvent } from '@polaris/kafka'
 import { KAFKA_TOPICS } from '@polaris/shared-types'
 
+import { AuditLogRepository } from '../infrastructure/audit-log.repository.js'
+import { insertAuditLogSafe } from '../infrastructure/audit-log.safe.js'
 import { EventBridgePublisherService } from '../infrastructure/eventbridge-publisher.service.js'
 import { IotDisplayCommandPublisher } from '../infrastructure/iot-display-command.publisher.js'
 import { IotLedCommandPublisher } from '../infrastructure/iot-led-command.publisher.js'
@@ -19,7 +21,8 @@ export class VehicleEntryHandler {
     private readonly parkingRedisStore: ParkingRedisStore,
     private readonly eventBridgePublisher: EventBridgePublisherService,
     private readonly ledCommands: IotLedCommandPublisher,
-    private readonly displayCommands: IotDisplayCommandPublisher
+    private readonly displayCommands: IotDisplayCommandPublisher,
+    private readonly auditLogRepository: AuditLogRepository
   ) {}
 
   async handle(event: VehicleEntryEvent): Promise<void> {
@@ -34,6 +37,20 @@ export class VehicleEntryHandler {
         })
 
       await this.parkingRedisStore.syncSpotTransition(spot, previousStatus)
+
+      await insertAuditLogSafe(this.auditLogRepository, {
+        eventType: KAFKA_TOPICS.VEHICLE_ENTRY,
+        userId: event.userId,
+        vehiclePlate: event.vehiclePlate,
+        parkingSpotId: event.parkingSpotId,
+        gate: event.gate ?? 'entry',
+        metadata: {
+          reservationId: event.reservationId,
+          previousStatus,
+          currentStatus: spot.status
+        },
+        timestamp: occurredAt
+      })
 
       await this.eventBridgePublisher.publishProcessedParkingEvent({
         detailType: KAFKA_TOPICS.VEHICLE_ENTRY,

@@ -24,6 +24,8 @@ type RfidLookupRepositoryOptions = Readonly<{
   lookupMode: RfidLookupMode
   tableName?: string
   dynamoClient?: DynamoDBDocumentClient
+  /** Test seam — production checks the RDS users table. */
+  userExists?: (userId: string) => Promise<boolean>
 }>
 
 const mapDynamoItemToTag = (item: Record<string, unknown>): RfidTag | null => {
@@ -94,14 +96,24 @@ export class RfidLookupRepository {
     const dynamoTag = await this.findInDynamo(rfidUid)
 
     if (dynamoTag) {
-      // An explicit DynamoDB record is authoritative in both Dynamo modes.
-      // Never fall back to a potentially stale active RDS record when the
-      // projection says the credential is inactive or expired.
+      // An explicit DynamoDB record is authoritative when valid.
+      // Never fall back to RDS when Dynamo says inactive/expired.
       if (!isRfidTagValid(dynamoTag)) {
         return null
       }
 
-      return { tag: dynamoTag, source: 'dynamodb' }
+      // After DB reset/reseed, Dynamo can still point at a Cognito user_id
+      // that no longer exists in RDS — using it breaks parking_sessions FK.
+      if (await this.userExistsInRds(dynamoTag.userId.value)) {
+        return { tag: dynamoTag, source: 'dynamodb' }
+      }
+
+      const rdsFallback = await this.findInRds(rfidUid)
+      if (rdsFallback) {
+        return rdsFallback
+      }
+
+      return null
     }
 
     if (this.options.lookupMode === 'dynamodb') {
@@ -109,6 +121,18 @@ export class RfidLookupRepository {
     }
 
     return this.findInRds(rfidUid)
+  }
+
+  private async userExistsInRds(userId: string): Promise<boolean> {
+    if (this.options.userExists) {
+      return this.options.userExists(userId)
+    }
+
+    const dataSource = await getLambdaDataSource()
+    const count = await dataSource.getRepository('User').count({
+      where: { userId }
+    })
+    return count > 0
   }
 
   private async findInDynamo(rfidUid: string): Promise<RfidTag | null> {

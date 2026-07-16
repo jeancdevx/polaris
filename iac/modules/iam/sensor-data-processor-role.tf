@@ -89,3 +89,8 @@ resource "aws_iam_role_policy_attachment" "sensor_data_processor_data" {
   role       = aws_iam_role.sensor_data_processor.name
   policy_arn = aws_iam_policy.sensor_data_processor_data.arn
 }
+
+resource "aws_iam_role_policy_attachment" "sensor_data_processor_secrets_read" {
+  role       = aws_iam_role.sensor_data_processor.name
+  policy_arn = aws_iam_policy.secrets_read.arn
+}

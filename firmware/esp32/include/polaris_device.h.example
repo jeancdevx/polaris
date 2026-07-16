@@ -12,20 +12,19 @@
 // Thing name = MQTT client id, e.g. polaris-dev-actuators-01
 #define POLARIS_IOT_THING_NAME "polaris-dev-actuators-01"
 
-static const char POLARIS_IOT_DEVICE_CERT[] = R"EOF(
------BEGIN CERTIFICATE-----
+// Put -----BEGIN on the same line as R"EOF(. A leading newline before BEGIN
+// makes ESP32 mbedTLS fail with BASE64 invalid character.
+static const char POLARIS_IOT_DEVICE_CERT[] = R"EOF(-----BEGIN CERTIFICATE-----
 (paste certificate lines here)
 -----END CERTIFICATE-----
 )EOF";
 
-static const char POLARIS_IOT_DEVICE_PRIVATE_KEY[] = R"EOF(
------BEGIN RSA PRIVATE KEY-----
+static const char POLARIS_IOT_DEVICE_PRIVATE_KEY[] = R"EOF(-----BEGIN RSA PRIVATE KEY-----
 (paste private key lines here)
 -----END RSA PRIVATE KEY-----
 )EOF";
 
-static const char POLARIS_IOT_ROOT_CA[] = R"EOF(
------BEGIN CERTIFICATE-----
+static const char POLARIS_IOT_ROOT_CA[] = R"EOF(-----BEGIN CERTIFICATE-----
 (paste Amazon Root CA 1 lines here)
 -----END CERTIFICATE-----
 )EOF";

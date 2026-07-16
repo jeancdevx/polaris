@@ -69,7 +69,7 @@ bool ServoBarrier::open() { return setAngle(polaris::hw::kServoOpenAngle); }
 
 bool ServoBarrier::close() { return setAngle(polaris::hw::kServoClosedAngle); }
 
-bool ServoBarrier::setAngle(int angle) {
+bool ServoBarrier::setAngle(int angle, bool forceRewrite) {
   if (angle < 0 || angle > 180) {
     Serial.printf("[servo] write rejected pin=%d angle=%d (valid=0..180)\n",
                   pin_,
@@ -85,12 +85,34 @@ bool ServoBarrier::setAngle(int angle) {
     return false;
   }
 
+  if (forceRewrite && angle_ == angle) {
+    const int nudge =
+        angle == polaris::hw::kServoOpenAngle ? polaris::hw::kServoClosedAngle
+                                             : polaris::hw::kServoOpenAngle;
+    servo_.writeMicroseconds(angleToUs(nudge));
+    delay(20);
+  }
+
   angle_ = angle;
   const int us = angleToUs(angle_);
   // writeMicroseconds es más fiable que write() tras WiFi en ESP32.
   servo_.writeMicroseconds(us);
-  Serial.printf("[servo] write pin=%d angle=%d us=%d\n", pin_, angle_, us);
+  Serial.printf("[servo] write pin=%d angle=%d us=%d%s\n",
+                pin_,
+                angle_,
+                us,
+                forceRewrite ? " force" : "");
   return true;
+}
+
+void ServoBarrier::reassertLastCommand() {
+  if (!attached_ || angle_ < 0) {
+    return;
+  }
+
+  const int us = angleToUs(angle_);
+  servo_.writeMicroseconds(us);
+  Serial.printf("[servo] reassert pin=%d angle=%d us=%d\n", pin_, angle_, us);
 }
 
 bool ServoBarrier::isOpen() const {

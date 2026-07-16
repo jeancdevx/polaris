@@ -5,6 +5,8 @@ import {
   parkingSpotKey
 } from '@polaris/shared-utils'
 
+import { ParkingSpotStatusRepository } from './repositories/parking-spot-status.repository.js'
+
 import { ledModeForStatus } from './led-mode.js'
 import type { LedSyncRequestIoTEvent } from './led-sync-iot-event.js'
 import { IotLedCommandPublisher } from './publishers/iot-led-command.publisher.js'
@@ -22,13 +24,15 @@ export type LedSyncProcessorResponse = Readonly<{
 export type ProcessLedSyncDependencies = Readonly<{
   env: SensorDataProcessorEnv
   ledPublisher: IotLedCommandPublisher
+  parkingSpotStatus?: ParkingSpotStatusRepository
 }>
 
 export const createProcessLedSyncDependencies = (
   env: SensorDataProcessorEnv
 ): ProcessLedSyncDependencies => ({
   env,
-  ledPublisher: new IotLedCommandPublisher(env)
+  ledPublisher: new IotLedCommandPublisher(env),
+  parkingSpotStatus: new ParkingSpotStatusRepository()
 })
 
 const spotIdFromNumber = (spotNumber: number): string =>
@@ -44,38 +48,81 @@ const readParkingSpotStatus = (
   return 'free'
 }
 
+const loadStatusesFromRds = async (
+  deps: ProcessLedSyncDependencies,
+  spotFirst: number,
+  spotLast: number
+): Promise<Map<string, ParkingSpotStatus>> => {
+  const repository = deps.parkingSpotStatus ?? new ParkingSpotStatusRepository()
+  const rows = await repository.listStatusesInRange(spotFirst, spotLast)
+  return new Map(rows.map(row => [row.spotId, row.status]))
+}
+
+const loadStatusesFromRedis = async (
+  redisUrl: string,
+  spotFirst: number,
+  spotLast: number
+): Promise<Map<string, ParkingSpotStatus>> => {
+  const redis = await connectRedis(redisUrl)
+  const statuses = new Map<string, ParkingSpotStatus>()
+
+  try {
+    for (let spotNumber = spotFirst; spotNumber <= spotLast; ++spotNumber) {
+      const spotId = spotIdFromNumber(spotNumber)
+      statuses.set(
+        spotId,
+        readParkingSpotStatus(
+          (await redis.hGet(parkingSpotKey(spotId), 'status')) ?? undefined
+        )
+      )
+    }
+  } finally {
+    await disconnectRedis(redis)
+  }
+
+  return statuses
+}
+
 export const processLedSyncRequest = async (
   request: LedSyncRequestIoTEvent,
   deps: ProcessLedSyncDependencies
 ): Promise<LedSyncProcessorResponse> => {
-  if (!deps.env.redisUrl) {
-    throw new Error('REDIS_URL must be configured for LED sync')
-  }
-
-  const redis = await connectRedis(deps.env.redisUrl)
   let ledCommandsPublished = 0
+  let statuses = new Map<string, ParkingSpotStatus>()
 
   try {
-    for (
-      let spotNumber = request.spotFirst;
-      spotNumber <= request.spotLast;
-      ++spotNumber
-    ) {
-      const spotId = spotIdFromNumber(spotNumber)
-      const status = readParkingSpotStatus(
-        (await redis.hGet(parkingSpotKey(spotId), 'status')) ?? undefined
-      )
-      const published = await deps.ledPublisher.publishSpotMode(
-        spotId,
-        ledModeForStatus(status)
-      )
-
-      if (published) {
-        ledCommandsPublished += 1
-      }
+    statuses = await loadStatusesFromRds(
+      deps,
+      request.spotFirst,
+      request.spotLast
+    )
+  } catch {
+    if (!deps.env.redisUrl) {
+      throw new Error('LED sync requires RDS or REDIS_URL')
     }
-  } finally {
-    await disconnectRedis(redis)
+    statuses = await loadStatusesFromRedis(
+      deps.env.redisUrl,
+      request.spotFirst,
+      request.spotLast
+    )
+  }
+
+  for (
+    let spotNumber = request.spotFirst;
+    spotNumber <= request.spotLast;
+    ++spotNumber
+  ) {
+    const spotId = spotIdFromNumber(spotNumber)
+    const status = statuses.get(spotId) ?? 'free'
+
+    const published = await deps.ledPublisher.publishSpotMode(
+      spotId,
+      ledModeForStatus(status)
+    )
+
+    if (published) {
+      ledCommandsPublished += 1
+    }
   }
 
   return {

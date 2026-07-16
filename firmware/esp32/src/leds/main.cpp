@@ -84,9 +84,16 @@ bool applyLedCommand(const char* spot, const char* mode) {
     return false;
   }
 
-  led->setMode(modeFromString(mode));
+  const RgbMode rgbMode = modeFromString(mode);
+  led->setMode(rgbMode);
   gCloudStateReceived = true;
-  Serial.printf("[leds] cloud %s -> %s\n", spot, mode);
+  const char* colorLabel = "green/off";
+  if (rgbMode == RgbMode::Occupied) {
+    colorLabel = "red";
+  } else if (rgbMode == RgbMode::BlinkBlue) {
+    colorLabel = "blue";
+  }
+  Serial.printf("[leds] cloud %s -> %s (%s)\n", spot, mode, colorLabel);
   return true;
 }
 
@@ -160,11 +167,9 @@ WifiMqttConfig makeConfig() {
 }
 
 void subscribeLedCommands(WifiMqttClient& client) {
-  for (int spot = POLARIS_SPOT_FIRST; spot <= POLARIS_SPOT_LAST; ++spot) {
-    client.subscribe(polaris::mqtt::ledCommandTopic(spotIdFromNumber(spot).c_str()).c_str());
-  }
+  client.subscribe("parking/commands/led/+");
 
-  const unsigned long drainUntil = millis() + 1500;
+  const unsigned long drainUntil = millis() + 3'000;
   while (millis() < drainUntil) {
     client.loop();
     delay(10);

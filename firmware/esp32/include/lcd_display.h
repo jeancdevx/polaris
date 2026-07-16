@@ -11,6 +11,9 @@ class LcdDisplay {
   void setFreeSpots(int freeSpots);
   void showIdle();
   void showProximityPrompt();
+  void showVehicleDetected();
+  void showValidating();
+  void showPassageInProgress();
   void showLines(const char* line1, const char* line2, bool backlight = true);
   void setBacklight(bool on);
 

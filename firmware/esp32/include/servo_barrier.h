@@ -11,7 +11,8 @@ class ServoBarrier {
   void detach();
   bool open();
   bool close();
-  bool setAngle(int angle);
+  bool setAngle(int angle, bool forceRewrite = false);
+  void reassertLastCommand();
   bool isOpen() const;
   bool isAttached() const;
   int angle() const;

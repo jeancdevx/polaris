@@ -931,6 +931,9 @@ importers:
       '@aws-sdk/lib-dynamodb':
         specifier: 3.1075.0
         version: 3.1075.0(@aws-sdk/client-dynamodb@3.1075.0)
+      '@polaris/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@polaris/domain':
         specifier: workspace:*
         version: link:../../packages/domain

@@ -623,6 +623,10 @@ bool tryConsumeEntryRfid(const String& uid, const char* via) {
 }
 
 void handleEntryRfid() {
+  // While exit passage is open, ignore entry reader noise.
+  if (gExitPassageArmed && gExitGateOpenAssumed) {
+    return;
+  }
   String uid;
   if (!gRfidEntry.readUid(uid)) {
     return;
@@ -631,17 +635,19 @@ void handleEntryRfid() {
 }
 
 void handleExitRfid() {
-  String uid;
-  if (!gRfidExit.readUid(uid)) {
+  const unsigned long nowMs = millis();
+
+  // Do not even poll the exit RC522 while entry presence is locked — SPI
+  // thrashing here freezes entry_io and floods serial.
+  if (gEntryRfidConsumed && isEntryPresenceLatched(nowMs)) {
+    return;
+  }
+  if (gEntryGateOpenAssumed) {
     return;
   }
 
-  const unsigned long nowMs = millis();
-
-  if (gEntryRfidConsumed && isEntryPresenceLatched(nowMs)) {
-    Serial.printf(
-        "[entry_io] Exit RFID ignored — entry passage locked until vehicle leaves uid=%s\n",
-        uid.c_str());
+  String uid;
+  if (!gRfidExit.readUid(uid)) {
     return;
   }
 
@@ -656,9 +662,6 @@ void handleExitRfid() {
   }
 
   if (gExitPassageArmed && gExitGateOpenAssumed) {
-    Serial.printf(
-        "[entry_io] Exit RFID ignored — passage in progress uid=%s\n",
-        uid.c_str());
     return;
   }
 

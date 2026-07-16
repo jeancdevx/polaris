@@ -41,7 +41,8 @@ data "aws_iam_policy_document" "sensor_data_processor_data" {
       "iot:RetainPublish"
     ]
     resources = [
-      "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/led/*"
+      "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/led/*",
+      "arn:aws:iot:${local.region}:${local.account_id}:topic/parking/commands/display/*"
     ]
   }
 }

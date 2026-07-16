@@ -179,7 +179,7 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
 
     const int angle =
         slot.angle >= 0 ? slot.angle : polaris::hw::kServoOpenAngle;
-    if (!servo.setAngle(angle, true)) {
+    if (!servo.setAngle(angle, slot.forceRewrite)) {
       publishServoStatus(servoId,
                          servoState(servo),
                          "rejected",
@@ -212,7 +212,7 @@ void applyServoCommand(const char* servoId, ServoBarrier& servo, PendingServoCom
   if (strcmp(slot.action, "close") == 0) {
     const int angle =
         slot.angle >= 0 ? slot.angle : polaris::hw::kServoClosedAngle;
-    if (!servo.setAngle(angle, true)) {
+    if (!servo.setAngle(angle, slot.forceRewrite)) {
       publishServoStatus(servoId,
                          servoState(servo),
                          "rejected",
@@ -306,11 +306,15 @@ void onMqttMessage(char* topic, byte* payload, unsigned int length) {
   PendingServoCommand* pending = nullptr;
   ServoBarrier* servo = nullptr;
 
-  if (strstr(topic, POLARIS_ENTRY_SERVO_ID) != nullptr) {
+  if (strstr(topic, "/" POLARIS_ENTRY_SERVO_ID) != nullptr ||
+      strcmp(topic + strlen(topic) - strlen(POLARIS_ENTRY_SERVO_ID),
+             POLARIS_ENTRY_SERVO_ID) == 0) {
     servoId = POLARIS_ENTRY_SERVO_ID;
     pending = &gPendingEntry;
     servo = &gEntryServo;
-  } else if (strstr(topic, POLARIS_EXIT_SERVO_ID) != nullptr) {
+  } else if (strstr(topic, "/" POLARIS_EXIT_SERVO_ID) != nullptr ||
+             strcmp(topic + strlen(topic) - strlen(POLARIS_EXIT_SERVO_ID),
+                    POLARIS_EXIT_SERVO_ID) == 0) {
     servoId = POLARIS_EXIT_SERVO_ID;
     pending = &gPendingExit;
     servo = &gExitServo;

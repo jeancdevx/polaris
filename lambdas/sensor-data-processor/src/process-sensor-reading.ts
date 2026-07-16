@@ -1,7 +1,9 @@
+import { ParkingOccupancySync } from './repositories/parking-occupancy-sync.js'
 import { SensorReadingsRepository } from './repositories/sensor-readings.repository.js'
 
 import type { OccupancyChangedIoTEvent } from './iot-event.js'
 import { ledModeForStatus } from './led-mode.js'
+import { IotDisplayCommandPublisher } from './publishers/iot-display-command.publisher.js'
 import { IotLedCommandPublisher } from './publishers/iot-led-command.publisher.js'
 import { KafkaOccupancyPublisher } from './publishers/kafka-occupancy.publisher.js'
 import type { SensorDataProcessorEnv } from './read-env.js'
@@ -13,6 +15,8 @@ export type SensorDataProcessorResponse = Readonly<{
   dynamoPersisted: boolean
   kafkaPublished: boolean
   ledCommandPublished: boolean
+  stateSynced: boolean
+  freeSpots: number
   timestamp: string
 }>
 
@@ -21,6 +25,8 @@ export type ProcessSensorReadingDependencies = Readonly<{
   sensorReadings: SensorReadingsRepository
   kafkaPublisher: KafkaOccupancyPublisher
   ledPublisher: IotLedCommandPublisher
+  displayPublisher: IotDisplayCommandPublisher
+  occupancySync: ParkingOccupancySync
 }>
 
 export const createProcessSensorReadingDependencies = (
@@ -32,7 +38,9 @@ export const createProcessSensorReadingDependencies = (
     ttlDays: env.sensorReadingsTtlDays
   }),
   kafkaPublisher: new KafkaOccupancyPublisher(env.kafkaClientId),
-  ledPublisher: new IotLedCommandPublisher(env)
+  ledPublisher: new IotLedCommandPublisher(env),
+  displayPublisher: new IotDisplayCommandPublisher(env),
+  occupancySync: new ParkingOccupancySync()
 })
 
 export const processSensorReading = async (
@@ -42,16 +50,28 @@ export const processSensorReading = async (
   const record = await deps.sensorReadings.saveOccupancyReading(reading)
   await deps.kafkaPublisher.publishOccupancyChanged(reading)
 
-  // Publish LED immediately so zone ESP32s update even if event-processor /
-  // Kafka consumers are delayed or unhealthy.
   const status =
     reading.status === 'occupied' || reading.status === 'reserved'
       ? reading.status
       : 'free'
+
+  // Update Redis + RDS so web/app/LCD reflect occupancy even if the
+  // event-processor Kafka consumer is unhealthy.
+  const sync = await deps.occupancySync.applySensorOccupancy(
+    reading.spotId,
+    status,
+    deps.env.redisUrl,
+    reading.occurredAt
+  )
+
   const ledCommandPublished = await deps.ledPublisher.publishSpotMode(
     reading.spotId,
     ledModeForStatus(status)
   )
+
+  if (sync.changed || sync.freeSpots >= 0) {
+    await deps.displayPublisher.publishIdleFreeSpots(sync.freeSpots)
+  }
 
   return {
     spotId: reading.spotId,
@@ -60,6 +80,8 @@ export const processSensorReading = async (
     dynamoPersisted: true,
     kafkaPublished: true,
     ledCommandPublished,
+    stateSynced: sync.changed,
+    freeSpots: sync.freeSpots,
     timestamp: record.timestamp
   }
 }

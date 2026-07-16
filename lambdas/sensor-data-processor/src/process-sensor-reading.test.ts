@@ -15,7 +15,8 @@ const baseEnv: SensorDataProcessorEnv = {
   sensorReadingsTtlDays: 90,
   kafkaClientId: 'sensor-data-processor-test',
   ledCommandsEnabled: true,
-  iotDataEndpoint: 'example.iot.us-east-2.amazonaws.com'
+  iotDataEndpoint: 'example.iot.us-east-2.amazonaws.com',
+  redisUrl: 'redis://localhost:6379'
 }
 
 const occupancyReading: OccupancyChangedIoTEvent = {
@@ -47,11 +48,22 @@ const buildDeps = (
   ledPublisher: {
     publishSpotMode: vi.fn().mockResolvedValue(true)
   } as never,
+  displayPublisher: {
+    publishIdleFreeSpots: vi.fn().mockResolvedValue(true)
+  } as never,
+  occupancySync: {
+    applySensorOccupancy: vi.fn().mockResolvedValue({
+      previousStatus: 'free',
+      currentStatus: 'occupied',
+      freeSpots: 9,
+      changed: true
+    })
+  } as never,
   ...overrides
 })
 
 describe('processSensorReading', () => {
-  it('persists to DynamoDB, publishes Kafka, and commands LEDs', async () => {
+  it('persists, syncs Redis/RDS state, commands LEDs and LCD', async () => {
     const deps = buildDeps()
 
     const result = await processSensorReading(occupancyReading, deps)
@@ -59,16 +71,18 @@ describe('processSensorReading', () => {
     expect(result.dynamoPersisted).toBe(true)
     expect(result.kafkaPublished).toBe(true)
     expect(result.ledCommandPublished).toBe(true)
-    expect(result.spotId).toBe('spot-05')
-    expect(deps.sensorReadings.saveOccupancyReading).toHaveBeenCalledWith(
-      occupancyReading
-    )
-    expect(deps.kafkaPublisher.publishOccupancyChanged).toHaveBeenCalledWith(
-      occupancyReading
+    expect(result.stateSynced).toBe(true)
+    expect(result.freeSpots).toBe(9)
+    expect(deps.occupancySync.applySensorOccupancy).toHaveBeenCalledWith(
+      'spot-05',
+      'occupied',
+      'redis://localhost:6379',
+      occupancyReading.occurredAt
     )
     expect(deps.ledPublisher.publishSpotMode).toHaveBeenCalledWith(
       'spot-05',
       'occupied'
     )
+    expect(deps.displayPublisher.publishIdleFreeSpots).toHaveBeenCalledWith(9)
   })
 })

@@ -64,10 +64,17 @@ export const processSensorReading = async (
     reading.occurredAt
   )
 
-  const ledCommandPublished = await deps.ledPublisher.publishSpotMode(
-    reading.spotId,
-    ledModeForStatus(status)
-  )
+  // Prefer post-sync status so reserved bays keep blink_blue on sensor "free".
+  const ledStatus = sync.currentStatus
+  let ledCommandPublished = false
+  try {
+    ledCommandPublished = await deps.ledPublisher.publishSpotMode(
+      reading.spotId,
+      ledModeForStatus(ledStatus)
+    )
+  } catch {
+    ledCommandPublished = false
+  }
 
   if (sync.changed || sync.freeSpots >= 0) {
     await deps.displayPublisher.publishIdleFreeSpots(sync.freeSpots)

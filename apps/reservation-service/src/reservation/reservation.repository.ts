@@ -65,6 +65,17 @@ export class ReservationRepository {
         )
       }
 
+      const existingForUser = await reservationRepository.findOne({
+        where: { userId: reservation.userId.value, status: 'active' }
+      })
+
+      if (existingForUser) {
+        businessRuleViolation(
+          'USER_HAS_ACTIVE_RESERVATION',
+          `User ${reservation.userId.value} already has an active reservation (${existingForUser.reservationId})`
+        )
+      }
+
       const row = mapDomainReservationToRow(reservation)
       await reservationRepository.insert(row)
 

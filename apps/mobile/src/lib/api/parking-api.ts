@@ -27,7 +27,9 @@ const readErrorMessage = async (response: Response): Promise<string> => {
 
   return response.status === 500
     ? 'Error interno del servidor. Revisa que reservation-service, Postgres, Redis y Kafka estén activos.'
-    : `Error ${response.status}`
+    : response.status === 409
+      ? 'Ya tienes una reserva activa o la plaza no está disponible.'
+      : `Error ${response.status}`
 }
 
 /** Flujo 23 — GET /parking/availability (API pública, sin cache HTTP). */

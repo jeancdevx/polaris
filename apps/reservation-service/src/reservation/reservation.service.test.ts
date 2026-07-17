@@ -106,4 +106,42 @@ describe('ReservationService', () => {
       })
     ).rejects.toBeInstanceOf(ConflictException)
   })
+
+  it('returns conflict when user already has an active reservation', async () => {
+    const { businessRuleViolation } = await import('@polaris/domain')
+
+    repository.insertActiveReservation.mockImplementation(() => {
+      businessRuleViolation(
+        'USER_HAS_ACTIVE_RESERVATION',
+        'User usr-12345 already has an active reservation (res-existing)'
+      )
+    })
+
+    await expect(
+      service.create('usr-12345', {
+        parkingSpotId: 'spot-08',
+        reservationDate: '2025-06-19T14:00:00.000Z'
+      })
+    ).rejects.toMatchObject({
+      response: {
+        message:
+          'Ya tienes una reserva activa. Cancélala antes de reservar otra plaza.'
+      }
+    })
+  })
+
+  it('maps unique-index races to conflict', async () => {
+    repository.insertActiveReservation.mockRejectedValue({
+      code: '23505',
+      constraint: 'UQ_reservations_one_active_per_user',
+      message: 'duplicate key'
+    })
+
+    await expect(
+      service.create('usr-12345', {
+        parkingSpotId: 'spot-08',
+        reservationDate: '2025-06-19T14:00:00.000Z'
+      })
+    ).rejects.toBeInstanceOf(ConflictException)
+  })
 })

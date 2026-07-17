@@ -217,6 +217,12 @@ export class ReservationService {
     }
 
     if (isBusinessRuleViolationError(error)) {
+      if (error.code === 'USER_HAS_ACTIVE_RESERVATION') {
+        return new ConflictException(
+          'Ya tienes una reserva activa. Cancélala antes de reservar otra plaza.'
+        )
+      }
+
       if (
         error.code === 'SPOT_NOT_AVAILABLE' ||
         error.code === 'RESERVATION_NOT_CANCELLABLE'
@@ -229,6 +235,40 @@ export class ReservationService {
       }
     }
 
+    const uniqueConflict = uniqueReservationConflictMessage(error)
+    if (uniqueConflict) {
+      return new ConflictException(uniqueConflict)
+    }
+
     return error
   }
+}
+
+const uniqueReservationConflictMessage = (error: unknown): string | null => {
+  if (!error || typeof error !== 'object') {
+    return null
+  }
+
+  const record = error as {
+    code?: string
+    driverError?: { code?: string; constraint?: string }
+    constraint?: string
+  }
+
+  const code = record.code ?? record.driverError?.code
+  if (code !== '23505') {
+    return null
+  }
+
+  const constraint = record.constraint ?? record.driverError?.constraint
+
+  if (constraint === 'UQ_reservations_one_active_per_user') {
+    return 'Ya tienes una reserva activa. Cancélala antes de reservar otra plaza.'
+  }
+
+  if (constraint === 'UQ_reservations_one_active_per_spot') {
+    return 'Parking spot is not available'
+  }
+
+  return 'Reservation conflicts with an existing active reservation'
 }

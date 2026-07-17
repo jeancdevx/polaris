@@ -49,6 +49,10 @@ export class ParkingOccupancySync {
         if (previousStatus === nextStatus) {
           return
         }
+        // Keep active reservations when the bay is empty.
+        if (previousStatus === 'reserved' && nextStatus === 'free') {
+          return
+        }
         changed = true
         await repo.update(
           { spotId },
@@ -66,6 +70,7 @@ export class ParkingOccupancySync {
     }
 
     let freeSpots = 0
+    let currentStatus: ParkingSpotStatus = nextStatus
 
     if (redisUrl) {
       const redis = await connectRedis(redisUrl)
@@ -78,8 +83,11 @@ export class ParkingOccupancySync {
           previousStatus = current
         }
 
-        if (current !== nextStatus) {
+        if (current === 'reserved' && nextStatus === 'free') {
+          currentStatus = 'reserved'
+        } else if (current !== nextStatus) {
           changed = true
+          currentStatus = nextStatus
           const multi = redis.multi()
           if (nextStatus === 'free') {
             multi.hSet(spotKey, { status: 'free' })
@@ -109,6 +117,8 @@ export class ParkingOccupancySync {
           }
 
           await multi.exec()
+        } else {
+          currentStatus = current
         }
 
         // incr/decr drifts under dual writers (lambda + event-processor);
@@ -118,11 +128,13 @@ export class ParkingOccupancySync {
       } finally {
         await disconnectRedis(redis)
       }
+    } else if (previousStatus === 'reserved' && nextStatus === 'free') {
+      currentStatus = 'reserved'
     }
 
     return {
       previousStatus,
-      currentStatus: nextStatus,
+      currentStatus,
       freeSpots,
       changed
     }

@@ -208,6 +208,12 @@ export class ParkingRepository {
         return null
       }
 
+      // Empty reserved spots stay reserved (blue). FC-51 "free" must not
+      // wipe an active reservation / LED blink.
+      if (spotRow.status === 'reserved' && input.status === 'free') {
+        return null
+      }
+
       const previousStatus = spotRow.status
       const spot = mapParkingSpotRow(spotRow)
       const nextSpot = applySensorStatus(spot, input.status, input.occurredAt)

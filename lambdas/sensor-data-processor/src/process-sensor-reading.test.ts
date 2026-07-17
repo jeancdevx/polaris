@@ -85,4 +85,31 @@ describe('processSensorReading', () => {
     )
     expect(deps.displayPublisher.publishIdleFreeSpots).toHaveBeenCalledWith(9)
   })
+
+  it('keeps reserved LED mode when sensor reports free on a reserved bay', async () => {
+    const deps = buildDeps({
+      occupancySync: {
+        applySensorOccupancy: vi.fn().mockResolvedValue({
+          previousStatus: 'reserved',
+          currentStatus: 'reserved',
+          freeSpots: 8,
+          changed: false
+        })
+      } as never
+    })
+
+    await processSensorReading(
+      {
+        ...occupancyReading,
+        status: 'free',
+        spotId: 'spot-08'
+      },
+      deps
+    )
+
+    expect(deps.ledPublisher.publishSpotMode).toHaveBeenCalledWith(
+      'spot-08',
+      'blink_blue'
+    )
+  })
 })

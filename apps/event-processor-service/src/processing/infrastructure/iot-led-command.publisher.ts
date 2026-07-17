@@ -33,24 +33,35 @@ export class IotLedCommandPublisher {
     )
 
     if (!config.ledCommandsEnabled || !config.iotDataEndpoint) {
+      this.logger.warn(
+        `LED command not published for ${parkingSpotId} (${mode}): ledCommandsEnabled=${config.ledCommandsEnabled} iotEndpoint=${Boolean(config.iotDataEndpoint)}`
+      )
       return false
     }
 
     const client = this.getClient(config)
 
-    await client.send(
-      new PublishCommand({
-        topic: `parking/commands/led/${parkingSpotId}`,
-        payload: Buffer.from(
-          JSON.stringify({
-            spotId: parkingSpotId,
-            mode
-          })
-        ),
-        qos: 1,
-        retain: true
-      })
-    )
+    try {
+      await client.send(
+        new PublishCommand({
+          topic: `parking/commands/led/${parkingSpotId}`,
+          payload: Buffer.from(
+            JSON.stringify({
+              spotId: parkingSpotId,
+              mode
+            })
+          ),
+          qos: 1,
+          retain: true
+        })
+      )
+    } catch (error) {
+      this.logger.error(
+        `LED IoT publish failed for ${parkingSpotId} (${mode})`,
+        error
+      )
+      return false
+    }
 
     this.logger.log(`LED cloud command ${parkingSpotId} -> ${mode}`)
     return true

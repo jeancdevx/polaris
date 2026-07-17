@@ -92,6 +92,15 @@ export class ParkingRedisStore {
     return clampFreeSpots(recounted.totalAvailable)
   }
 
+  async getSpotStatus(spotId: string): Promise<ParkingSpotStatus | null> {
+    const client = await this.redisService.getClient()
+    const status = await client.hGet(parkingSpotKey(spotId), 'status')
+    if (status === 'occupied' || status === 'reserved' || status === 'free') {
+      return status
+    }
+    return null
+  }
+
   async markReservationCancelled(spotId: string): Promise<void> {
     const client = await this.redisService.getClient()
     const spotKey = parkingSpotKey(spotId)

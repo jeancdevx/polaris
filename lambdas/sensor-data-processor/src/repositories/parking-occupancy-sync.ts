@@ -33,6 +33,7 @@ export class ParkingOccupancySync {
   ): Promise<OccupancySyncResult> {
     let previousStatus: ParkingSpotStatus = 'free'
     let changed = false
+    let preservedReserved = false
 
     // Authoritative RDS update (best-effort if DB env is configured).
     try {
@@ -51,6 +52,7 @@ export class ParkingOccupancySync {
         }
         // Keep active reservations when the bay is empty.
         if (previousStatus === 'reserved' && nextStatus === 'free') {
+          preservedReserved = true
           return
         }
         changed = true
@@ -70,7 +72,9 @@ export class ParkingOccupancySync {
     }
 
     let freeSpots = 0
-    let currentStatus: ParkingSpotStatus = nextStatus
+    let currentStatus: ParkingSpotStatus = preservedReserved
+      ? 'reserved'
+      : nextStatus
 
     if (redisUrl) {
       const redis = await connectRedis(redisUrl)
@@ -128,8 +132,6 @@ export class ParkingOccupancySync {
       } finally {
         await disconnectRedis(redis)
       }
-    } else if (previousStatus === 'reserved' && nextStatus === 'free') {
-      currentStatus = 'reserved'
     }
 
     return {
